@@ -17,7 +17,7 @@
 
 | Фаза | Название | Шаги | Статус |
 |---|---|---|---|
-| 1 | Фундамент, нейминг и дизайн-система | 1.0–1.5 | 🔄 В процессе (1.1 ✅, 1.2 ✅) |
+| 1 | Фундамент, нейминг и дизайн-система | 1.0–1.5 | 🔄 В процессе (1.1 ✅, 1.2 ✅, 1.3 ✅) |
 | 2 | Витрина на моковых данных | 2.1–2.10 | ⬜ |
 | 3 | PostgreSQL: схема, функции брони, подключение витрины | 3.1–3.7 | ⬜ |
 | 4 | Мобильная админка и медиа-пайплайн (S3) | 4.1–4.9 | ⬜ |
@@ -44,10 +44,10 @@
 - **Файлы:** `src/app/globals.css`, `src/lib/fonts.ts`, `src/app/layout.tsx`, `src/app/styleguide/page.tsx`.
 - **✅ Готово:** Токены палитры и шрифтов внедрены. Страница `/styleguide` создана и успешно статически пререндерится. `npm run typecheck` ✅, `npm run lint` ✅, `npm run build` ✅. Кириллическая шрифтовая пара протестирована.
 
-### Step 1.3 — shadcn/ui под бренд
-- **Что делаем:** `shadcn init`; `button`, `badge`, `card`, `input`, `textarea`, `label`, `dialog`, `sheet`, `sonner`, `skeleton`, `separator`, `tabs`, `checkbox`, `radio-group`. Переменные shadcn → палитра бренда; варианты кнопок (`primary` терракота, `secondary` шалфей, `ghost`, `link`) и бейджи статусов.
-- **Файлы:** `components.json`, `src/components/ui/*`, `src/lib/utils/cn.ts`.
-- **✅ Готово, когда:** на `/styleguide` все компоненты в фирменном стиле, состояния hover/focus/disabled доступны с клавиатуры.
+### Step 1.3 — shadcn/ui под бренд [x]
+- **Что делаем:** `components.json`; утилита `cn` (`clsx` + `tailwind-merge`); базовые UI-компоненты: `button`, `badge`, `card`, `input`, `textarea`, `label`, `dialog`, `sheet`, `sonner`, `skeleton`, `separator`, `tabs`, `checkbox`, `radio-group`. Маппинг семантических переменных shadcn в `globals.css` на фирменную палитру бренда (терракота, шалфей, лен, алебастр, эспрессо); кастомные варианты кнопок (`default` терракота, `secondary` шалфей, `subtle`, `sage-subtle`, `outline`, `ghost`, `destructive`, `link`), бейджи статусов кукол (`available`, `reserved`, `sold`, `in_progress`, `ooak`). Монтирование `<Toaster />` в корень `layout.tsx`.
+- **Файлы:** `components.json`, `src/lib/utils.ts`, `src/lib/utils/cn.ts`, `src/components/ui/*`, `src/app/globals.css`, `src/app/layout.tsx`, `src/app/styleguide/page.tsx`.
+- **✅ Готово:** Все компоненты реализованы без `any`, адаптированы под палитру «Теплый цифровой арт-бутик», экспортируются из `src/components/ui/`. Интерактивная витрина на `/styleguide` обновлена (диалог бронирования, шторка корзины, тосты Sonner, табы, карточка, поля ввода, бейджи). `npm run typecheck` ✅, `npm run lint` ✅, `npm run build` ✅.
 
 ### Step 1.4 — Каркас: Header, Footer, мобильное меню
 - **Что делаем:** `Container`, `Header` (вордмарк бренда в Cormorant, навигация: Куклы · На заказ · Галерея · О мастере), `MobileNav` в `Sheet`, `Footer` (контакты, Telegram/Viber/Instagram, место под реквизиты ИП и юридические ссылки), анимация появления.

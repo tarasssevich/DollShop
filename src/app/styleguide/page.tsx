@@ -1,14 +1,74 @@
+"use client";
+
+import * as React from "react";
 import Link from "next/link";
+import { toast } from "sonner";
+import {
+  Heart,
+  ShoppingBag,
+  Sparkles,
+  Clock,
+  ArrowRight,
+  ShieldCheck,
+  Truck,
+  CheckCircle2,
+  AlertCircle,
+  Eye,
+} from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
+import {
+  Sheet,
+  SheetTrigger,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+} from "@/components/ui/sheet";
 
 export default function StyleguidePage() {
+  const [agreementChecked, setAgreementChecked] = React.useState(false);
+  const [deliveryMethod, setDeliveryMethod] = React.useState("europost");
+  const [dialogOpen, setDialogOpen] = React.useState(false);
+  const [sheetOpen, setSheetOpen] = React.useState(false);
+  const [isLiked, setIsLiked] = React.useState(false);
+
   return (
-    <div className="min-h-screen bg-alabaster py-12 px-4 sm:px-6 lg:px-8 font-sans text-espresso">
+    <div className="min-h-screen bg-alabaster py-12 px-4 sm:px-6 lg:px-8 font-sans text-espresso selection:bg-terracotta/15 selection:text-terracotta">
       <div className="mx-auto max-w-5xl space-y-16">
         {/* Navigation & Header */}
         <header className="border-b border-linen-dark pb-8">
           <div className="flex items-center justify-between mb-4">
-            <span className="rounded-full bg-terracotta/10 px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-terracotta">
-              Дизайн-система v1.0
+            <span className="rounded-full bg-terracotta-subtle px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-terracotta border border-terracotta/20">
+              Дизайн-система v1.0 · shadcn/ui
             </span>
             <Link
               href="/"
@@ -18,45 +78,53 @@ export default function StyleguidePage() {
             </Link>
           </div>
           <h1 className="font-serif text-4xl sm:text-5xl font-light tracking-tight text-espresso">
-            DollShop Styleguide
+            Витрина компонентов DollShop
           </h1>
           <p className="mt-3 max-w-2xl text-base text-muted leading-relaxed">
-            Эстетика «Теплый цифровой арт-бутик»: естественные природные оттенки (алебастр, лен,
-            терракота, шалфей), благородная антиква Cormorant Garamond и чистый функциональный гротеск Manrope.
+            Коллекция базовых UI-компонентов на базе shadcn/ui и Radix UI,
+            стилизованная под теплую эстетику арт-бутика авторских кукол.
           </p>
         </header>
 
         {/* 1. Palette */}
         <section className="space-y-6">
           <div>
-            <h2 className="font-serif text-2xl font-normal text-espresso">1. Цветовая палитра</h2>
+            <h2 className="font-serif text-2xl font-normal text-espresso">
+              1. Фирменная палитра
+            </h2>
             <p className="text-sm text-muted">
-              Базовые тона фона, акценты терракоты и шалфея для взаимодействия и статусов.
+              Натуральные природные оттенки для фона, карточек и акцентов.
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-6">
-            {/* Alabaster */}
             <div className="overflow-hidden rounded-xl border border-linen-dark bg-white p-3 shadow-xs">
               <div className="h-16 w-full rounded-lg bg-alabaster border border-linen-dark" />
               <div className="mt-3">
                 <p className="font-medium text-xs text-espresso">Alabaster</p>
                 <p className="font-mono text-[11px] text-muted">#FAF8F5</p>
-                <p className="text-[10px] text-muted-light mt-0.5">Основной фон</p>
+                <p className="text-[10px] text-muted-light mt-0.5">Основной холст</p>
               </div>
             </div>
 
-            {/* Linen */}
             <div className="overflow-hidden rounded-xl border border-linen-dark bg-white p-3 shadow-xs">
               <div className="h-16 w-full rounded-lg bg-linen" />
               <div className="mt-3">
                 <p className="font-medium text-xs text-espresso">Linen</p>
                 <p className="font-mono text-[11px] text-muted">#F3EFE6</p>
-                <p className="text-[10px] text-muted-light mt-0.5">Вторичный / карточки</p>
+                <p className="text-[10px] text-muted-light mt-0.5">Карточки, вкладки</p>
               </div>
             </div>
 
-            {/* Espresso */}
+            <div className="overflow-hidden rounded-xl border border-linen-dark bg-white p-3 shadow-xs">
+              <div className="h-16 w-full rounded-lg bg-linen-dark" />
+              <div className="mt-3">
+                <p className="font-medium text-xs text-espresso">Linen Dark</p>
+                <p className="font-mono text-[11px] text-muted">#EAE4D8</p>
+                <p className="text-[10px] text-muted-light mt-0.5">Бордюры и линии</p>
+              </div>
+            </div>
+
             <div className="overflow-hidden rounded-xl border border-linen-dark bg-white p-3 shadow-xs">
               <div className="h-16 w-full rounded-lg bg-espresso" />
               <div className="mt-3">
@@ -66,17 +134,6 @@ export default function StyleguidePage() {
               </div>
             </div>
 
-            {/* Muted */}
-            <div className="overflow-hidden rounded-xl border border-linen-dark bg-white p-3 shadow-xs">
-              <div className="h-16 w-full rounded-lg bg-muted" />
-              <div className="mt-3">
-                <p className="font-medium text-xs text-espresso">Muted</p>
-                <p className="font-mono text-[11px] text-muted">#78716C</p>
-                <p className="text-[10px] text-muted-light mt-0.5">Вторичный текст</p>
-              </div>
-            </div>
-
-            {/* Terracotta Main */}
             <div className="overflow-hidden rounded-xl border border-linen-dark bg-white p-3 shadow-xs">
               <div className="h-16 w-full rounded-lg bg-terracotta" />
               <div className="mt-3">
@@ -86,7 +143,6 @@ export default function StyleguidePage() {
               </div>
             </div>
 
-            {/* Sage Main */}
             <div className="overflow-hidden rounded-xl border border-linen-dark bg-white p-3 shadow-xs">
               <div className="h-16 w-full rounded-lg bg-sage" />
               <div className="mt-3">
@@ -98,212 +154,577 @@ export default function StyleguidePage() {
           </div>
         </section>
 
-        {/* 2. Typography Scale */}
+        {/* 2. Buttons */}
         <section className="space-y-6">
           <div className="border-t border-linen-dark pt-8">
-            <h2 className="font-serif text-2xl font-normal text-espresso">2. Иерархия заголовков (Cormorant Garamond)</h2>
-            <p className="text-sm text-muted">Благородная антиква с выраженным характером для крупных акцентов и арт-подачи.</p>
-          </div>
-
-          <div className="space-y-6 rounded-2xl border border-linen-dark bg-white p-6 sm:p-8">
-            <div className="border-b border-linen pb-4">
-              <span className="text-[11px] font-mono uppercase text-muted tracking-widest">H1 · font-serif text-5xl font-light</span>
-              <h1 className="font-serif text-4xl sm:text-5xl font-light tracking-tight text-espresso mt-1">
-                Фарфоровая мечта в лунном свете
-              </h1>
-            </div>
-
-            <div className="border-b border-linen pb-4">
-              <span className="text-[11px] font-mono uppercase text-muted tracking-widest">H2 · font-serif text-3xl font-normal</span>
-              <h2 className="font-serif text-3xl font-normal text-espresso mt-1">
-                Авторские шарнирные куклы ручной работы
-              </h2>
-            </div>
-
-            <div className="border-b border-linen pb-4">
-              <span className="text-[11px] font-mono uppercase text-muted tracking-widest">H3 · font-serif text-2xl font-normal</span>
-              <h3 className="font-serif text-2xl font-normal text-espresso mt-1">
-                Коллекция «Шепот осеннего леса»
-              </h3>
-            </div>
-
-            <div className="border-b border-linen pb-4">
-              <span className="text-[11px] font-mono uppercase text-muted tracking-widest">H4 · font-serif text-xl font-medium</span>
-              <h4 className="font-serif text-xl font-medium text-espresso mt-1">
-                Особенности росписи и материалы креплений
-              </h4>
-            </div>
-
-            <div>
-              <span className="text-[11px] font-mono uppercase text-muted tracking-widest">Цитата / Story Quote · font-serif italic text-2xl</span>
-              <blockquote className="font-serif italic text-xl sm:text-2xl text-terracotta mt-2 leading-relaxed pl-4 border-l-2 border-terracotta">
-                «Каждая кукла рождается с собственным именем и настроением. В ней нет фабричной симметрии — лишь живое дыхание ручного искусства.»
-              </blockquote>
-            </div>
-          </div>
-        </section>
-
-        {/* 3. Cyrillic Text & Font Comparison */}
-        <section className="space-y-6">
-          <div className="border-t border-linen-dark pt-8">
-            <h2 className="font-serif text-2xl font-normal text-espresso">3. Кириллический текст и шрифтовая пара</h2>
+            <h2 className="font-serif text-2xl font-normal text-espresso">
+              2. Кнопки (Button)
+            </h2>
             <p className="text-sm text-muted">
-              Сравнение основного гротеска Manrope с Inter. Обратите внимание на чистоту и мягкость округлостей Manrope при наборе цен и характеристик.
+              Варианты состояний, размеров и интеграция с иконками Lucide.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Manrope Card (Primary) */}
-            <div className="rounded-2xl border-2 border-terracotta/40 bg-white p-6 shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <span className="font-mono text-xs font-semibold text-terracotta uppercase tracking-wider">
-                  Manrope (Основной выбор)
-                </span>
-                <span className="rounded-full bg-terracotta/10 px-2 py-0.5 text-[11px] font-medium text-terracotta">
-                  Рекомендуемый
-                </span>
-              </div>
-              <p className="font-sans text-base text-espresso leading-relaxed">
-                Съешь же ещё этих мягких французских булок, да выпей чаю. Широкая электрификация южных губерний даст мощный толчок подъёму сельского хозяйства.
+          <div className="rounded-2xl border border-linen-dark bg-white p-6 sm:p-8 space-y-6">
+            <div>
+              <p className="text-xs uppercase tracking-wider font-semibold text-muted mb-3">
+                Варианты стилей
               </p>
-              <div className="mt-4 pt-4 border-t border-linen space-y-2">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-muted">Высота:</span>
-                  <span className="font-medium text-espresso">36 см</span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-muted">Материалы:</span>
-                  <span className="font-medium text-espresso">Фарфор, шёлк, мохер</span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-muted">Цена:</span>
-                  <span className="font-semibold text-lg text-terracotta">420 BYN</span>
-                </div>
+              <div className="flex flex-wrap gap-3 items-center">
+                <Button variant="default">
+                  <ShoppingBag className="h-4 w-4" />
+                  Терракотовая (Primary)
+                </Button>
+                <Button variant="secondary">
+                  <Sparkles className="h-4 w-4" />
+                  Шалфей (Secondary)
+                </Button>
+                <Button variant="outline">Контурная (Outline)</Button>
+                <Button variant="subtle">Мягкая терракота</Button>
+                <Button variant="sage-subtle">Мягкий шалфей</Button>
+                <Button variant="ghost">Прозрачная (Ghost)</Button>
+                <Button variant="destructive">Удалить</Button>
+                <Button variant="link">Ссылка в тексте</Button>
               </div>
             </div>
 
-            {/* Inter Card (Comparison) */}
-            <div className="rounded-2xl border border-linen-dark bg-white p-6">
-              <div className="flex items-center justify-between mb-4">
-                <span className="font-mono text-xs font-semibold text-muted uppercase tracking-wider">
-                  Inter (Альтернатива)
-                </span>
-                <span className="rounded-full bg-linen px-2 py-0.5 text-[11px] font-medium text-muted">
-                  Технический
-                </span>
-              </div>
-              <p className="font-inter text-base text-espresso leading-relaxed">
-                Съешь же ещё этих мягких французских булок, да выпей чаю. Широкая электрификация южных губерний даст мощный толчок подъёму сельского хозяйства.
+            <Separator />
+
+            <div>
+              <p className="text-xs uppercase tracking-wider font-semibold text-muted mb-3">
+                Размеры и иконки
               </p>
-              <div className="mt-4 pt-4 border-t border-linen space-y-2 font-inter">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-muted">Высота:</span>
-                  <span className="font-medium text-espresso">36 см</span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-muted">Материалы:</span>
-                  <span className="font-medium text-espresso">Фарфор, шёлк, мохер</span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-muted">Цена:</span>
-                  <span className="font-semibold text-lg text-terracotta">420 BYN</span>
-                </div>
+              <div className="flex flex-wrap gap-3 items-center">
+                <Button size="sm">Размер SM</Button>
+                <Button size="default">Размер Default (MD)</Button>
+                <Button size="lg">Размер LG · В корзину</Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setIsLiked(!isLiked)}
+                  title="Добавить в избранное"
+                >
+                  <Heart
+                    className={`h-4 w-4 transition-colors ${
+                      isLiked ? "fill-terracotta text-terracotta" : "text-muted"
+                    }`}
+                  />
+                </Button>
+                <Button variant="ghost" size="icon-sm">
+                  <Eye className="h-4 w-4" />
+                </Button>
+                <Button disabled>
+                  <Clock className="h-4 w-4" />
+                  Заблокирована
+                </Button>
               </div>
             </div>
           </div>
         </section>
 
-        {/* 4. Status Badges & Price formatting */}
+        {/* 3. Badges */}
         <section className="space-y-6">
           <div className="border-t border-linen-dark pt-8">
-            <h2 className="font-serif text-2xl font-normal text-espresso">4. Статусы кукол и цены (BYN)</h2>
-            <p className="text-sm text-muted">Каждая кукла существует в единственном экземпляре и имеет уникальный статус жизненного цикла.</p>
+            <h2 className="font-serif text-2xl font-normal text-espresso">
+              3. Бейджи статусов (Badge)
+            </h2>
+            <p className="text-sm text-muted">
+              Отображают жизненный цикл единственного экземпляра куклы (OOAK).
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Available */}
-            <div className="rounded-xl border border-linen-dark bg-white p-4">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-terracotta-subtle px-2.5 py-1 text-xs font-medium text-terracotta">
-                <span className="h-1.5 w-1.5 rounded-full bg-terracotta animate-pulse" />
-                Ищет дом
-              </span>
-              <p className="mt-3 text-xs text-muted">Доступна для моментальной покупки</p>
-              <p className="mt-2 text-2xl font-light text-espresso">380 BYN</p>
-            </div>
+          <div className="rounded-2xl border border-linen-dark bg-white p-6 space-y-4">
+            <div className="flex flex-wrap gap-3 items-center">
+              <Badge variant="available">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-600 animate-pulse" />
+                В наличии · Доступна к покупке
+              </Badge>
 
-            {/* Reserved */}
-            <div className="rounded-xl border border-linen-dark bg-white p-4">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800 border border-amber-200/50">
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-600" />
-                Забронирована (14:28)
-              </span>
-              <p className="mt-3 text-xs text-muted">Покупатель в процессе чекаута</p>
-              <p className="mt-2 text-2xl font-light text-muted">450 BYN</p>
-            </div>
+              <Badge variant="reserved">
+                <Clock className="h-3 w-3" />
+                Забронирована (14:32)
+              </Badge>
 
-            {/* Made to order */}
-            <div className="rounded-xl border border-linen-dark bg-white p-4">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-sage-subtle px-2.5 py-1 text-xs font-medium text-sage">
-                <span className="h-1.5 w-1.5 rounded-full bg-sage" />
-                На заказ
-              </span>
-              <p className="mt-3 text-xs text-muted">Срок создания: 3–4 недели</p>
-              <p className="mt-2 text-2xl font-light text-espresso">от 500 BYN</p>
-            </div>
+              <Badge variant="sold">В частной коллекции</Badge>
 
-            {/* Sold / In collection */}
-            <div className="rounded-xl border border-linen-dark bg-white p-4">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-linen px-2.5 py-1 text-xs font-medium text-muted">
-                В частной коллекции
-              </span>
-              <p className="mt-3 text-xs text-muted">Кукла продана, доступен повтор</p>
-              <p className="mt-2 text-2xl font-light text-muted-light line-through">620 BYN</p>
+              <Badge variant="in_progress">
+                <Sparkles className="h-3 w-3" />В процессе создания
+              </Badge>
+
+              <Badge variant="ooak">Единственный экземпляр (OOAK)</Badge>
+
+              <Badge variant="default">Бестселлер</Badge>
+              <Badge variant="secondary">Ручной шов</Badge>
+              <Badge variant="outline">Высота 36 см</Badge>
             </div>
           </div>
         </section>
 
-        {/* 5. Buttons preview */}
+        {/* 4. Interactive Dialog & Sheet */}
         <section className="space-y-6">
           <div className="border-t border-linen-dark pt-8">
-            <h2 className="font-serif text-2xl font-normal text-espresso">5. Интерактивные элементы (Кнопки действий)</h2>
-            <p className="text-sm text-muted">Базовые варианты кнопок в фирменной терракотовой и шалфейной гамме.</p>
+            <h2 className="font-serif text-2xl font-normal text-espresso">
+              4. Модальные окна и шторки (Dialog & Sheet)
+            </h2>
+            <p className="text-sm text-muted">
+              Доступные всплывающие окна бронирования и выдвижная панель корзины.
+            </p>
           </div>
 
-          <div className="flex flex-wrap gap-4 items-center">
-            <button
-              type="button"
-              className="rounded-full bg-terracotta px-6 py-3 text-sm font-medium text-white shadow-xs transition-all hover:bg-terracotta-hover active:scale-[0.98]"
-            >
-              Купить сейчас · 380 BYN
-            </button>
+          <div className="rounded-2xl border border-linen-dark bg-white p-6 sm:p-8 flex flex-wrap gap-4 items-center">
+            {/* Dialog Demo */}
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="default">
+                  <Clock className="h-4 w-4" />
+                  Открыть окно бронирования (Dialog)
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <div className="inline-flex items-center gap-1.5 text-xs text-amber-800 font-medium bg-amber-50 rounded-full px-2.5 py-0.5 border border-amber-200/80 w-fit mb-1">
+                    <Clock className="h-3 w-3" /> 15 минут на оформление
+                  </div>
+                  <DialogTitle>Забронировать куклу «Селеста»</DialogTitle>
+                  <DialogDescription>
+                    Кукла будет временно закреплена за вами. Если оформление заказа
+                    не завершится в течение 15 минут, бронь автоматически снимется
+                    в пользу следующего ценителя.
+                  </DialogDescription>
+                </DialogHeader>
 
-            <button
-              type="button"
-              className="rounded-full bg-sage px-6 py-3 text-sm font-medium text-white shadow-xs transition-all hover:bg-sage-hover active:scale-[0.98]"
-            >
-              Хочу похожую на заказ
-            </button>
+                <div className="space-y-3 py-2 border-y border-linen-dark/60 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted">Кукла:</span>
+                    <span className="font-medium text-espresso">«Селеста» (OOAK)</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted">Материалы:</span>
+                    <span className="text-espresso">Бисквитный фарфор, шелк</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted">Стоимость:</span>
+                    <span className="font-semibold text-lg text-terracotta">
+                      420 BYN
+                    </span>
+                  </div>
+                </div>
 
-            <button
-              type="button"
-              className="rounded-full border border-linen-dark bg-white px-6 py-3 text-sm font-medium text-espresso transition-all hover:bg-linen active:scale-[0.98]"
-            >
-              История куклы
-            </button>
+                <DialogFooter>
+                  <DialogClose asChild>
+                    <Button variant="outline">Отмена</Button>
+                  </DialogClose>
+                  <Button
+                    variant="default"
+                    onClick={() => {
+                      setDialogOpen(false);
+                      toast.success("Бронь успешно оформлена на 15 минут!", {
+                        description: "Перейдите к оформлению заказа для завершения покупки.",
+                      });
+                    }}
+                  >
+                    Подтвердить бронь
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
 
-            <button
-              type="button"
-              disabled
-              className="rounded-full bg-linen px-6 py-3 text-sm font-medium text-muted cursor-not-allowed opacity-60"
+            {/* Sheet Demo */}
+            <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline">
+                  <ShoppingBag className="h-4 w-4" />
+                  Открыть корзину (Sheet справа)
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right">
+                <SheetHeader>
+                  <SheetTitle>Ваша корзина</SheetTitle>
+                  <SheetDescription>
+                    Выбранные авторские произведения ручной работы.
+                  </SheetDescription>
+                </SheetHeader>
+
+                <div className="py-6 space-y-4">
+                  <div className="flex gap-4 items-center p-3 rounded-xl border border-linen-dark bg-white">
+                    <div className="h-16 w-16 rounded-lg bg-linen flex items-center justify-center text-xs text-muted font-serif">
+                      Фото
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-serif font-medium text-espresso truncate">
+                        Кукла «Селеста»
+                      </p>
+                      <p className="text-xs text-muted">Бисквитный фарфор, 36 см</p>
+                      <p className="text-sm font-semibold text-terracotta mt-1">
+                        420 BYN
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl bg-linen p-3.5 space-y-1.5 text-xs text-muted leading-relaxed">
+                    <p className="flex items-center gap-1.5 font-medium text-espresso">
+                      <ShieldCheck className="h-3.5 w-3.5 text-sage" />
+                      Гарантия подлинности и безопасности
+                    </p>
+                    <p>
+                      Доставка по всей Беларуси через Европочту с трек-номером и
+                      проверкой комплектности при получении.
+                    </p>
+                  </div>
+                </div>
+
+                <SheetFooter className="mt-auto">
+                  <div className="w-full space-y-3">
+                    <div className="flex justify-between items-center text-base font-medium">
+                      <span>Итого:</span>
+                      <span className="font-semibold text-xl text-terracotta">
+                        420 BYN
+                      </span>
+                    </div>
+                    <Button
+                      className="w-full"
+                      size="lg"
+                      onClick={() => {
+                        setSheetOpen(false);
+                        toast.info("Переход к чекауту...", {
+                          description: "Заполнение адреса Европочты и данных получателя.",
+                        });
+                      }}
+                    >
+                      Перейти к оформлению
+                      <ArrowRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </div>
+                </SheetFooter>
+              </SheetContent>
+            </Sheet>
+          </div>
+        </section>
+
+        {/* 5. Toasts (Sonner) */}
+        <section className="space-y-6">
+          <div className="border-t border-linen-dark pt-8">
+            <h2 className="font-serif text-2xl font-normal text-espresso">
+              5. Всплывающие уведомления (Sonner Toast)
+            </h2>
+            <p className="text-sm text-muted">
+              Информативные и контекстные уведомления для пользователя.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-linen-dark bg-white p-6 flex flex-wrap gap-3">
+            <Button
+              variant="outline"
+              onClick={() =>
+                toast.success("Кукла добавлена в список желаний!", {
+                  description: "Мы пришлем вам уведомление при изменениях статуса.",
+                })
+              }
             >
-              В частной коллекции
-            </button>
+              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+              Уведомление об успехе
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={() =>
+                toast.warning("Время резерва подходит к концу", {
+                  description: "Осталось менее 3 минут для подтверждения покупки.",
+                })
+              }
+            >
+              <Clock className="h-4 w-4 text-amber-600" />
+              Предупреждение о таймере
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={() =>
+                toast.error("Кукла уже забронирована другим ценителем", {
+                  description: "Вы можете запросить создание похожей работы на заказ.",
+                })
+              }
+            >
+              <AlertCircle className="h-4 w-4 text-red-600" />
+              Сообщение об ошибке
+            </Button>
+          </div>
+        </section>
+
+        {/* 6. Form Controls: Input, Textarea, Label, Checkbox, RadioGroup */}
+        <section className="space-y-6">
+          <div className="border-t border-linen-dark pt-8">
+            <h2 className="font-serif text-2xl font-normal text-espresso">
+              6. Элементы форм (Input, Textarea, Checkbox, Radio)
+            </h2>
+            <p className="text-sm text-muted">
+              Формы заказа, адреса Европочты и индивидуальных пожеланий.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-linen-dark bg-white p-6 sm:p-8 space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="customer-name">Имя и фамилия получателя</Label>
+                <Input
+                  id="customer-name"
+                  placeholder="Анна Ковалева"
+                  defaultValue="Алена Васильева"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="customer-phone">Номер телефона (для СМС)</Label>
+                <Input
+                  id="customer-phone"
+                  placeholder="+375 (29) 123-45-67"
+                  defaultValue="+375 (29) 987-65-43"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="order-note">
+                Пожелания по упаковке или гравировке на шкатулке
+              </Label>
+              <Textarea
+                id="order-note"
+                rows={3}
+                placeholder="Напишите, если это подарок к особой дате или требуется подарочное оформление лентой..."
+              />
+            </div>
+
+            <Separator />
+
+            {/* Delivery Radio Group */}
+            <div className="space-y-3">
+              <Label>Способ доставки по Беларуси</Label>
+              <RadioGroup
+                value={deliveryMethod}
+                onValueChange={setDeliveryMethod}
+              >
+                <label
+                  htmlFor="europost"
+                  className="flex items-start gap-3 p-3.5 rounded-xl border border-linen-dark hover:bg-linen/40 cursor-pointer transition-colors"
+                >
+                  <RadioGroupItem value="europost" id="europost" className="mt-1" />
+                  <div className="flex-1">
+                    <p className="font-medium text-sm text-espresso flex items-center gap-1.5">
+                      <Truck className="h-4 w-4 text-terracotta" />
+                      Европочта (до отделения) · 5 BYN
+                    </p>
+                    <p className="text-xs text-muted mt-0.5">
+                      Срок доставки 2–3 дня. СМС-уведомление при поступлении в ОПС.
+                    </p>
+                  </div>
+                </label>
+
+                <label
+                  htmlFor="courier"
+                  className="flex items-start gap-3 p-3.5 rounded-xl border border-linen-dark hover:bg-linen/40 cursor-pointer transition-colors"
+                >
+                  <RadioGroupItem value="courier" id="courier" className="mt-1" />
+                  <div className="flex-1">
+                    <p className="font-medium text-sm text-espresso flex items-center gap-1.5">
+                      <Truck className="h-4 w-4 text-sage" />
+                      Курьерская доставка до двери (Минск) · 10 BYN
+                    </p>
+                    <p className="text-xs text-muted mt-0.5">
+                      Вручение лично в руки в согласованное удобное время.
+                    </p>
+                  </div>
+                </label>
+              </RadioGroup>
+            </div>
+
+            <Separator />
+
+            {/* Terms checkbox */}
+            <label
+              htmlFor="agree-terms"
+              className="flex items-start gap-3 cursor-pointer select-none"
+            >
+              <Checkbox
+                id="agree-terms"
+                checked={agreementChecked}
+                onCheckedChange={(checked) =>
+                  setAgreementChecked(checked === true)
+                }
+              />
+              <span className="text-xs text-muted leading-relaxed">
+                Я подтверждаю согласие с условиями{" "}
+                <Link
+                  href="/legal/terms"
+                  className="text-terracotta underline hover:text-terracotta-hover"
+                >
+                  публичной оферты
+                </Link>{" "}
+                и правилами обработки персональных данных согласно Закону РБ № 99-З.
+              </span>
+            </label>
+          </div>
+        </section>
+
+        {/* 7. Tabs & Doll Card Preview */}
+        <section className="space-y-6">
+          <div className="border-t border-linen-dark pt-8">
+            <h2 className="font-serif text-2xl font-normal text-espresso">
+              7. Вкладки и карточка произведения (Tabs & Card)
+            </h2>
+            <p className="text-sm text-muted">
+              Презентация куклы в каталоге и детальный просмотр характеристик.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+            {/* Doll Card Preview */}
+            <Card className="overflow-hidden group">
+              <div className="relative aspect-[4/5] bg-linen overflow-hidden flex items-center justify-center">
+                <div className="text-center p-6 space-y-2">
+                  <Sparkles className="h-8 w-8 text-terracotta/60 mx-auto" />
+                  <p className="font-serif text-xl text-espresso">
+                    Фотография экспоната
+                  </p>
+                  <p className="text-xs text-muted">
+                    Художественная фотосессия при естественном свете
+                  </p>
+                </div>
+                <div className="absolute top-4 left-4">
+                  <Badge variant="available">В наличии</Badge>
+                </div>
+                <div className="absolute top-4 right-4">
+                  <Badge variant="ooak">OOAK</Badge>
+                </div>
+              </div>
+
+              <CardHeader>
+                <div className="flex items-baseline justify-between">
+                  <CardTitle>«Селеста»</CardTitle>
+                  <span className="text-xl font-medium text-terracotta font-sans">
+                    420 BYN
+                  </span>
+                </div>
+                <CardDescription>
+                  Коллекция «Шепот осеннего леса» · Фарфор, шелк ручного крашения
+                </CardDescription>
+              </CardHeader>
+
+              <CardContent>
+                <p className="text-sm text-espresso-soft leading-relaxed line-clamp-2">
+                  Тонкая роспись надглазурными красками с многократным обжигом.
+                  Шарнирные соединения на эластичном жгуте с замшевой проклейкой.
+                </p>
+              </CardContent>
+
+              <CardFooter className="gap-2">
+                <Button
+                  className="flex-1"
+                  onClick={() =>
+                    toast.success("Бронь открыта!", {
+                      description: "Перейдите в корзину для подтверждения.",
+                    })
+                  }
+                >
+                  <ShoppingBag className="h-4 w-4" />
+                  Забронировать
+                </Button>
+                <Button variant="outline" size="icon">
+                  <Heart className="h-4 w-4" />
+                </Button>
+              </CardFooter>
+            </Card>
+
+            {/* Tabs for Doll Details */}
+            <div className="space-y-4">
+              <p className="text-xs uppercase tracking-wider font-semibold text-muted">
+                Табы информации о произведении
+              </p>
+              <Tabs defaultValue="story" className="w-full">
+                <TabsList className="w-full grid grid-cols-3">
+                  <TabsTrigger value="story">История</TabsTrigger>
+                  <TabsTrigger value="materials">Материалы</TabsTrigger>
+                  <TabsTrigger value="delivery">Доставка</TabsTrigger>
+                </TabsList>
+
+                <TabsContent
+                  value="story"
+                  className="rounded-xl border border-linen-dark bg-white p-5 text-sm text-espresso-soft space-y-3 leading-relaxed"
+                >
+                  <blockquote className="font-serif italic text-lg text-terracotta border-l-2 border-terracotta pl-3">
+                    «Она родилась в тихий ноябрьский вечер под мерный стук капель по стеклу мастерской...»
+                  </blockquote>
+                  <p>
+                    Селеста одета в многослойное платье из антикварного кружева и
+                    натурального шёлка, окрашенного корой дуба и ягодами бузины.
+                  </p>
+                </TabsContent>
+
+                <TabsContent
+                  value="materials"
+                  className="rounded-xl border border-linen-dark bg-white p-5 text-sm space-y-2 leading-relaxed"
+                >
+                  <div className="flex justify-between py-1 border-b border-linen">
+                    <span className="text-muted">Материал основы:</span>
+                    <span className="font-medium">Бисквитный фарфор Flashe</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-linen">
+                    <span className="text-muted">Роспись:</span>
+                    <span className="font-medium">Надглазурная, пастель</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-linen">
+                    <span className="text-muted">Волосы:</span>
+                    <span className="font-medium">Натуральный мохер (тибетская козочка)</span>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <span className="text-muted">Шарниры:</span>
+                    <span className="font-medium">14 точек артикуляции, замша</span>
+                  </div>
+                </TabsContent>
+
+                <TabsContent
+                  value="delivery"
+                  className="rounded-xl border border-linen-dark bg-white p-5 text-sm space-y-3 leading-relaxed"
+                >
+                  <p className="font-medium text-espresso flex items-center gap-1.5">
+                    <Truck className="h-4 w-4 text-terracotta" />
+                    Бережная упаковка в авторскую шкатулку
+                  </p>
+                  <p className="text-muted text-xs">
+                    Кукла надежно фиксируется в жесткой деревянной шкатулке с
+                    мягким бархатным ложементом. Сертификат подлинности с личной
+                    подписью мастера и серийным номером прилагается.
+                  </p>
+                </TabsContent>
+              </Tabs>
+
+              {/* Skeletons Preview */}
+              <div className="pt-4 space-y-2">
+                <p className="text-xs uppercase tracking-wider font-semibold text-muted">
+                  Скелетоны загрузки (Skeleton)
+                </p>
+                <div className="rounded-xl border border-linen-dark bg-white p-4 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-10 w-10 rounded-full" />
+                    <div className="space-y-1.5 flex-1">
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-3 w-1/2" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-16 w-full" />
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
         {/* Footer info */}
-        <footer className="border-t border-linen-dark pt-8 pb-16 text-center text-xs text-muted">
-          DollShop · OOAK Art Boutique & Gallery · Минск, Беларусь
+        <footer className="border-t border-linen-dark pt-8 pb-16 text-center text-xs text-muted space-y-2">
+          <p className="font-serif text-sm text-espresso">
+            DollShop · OOAK Art Boutique & Gallery
+          </p>
+          <p>
+            ИП Прокопенко А. В. · УНП 193758204 · Минск, Республика Беларусь
+          </p>
         </footer>
       </div>
     </div>

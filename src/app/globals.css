@@ -20,6 +20,32 @@
   --color-sage-light: #5F7463;
   --color-sage-subtle: #EDF2EE;
 
+  /* shadcn semantic color aliases */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted-bg: var(--muted);
+  --color-muted-fg: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
   --font-serif: "Cormorant Garamond", Georgia, serif;
   --font-sans: "Manrope", system-ui, -apple-system, sans-serif;
   --font-inter: "Inter", system-ui, -apple-system, sans-serif;
@@ -28,10 +54,30 @@
 :root {
   --background: #FAF8F5;
   --foreground: #1C1917;
+  --card: #FFFFFF;
+  --card-foreground: #1C1917;
+  --popover: #FAF8F5;
+  --popover-foreground: #1C1917;
+  --primary: #9A5B42;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F3EFE6;
+  --secondary-foreground: #1C1917;
+  --muted: #F3EFE6;
+  --muted-foreground: #78716C;
+  --accent: #F7EEEA;
+  --accent-foreground: #9A5B42;
+  --destructive: #B91C1C;
+  --destructive-foreground: #FFFFFF;
+  --border: #EAE4D8;
+  --input: #EAE4D8;
+  --ring: #9A5B42;
+  --radius: 0.75rem;
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
