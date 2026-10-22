@@ -17,7 +17,7 @@
 
 | Фаза | Название | Шаги | Статус |
 |---|---|---|---|
-| 1 | Фундамент, нейминг и дизайн-система | 1.0–1.5 | 🔄 В процессе (1.1 ✅, 1.2 ✅, 1.3 ✅, 1.4 ✅) |
+| 1 | Фундамент, нейминг и дизайн-система | 1.0–1.5 | ✅ Завершена (1.1–1.5 готовы) |
 | 2 | Витрина на моковых данных | 2.1–2.10 | ⬜ |
 | 3 | PostgreSQL: схема, функции брони, подключение витрины | 3.1–3.7 | ⬜ |
 | 4 | Мобильная админка и медиа-пайплайн (S3) | 4.1–4.9 | ⬜ |
@@ -54,10 +54,10 @@
 - **Файлы:** `src/components/layout/Container.tsx`, `src/components/layout/Header.tsx`, `src/components/layout/MobileNav.tsx`, `src/components/layout/Footer.tsx`, `src/app/(shop)/layout.tsx`, `src/app/(shop)/page.tsx`.
 - **✅ Готово:** Каркас полностью адаптивен (протестирован на 375px, 768px, 1440px), мобильное меню работает на базе Radix Sheet, юридический блок строго соответствует требованиям торговли в РБ. `npm run typecheck` ✅, `npm run lint` ✅, `npm run build` ✅.
 
-### Step 1.5 — Доменные типы, моки, утилиты
-- **Что делаем:** доменные типы + Zod-схемы; 8–10 моковых кукол во всех статусах (включая `reserved` с истёкшим и активным `reserved_until`); репозиторий `lib/data/catalog.ts` с мок-реализацией. Утилиты: `slugify` (ru → translit), `formatPrice` (BYN), `normalizeBelarusPhone` (+375). Настройка Vitest.
-- **Файлы:** `src/types/domain.ts`, `src/lib/schemas/*`, `src/lib/data/{catalog.ts,mock/*}`, `public/mock/*`, `src/lib/utils/{slugify,format,phone}.ts`, `vitest.config.ts`, тесты.
-- **✅ Готово, когда:** `npm test` зелёный: «Лиза в лунном свете» → `liza-v-lunnom-svete`; `350` → «350 BYN»; `8029 123-45-67` → `+375291234567`; черновики не попадают в публичные списки.
+### Step 1.5 — Доменные типы, моки, утилиты [x]
+- **Что делаем:** Доменные типы (`Doll`, `DollStatus`, `DollCategory`, `DollImage`, `Order`, `OrderCustomer`, `OrderDelivery`); Zod-схемы валидации (`dollSchema`, `createOrderSchema`); 10 моковых кукол во всех статусах (включая `reserved` с активным и истекшим таймером, а также черновик `isDraft: true`); репозиторий `src/lib/data/catalog.ts` с фильтрацией, пагинацией и проверкой истечения брони; утилиты: `slugify` (кириллица → транслит), `formatPrice` (BYN), `normalizeBelarusPhone` / `formatBelarusPhone` (+375); настройка Vitest и 28 модульных тестов.
+- **Файлы:** `src/types/domain.ts`, `src/lib/schemas/{doll,order}.ts`, `src/lib/data/{catalog.ts,mock/dolls.ts}`, `src/lib/utils/{slugify,format,phone}.ts`, `vitest.config.mts`, `src/lib/**/__tests__/*`.
+- **✅ Готово:** `npm test` полностью зеленый (5 файлов, 28 тестов): «Лиза в лунном свете» → `liza-v-lunnom-svete`; `350` → «350 BYN»; `8029 123-45-67` → `+375291234567`; черновики строго исключаются из публичной выдачи. `npm run typecheck` ✅, `npm run lint` ✅, `npm run build` ✅.
 
 ---
 
