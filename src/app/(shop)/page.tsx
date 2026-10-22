@@ -1,100 +1,104 @@
+import { Hero } from "@/components/shop/Hero";
+import { getDollBySlug } from "@/lib/data/catalog";
+import { Container } from "@/components/layout/Container";
 import Link from "next/link";
 import { Sparkles, ArrowRight, ShieldCheck, Heart, Truck } from "lucide-react";
-import { Container } from "@/components/layout/Container";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const featuredDoll = await getDollBySlug("selesta");
+
   return (
-    <div className="py-12 sm:py-20">
-      <Container className="space-y-16">
-        {/* Hero Section Preview */}
-        <section className="text-center space-y-6 max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-2 rounded-full bg-terracotta-subtle px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-terracotta border border-terracotta/20">
-            <Sparkles className="h-3.5 w-3.5" />
-            <span>Фаза 1 · Шаг 1.4 готов (Каркас сайта)</span>
+    <div className="flex flex-col min-h-full">
+      {/* 1. Atmospheric Hero Section (Step 2.1) */}
+      <Hero featuredDoll={featuredDoll} />
+
+      {/* 2. Boutique Values / Philosophy Section */}
+      <section className="border-t border-linen-dark bg-white py-12 sm:py-16">
+        <Container className="space-y-10">
+          <div className="text-center max-w-2xl mx-auto space-y-3">
+            <span className="text-xs uppercase tracking-widest text-muted font-semibold">
+              Ценности мастерской
+            </span>
+            <h2 className="font-serif text-3xl sm:text-4xl font-light text-espresso">
+              Искусство создания куклы
+            </h2>
+            <p className="text-sm text-muted leading-relaxed">
+              Мы создаем не игрушки, а коллекционные скульптурные произведения с
+              живым характером для ценителей прекрасного.
+            </p>
           </div>
 
-          <h1 className="font-serif text-4xl sm:text-6xl font-light tracking-tight text-espresso leading-tight">
-            Авторские коллекционные куклы ручной работы
-          </h1>
-
-          <p className="font-serif italic text-xl sm:text-2xl text-terracotta max-w-xl mx-auto">
-            «Каждое создание — единственный в мире экземпляр с собственной душой и историей.»
-          </p>
-
-          <p className="text-base text-muted max-w-xl mx-auto leading-relaxed">
-            Бутик художественных шарнирных и статичных кукол из бисквитного фарфора.
-            Тончайшая ручная роспись, антикварные ткани, натуральный мохер.
-          </p>
-
-          <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
-            <Link href="/styleguide">
-              <Button size="lg" className="rounded-full">
-                Витрина дизайн-системы (Styleguide)
-                <ArrowRight className="h-4 w-4 ml-1" />
-              </Button>
-            </Link>
-
-            <Link href="/styleguide#components">
-              <Button variant="outline" size="lg" className="rounded-full">
-                Интерактивные компоненты
-              </Button>
-            </Link>
-          </div>
-        </section>
-
-        {/* Brand Highlights */}
-        <section className="grid grid-cols-1 gap-6 sm:grid-cols-3 pt-6 border-t border-linen-dark">
-          <div className="rounded-2xl border border-linen-dark bg-white p-6 space-y-3 shadow-xs">
-            <div className="flex items-center gap-2">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-terracotta-subtle text-terracotta">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+            <div className="rounded-2xl border border-linen-dark bg-alabaster/60 p-6 space-y-3 transition-colors hover:border-terracotta/40">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-terracotta-subtle text-terracotta">
                 <Heart className="h-5 w-5" />
-              </span>
-              <Badge variant="ooak">1 of 1</Badge>
+              </div>
+              <h3 className="font-serif text-xl font-medium text-espresso">
+                Единственный экземпляр
+              </h3>
+              <p className="text-xs text-muted leading-relaxed">
+                Каждая кукла уникальна. Формы, роспись лица и наряды создаются в
+                единственном числе (OOAK). Повторы исключены.
+              </p>
             </div>
-            <h3 className="font-serif text-xl font-medium text-espresso">
-              Только OOAK
-            </h3>
-            <p className="text-xs text-muted leading-relaxed">
-              One Of A Kind — ни одного точного повтора. У каждой куклы персональный
-              паспорт с подписью мастера и серийным номером.
-            </p>
-          </div>
 
-          <div className="rounded-2xl border border-linen-dark bg-white p-6 space-y-3 shadow-xs">
-            <div className="flex items-center gap-2">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sage-subtle text-sage">
-                <Truck className="h-5 w-5" />
-              </span>
-              <Badge variant="secondary">Беларусь</Badge>
+            <div className="rounded-2xl border border-linen-dark bg-alabaster/60 p-6 space-y-3 transition-colors hover:border-sage/40">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-sage-subtle text-sage">
+                <Sparkles className="h-5 w-5" />
+              </div>
+              <h3 className="font-serif text-xl font-medium text-espresso">
+                Благородные материалы
+              </h3>
+              <p className="text-xs text-muted leading-relaxed">
+                Французский бисквитный фарфор, натуральный шёлк ручного окрашивания,
+                старинное кружево и мохер тибетской козочки.
+              </p>
             </div>
-            <h3 className="font-serif text-xl font-medium text-espresso">
-              Доставка Европочтой
-            </h3>
-            <p className="text-xs text-muted leading-relaxed">
-              Надежная доставка в любое отделение по РБ за 2–3 дня. Каждая работа
-              упакована в твердую деревянную шкатулку с мягким ложементом.
-            </p>
-          </div>
 
-          <div className="rounded-2xl border border-linen-dark bg-white p-6 space-y-3 shadow-xs">
-            <div className="flex items-center gap-2">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-linen text-espresso">
+            <div className="rounded-2xl border border-linen-dark bg-alabaster/60 p-6 space-y-3 transition-colors hover:border-terracotta/40">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-linen text-espresso">
                 <ShieldCheck className="h-5 w-5" />
-              </span>
-              <Badge variant="outline">Указ № 60</Badge>
+              </div>
+              <h3 className="font-serif text-xl font-medium text-espresso">
+                Паспорт и шкатулка
+              </h3>
+              <p className="text-xs text-muted leading-relaxed">
+                Каждая работа бережно упаковывается в деревянную шкатулку с бархатным
+                ложементом. Прилагается авторский паспорт подлинности.
+              </p>
             </div>
-            <h3 className="font-serif text-xl font-medium text-espresso">
-              Официально в РБ
-            </h3>
-            <p className="text-xs text-muted leading-relaxed">
-              ИП Прокопенко А. В., регистрация в Торговом реестре РБ, соблюдение
-              Закона «О защите прав потребителей» и Закона № 99-З о персональных данных.
-            </p>
           </div>
-        </section>
-      </Container>
+        </Container>
+      </section>
+
+      {/* 3. Fast link to Styleguide / Component Showcase */}
+      <section className="border-t border-linen-dark bg-linen/30 py-8">
+        <Container className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-lg bg-terracotta-subtle flex items-center justify-center text-terracotta">
+              <Truck className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-xs font-medium text-espresso">
+                Доставка Европочтой по всей Беларуси
+              </p>
+              <p className="text-[11px] text-muted">
+                Срок доставки 2–3 дня с трек-номером и бережной упаковкой
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Link href="/styleguide">
+              <Button variant="outline" size="sm" className="rounded-full text-xs">
+                Посмотреть Styleguide
+                <ArrowRight className="h-3.5 w-3.5 ml-1" />
+              </Button>
+            </Link>
+          </div>
+        </Container>
+      </section>
     </div>
   );
 }

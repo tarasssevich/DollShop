@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FAF8F5"/>
+      <stop offset="50%" stop-color="#F3EFE6"/>
+      <stop offset="100%" stop-color="#EAE4D8"/>
+    </linearGradient>
+    <linearGradient id="terracotta-soft" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#B47157"/>
+      <stop offset="100%" stop-color="#9A5B42"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="50%" cy="40%" r="45%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.8"/>
+      <stop offset="60%" stop-color="#F7EEEA" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#FAF8F5" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft-shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#1C1917" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="800" height="1000" fill="url(#bg-grad)"/>
+
+  <!-- Subtle Art Texture Lines -->
+  <circle cx="400" cy="420" r="320" fill="none" stroke="#EAE4D8" stroke-width="1.5" stroke-dasharray="4 6"/>
+  <circle cx="400" cy="420" r="260" fill="url(#halo)"/>
+
+  <!-- Decorative Botanical Elements (Sage & Terracotta) -->
+  <g opacity="0.4">
+    <path d="M120 780 C160 700, 200 680, 240 690 C220 720, 180 750, 120 780 Z" fill="#4A5D4E"/>
+    <path d="M150 720 C200 660, 240 650, 270 670 C240 690, 200 710, 150 720 Z" fill="#5F7463"/>
+    <path d="M680 790 C640 710, 600 690, 560 700 C580 730, 620 760, 680 790 Z" fill="#9A5B42"/>
+    <path d="M650 730 C600 670, 560 660, 530 680 C560 700, 600 720, 650 730 Z" fill="#B47157"/>
+  </g>
+
+  <!-- Main Doll Figure Silhouette & Drapery -->
+  <g filter="url(#soft-shadow)">
+    <!-- Gown / Dress Layer Back -->
+    <path d="M300 480 Q220 700 180 920 L620 920 Q580 700 500 480 Z" fill="#EAE4D8"/>
+    <!-- Silk Overskirt with folds -->
+    <path d="M320 500 C270 650, 240 800, 220 920 L580 920 C560 800, 530 650, 480 500 Z" fill="#F3EFE6"/>
+    <!-- Fold shadows -->
+    <path d="M380 520 Q360 720 340 920" stroke="#E5DEC9" stroke-width="3" fill="none"/>
+    <path d="M420 520 Q440 720 460 920" stroke="#E5DEC9" stroke-width="3" fill="none"/>
+    <path d="M400 520 L400 920" stroke="#DCD3BA" stroke-width="2" fill="none"/>
+
+    <!-- Bodice & Corset -->
+    <path d="M340 370 L460 370 L440 500 L360 500 Z" fill="url(#terracotta-soft)"/>
+    <!-- Lace Collar & Shoulders -->
+    <path d="M320 360 Q400 390 480 360 Q450 330 400 340 Q350 330 320 360 Z" fill="#FAF8F5" stroke="#EAE4D8" stroke-width="1.5"/>
+
+    <!-- Porcelain Neck -->
+    <rect x="382" y="290" width="36" height="55" rx="10" fill="#FAF8F5"/>
+
+    <!-- Porcelain Head & Face -->
+    <ellipse cx="400" cy="240" rx="65" ry="78" fill="#FFFDFB"/>
+    <!-- Delicate Chin & Cheek Blush -->
+    <ellipse cx="370" cy="255" rx="14" ry="10" fill="#F7EEEA" opacity="0.8"/>
+    <ellipse cx="430" cy="255" rx="14" ry="10" fill="#F7EEEA" opacity="0.8"/>
+
+    <!-- Closed serene eyes & lashes -->
+    <path d="M365 240 Q375 246 385 240" stroke="#2D2825" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <path d="M415 240 Q425 246 435 240" stroke="#2D2825" stroke-width="2" fill="none" stroke-linecap="round"/>
+
+    <!-- Eyebrows -->
+    <path d="M362 230 Q375 224 388 231" stroke="#834B36" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+    <path d="M412 231 Q425 224 438 230" stroke="#834B36" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+
+    <!-- Lips (Terracotta soft accent) -->
+    <path d="M394 275 Q400 273 406 275 Q400 282 394 275 Z" fill="#9A5B42"/>
+
+    <!-- Flowing Hair / Mohair Curls -->
+    <path d="M340 220 C320 180, 360 140, 400 140 C440 140, 480 180, 460 220 C480 200, 490 280, 480 340 C470 300, 460 270, 460 250 C440 280, 450 360, 440 400 C430 350, 435 300, 435 280 C365 280, 370 350, 360 400 C350 360, 360 280, 340 250 C340 270, 330 300, 320 340 C310 280, 320 200, 340 220 Z" fill="#42291E" opacity="0.95"/>
+    <path d="M370 145 C390 135, 410 135, 430 145 C410 140, 390 140, 370 145 Z" stroke="#834B36" stroke-width="2" fill="none"/>
+
+    <!-- Silk Headband with delicate blossom -->
+    <path d="M348 200 Q400 185 452 200" stroke="#9A5B42" stroke-width="4" fill="none"/>
+    <circle cx="360" cy="195" r="7" fill="#FAF8F5" stroke="#9A5B42" stroke-width="1.5"/>
+    <circle cx="360" cy="195" r="2.5" fill="#9A5B42"/>
+  </g>
+
+  <!-- Framing Border and Signature Monogram -->
+  <rect x="24" y="24" width="752" height="952" rx="16" fill="none" stroke="#EAE4D8" stroke-width="1.5"/>
+  <rect x="36" y="36" width="728" height="928" rx="12" fill="none" stroke="#FAF8F5" stroke-width="1"/>
+
+  <text x="400" y="945" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, serif" font-style="italic" font-size="16" fill="#78716C" letter-spacing="3">
+    OOAK · АВТОРСКИЙ ФАРФОР · СЕЛЕСТА
+  </text>
+</svg>

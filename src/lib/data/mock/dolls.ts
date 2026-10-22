@@ -39,7 +39,7 @@ export const MOCK_DOLLS: Doll[] = [
     images: [
       {
         id: "img-001-1",
-        url: "/mock/dolls/selesta-1.webp",
+        url: "/mock/dolls/selesta-1.svg",
         blurDataUrl: BLUR_PLACEHOLDER,
         alt: "Фарфоровая кукла Селеста — общий вид в полный рост",
         width: 1200,
@@ -48,7 +48,7 @@ export const MOCK_DOLLS: Doll[] = [
       },
       {
         id: "img-001-2",
-        url: "/mock/dolls/selesta-2.webp",
+        url: "/mock/dolls/selesta-1.svg",
         blurDataUrl: BLUR_PLACEHOLDER,
         alt: "Портрет куклы Селеста крупным планом, роспись лица",
         width: 1200,
