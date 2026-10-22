@@ -17,7 +17,7 @@
 
 | Фаза | Название | Шаги | Статус |
 |---|---|---|---|
-| 1 | Фундамент, нейминг и дизайн-система | 1.0–1.5 | 🔄 В процессе (1.1 ✅) |
+| 1 | Фундамент, нейминг и дизайн-система | 1.0–1.5 | 🔄 В процессе (1.1 ✅, 1.2 ✅) |
 | 2 | Витрина на моковых данных | 2.1–2.10 | ⬜ |
 | 3 | PostgreSQL: схема, функции брони, подключение витрины | 3.1–3.7 | ⬜ |
 | 4 | Мобильная админка и медиа-пайплайн (S3) | 4.1–4.9 | ⬜ |
@@ -39,10 +39,10 @@
 - **Файлы:** `package.json`, `tsconfig.json`, `next.config.ts`, `eslint.config.mjs`, `.prettierrc`, `.gitignore`, `.env.example`, `README.md`, `src/app/{layout,page}.tsx`.
 - **✅ Готово:** Каркас Next.js 16.4.2 (App Router, Turbopack, React 19, TypeScript strict, Tailwind CSS v4, ESLint 9, Prettier) развернут. `npm run typecheck` ✅, `npm run lint` ✅, `npm run build` ✅. Первый коммит выполнен.
 
-### Step 1.2 — Дизайн-токены, шрифты, styleguide
-- **Что делаем:** палитра в `@theme` (`alabaster #FAF8F5`, `linen #F3EFE6`, `espresso #1C1917`, `muted #78716C`, **основной акцент `terracotta #9A5B42`**, вторичный `sage #4A5D4E` + оттенки hover/border). Шрифты `next/font` с `subsets: ['cyrillic','latin']`: **Cormorant Garamond** (заголовки) + **Manrope** (текст, цены, интерфейс); на styleguide сравниваем Manrope с Inter. Страница `/styleguide` только в dev.
-- **Файлы:** `src/app/globals.css`, `src/lib/fonts.ts`, `src/app/styleguide/page.tsx`.
-- **✅ Готово, когда:** на `/styleguide` видны цвета, шкала заголовков, текст и цены «350 BYN»; кириллица отображается без фоллбеков; пара шрифтов утверждена.
+### Step 1.2 — Дизайн-токены, шрифты, styleguide [x]
+- **Что делаем:** палитра в `@theme inline` (`alabaster #FAF8F5`, `linen #F3EFE6`, `espresso #1C1917`, `muted #78716C`, **основной акцент `terracotta #9A5B42`**, вторичный `sage #4A5D4E` + оттенки hover/border). Шрифты: **Cormorant Garamond** (заголовки, цитаты) + **Manrope** (текст, характеристики, цены BYN) + сравнение с Inter. Страница `/styleguide` с интерактивной демонстрацией палитры, заголовков H1–H4, цитат, бейджей статусов кукол и цен в BYN.
+- **Файлы:** `src/app/globals.css`, `src/lib/fonts.ts`, `src/app/layout.tsx`, `src/app/styleguide/page.tsx`.
+- **✅ Готово:** Токены палитры и шрифтов внедрены. Страница `/styleguide` создана и успешно статически пререндерится. `npm run typecheck` ✅, `npm run lint` ✅, `npm run build` ✅. Кириллическая шрифтовая пара протестирована.
 
 ### Step 1.3 — shadcn/ui под бренд
 - **Что делаем:** `shadcn init`; `button`, `badge`, `card`, `input`, `textarea`, `label`, `dialog`, `sheet`, `sonner`, `skeleton`, `separator`, `tabs`, `checkbox`, `radio-group`. Переменные shadcn → палитра бренда; варианты кнопок (`primary` терракота, `secondary` шалфей, `ghost`, `link`) и бейджи статусов.

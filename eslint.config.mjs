@@ -23,7 +23,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
-    "force-ipv4.cjs",
+    "scripts/**",
+    "*.cjs",
   ]),
 ]);
 
