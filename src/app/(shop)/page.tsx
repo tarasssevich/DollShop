@@ -1,19 +1,30 @@
 import { Hero } from "@/components/shop/Hero";
-import { getDollBySlug } from "@/lib/data/catalog";
+import { FeaturedSection } from "@/components/shop/FeaturedSection";
+import { getDollBySlug, getFeaturedDolls } from "@/lib/data/catalog";
 import { Container } from "@/components/layout/Container";
 import Link from "next/link";
 import { Sparkles, ArrowRight, ShieldCheck, Heart, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default async function HomePage() {
-  const featuredDoll = await getDollBySlug("selesta");
+  const [featuredDoll, featuredDolls] = await Promise.all([
+    getDollBySlug("selesta"),
+    getFeaturedDolls(6),
+  ]);
 
   return (
     <div className="flex flex-col min-h-full">
       {/* 1. Atmospheric Hero Section (Step 2.1) */}
       <Hero featuredDoll={featuredDoll} />
 
-      {/* 2. Boutique Values / Philosophy Section */}
+      {/* 2. Featured Dolls Showcase Grid (Step 2.2) */}
+      <FeaturedSection
+        dolls={featuredDolls}
+        title="Коллекция авторских кукол"
+        subtitle="Каждая работа — уникальное фарфоровое создание в единственном экземпляре (OOAK), готовое стать жемчужиной вашей коллекции."
+      />
+
+      {/* 3. Boutique Values / Philosophy Section */}
       <section className="border-t border-linen-dark bg-white py-12 sm:py-16">
         <Container className="space-y-10">
           <div className="text-center max-w-2xl mx-auto space-y-3">
@@ -72,7 +83,7 @@ export default async function HomePage() {
         </Container>
       </section>
 
-      {/* 3. Fast link to Styleguide / Component Showcase */}
+      {/* 4. Delivery & Fast link to Styleguide */}
       <section className="border-t border-linen-dark bg-linen/30 py-8">
         <Container className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">

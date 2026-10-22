@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-beat" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FAF8F5"/>
+      <stop offset="60%" stop-color="#F7EEEA"/>
+      <stop offset="100%" stop-color="#EAE4D8"/>
+    </linearGradient>
+    <radialGradient id="halo-beat" cx="50%" cy="38%" r="40%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#FAF8F5" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="shadow-beat" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#1C1917" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+  <rect width="800" height="1000" fill="url(#bg-beat)"/>
+  <circle cx="400" cy="400" r="280" fill="url(#halo-beat)"/>
+
+  <g filter="url(#shadow-beat)">
+    <path d="M305 480 Q230 700 190 920 L610 920 Q570 700 495 480 Z" fill="#9A5B42"/>
+    <path d="M325 500 C280 650, 250 800, 230 920 L570 920 C550 800, 520 650, 475 500 Z" fill="#B47157"/>
+    <path d="M345 375 L455 375 L435 490 L365 490 Z" fill="#834B36"/>
+    <path d="M325 365 Q400 390 475 365 Q445 340 400 348 Q355 340 325 365 Z" fill="#FAF8F5" stroke="#EAE4D8" stroke-width="1.5"/>
+    <rect x="384" y="295" width="32" height="50" rx="8" fill="#FFFDFB"/>
+    <ellipse cx="400" cy="240" rx="62" ry="74" fill="#FFFDFB"/>
+    <ellipse cx="372" cy="255" rx="12" ry="8" fill="#F7EEEA"/>
+    <ellipse cx="428" cy="255" rx="12" ry="8" fill="#F7EEEA"/>
+    <path d="M368 240 Q376 245 384 240" stroke="#2D2825" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <path d="M416 240 Q424 245 432 240" stroke="#2D2825" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <path d="M395 274 Q400 272 405 274 Q400 280 395 274 Z" fill="#9A5B42"/>
+    <!-- Copper Auburn Hair -->
+    <path d="M340 220 C320 180, 360 140, 400 140 C440 140, 480 180, 460 220 C480 200, 490 275, 480 335 C470 295, 460 265, 460 245 C440 275, 450 355, 440 395 C430 345, 435 295, 435 275 C365 275, 370 345, 360 395 C350 355, 360 275, 340 245 C340 265, 330 295, 320 335 C310 275, 320 200, 340 220 Z" fill="#78350F" opacity="0.95"/>
+  </g>
+  <rect x="24" y="24" width="752" height="952" rx="16" fill="none" stroke="#EAE4D8" stroke-width="1.5"/>
+  <text x="400" y="945" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, serif" font-style="italic" font-size="16" fill="#78716C" letter-spacing="3">
+    OOAK · АВТОРСКИЙ ФАРФОР · БЕАТРИС
+  </text>
+</svg>

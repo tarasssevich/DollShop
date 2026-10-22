@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-aur" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FAF8F5"/>
+      <stop offset="60%" stop-color="#F7EEEA"/>
+      <stop offset="100%" stop-color="#EFE2DC"/>
+    </linearGradient>
+    <radialGradient id="halo-aur" cx="50%" cy="38%" r="40%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#F7EEEA" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="shadow-aur" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#9A5B42" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+  <rect width="800" height="1000" fill="url(#bg-aur)"/>
+  <circle cx="400" cy="400" r="280" fill="url(#halo-aur)"/>
+
+  <g filter="url(#shadow-aur)">
+    <path d="M330 500 Q260 700 230 920 L570 920 Q540 700 470 500 Z" fill="#F7EEEA"/>
+    <path d="M340 510 C310 650, 280 780, 260 920 L540 920 C520 780, 490 650, 460 510 Z" fill="#FFFFFF"/>
+    <path d="M360 400 L440 400 L425 500 L375 500 Z" fill="#B47157"/>
+    <path d="M345 390 Q400 410 455 390 Q435 370 400 375 Q365 370 345 390 Z" fill="#FAF8F5" stroke="#EAE4D8" stroke-width="1.5"/>
+    <rect x="386" y="325" width="28" height="45" rx="6" fill="#FFFDFB"/>
+    <ellipse cx="400" cy="270" rx="55" ry="65" fill="#FFFDFB"/>
+    <ellipse cx="375" cy="282" rx="11" ry="8" fill="#F7EEEA"/>
+    <ellipse cx="425" cy="282" rx="11" ry="8" fill="#F7EEEA"/>
+    <path d="M372 270 Q380 274 388 270" stroke="#2D2825" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+    <path d="M412 270 Q420 274 428 270" stroke="#2D2825" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+    <path d="M396 298 Q400 296 404 298 Q400 304 396 298 Z" fill="#9A5B42"/>
+    <!-- Soft Rose-Brown Miniature Curls -->
+    <path d="M350 250 C330 215, 365 180, 400 180 C435 180, 470 215, 450 250 C465 240, 475 290, 465 340 C455 310, 450 280, 450 260 C430 290, 440 350, 430 380 C420 340, 425 300, 425 280 C375 280, 380 340, 370 380 C360 350, 370 290, 350 260 C350 280, 345 310, 335 340 C325 290, 335 240, 350 250 Z" fill="#754738" opacity="0.95"/>
+  </g>
+  <rect x="24" y="24" width="752" height="952" rx="16" fill="none" stroke="#EAE4D8" stroke-width="1.5"/>
+  <text x="400" y="945" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, serif" font-style="italic" font-size="16" fill="#78716C" letter-spacing="3">
+    OOAK · БУДУАРНАЯ МИНИАТЮРА · АУРЕЛИЯ
+  </text>
+</svg>

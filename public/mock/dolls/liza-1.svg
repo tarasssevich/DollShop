@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-liza" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FAF8F5"/>
+      <stop offset="60%" stop-color="#EAE4D8"/>
+      <stop offset="100%" stop-color="#D5CEBF"/>
+    </linearGradient>
+    <radialGradient id="halo-liza" cx="50%" cy="38%" r="42%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#EAE4D8" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="shadow-liza" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#1C1917" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+  <rect width="800" height="1000" fill="url(#bg-liza)"/>
+  <circle cx="400" cy="400" r="290" fill="url(#halo-liza)"/>
+
+  <g filter="url(#shadow-liza)">
+    <path d="M295 470 Q215 700 175 920 L625 920 Q585 700 505 470 Z" fill="#1E293B"/>
+    <path d="M315 490 C265 650, 235 800, 215 920 L585 920 C565 800, 535 650, 485 490 Z" fill="#334155"/>
+    <path d="M340 365 L460 365 L440 485 L360 485 Z" fill="#0F172A"/>
+    <path d="M320 355 Q400 385 480 355 Q450 325 400 335 Q350 325 320 355 Z" fill="#FAF8F5" stroke="#CBD5E1" stroke-width="2"/>
+    <rect x="382" y="285" width="36" height="55" rx="10" fill="#FFFDFB"/>
+    <ellipse cx="400" cy="235" rx="64" ry="76" fill="#FFFFFF"/>
+    <ellipse cx="370" cy="250" rx="13" ry="9" fill="#F1F5F9"/>
+    <ellipse cx="430" cy="250" rx="13" ry="9" fill="#F1F5F9"/>
+    <path d="M366 235 Q376 241 386 235" stroke="#0F172A" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <path d="M414 235 Q424 241 434 235" stroke="#0F172A" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <path d="M394 272 Q400 269 406 272 Q400 279 394 272 Z" fill="#475569"/>
+    <!-- Pale Moonlit Platinum Curls -->
+    <path d="M335 215 C310 170, 355 130, 400 130 C445 130, 490 170, 465 215 C485 200, 495 270, 485 340 C475 300, 465 265, 465 245 C445 275, 455 355, 445 405 C435 350, 440 300, 440 275 C360 275, 365 350, 355 405 C345 355, 355 275, 335 245 C335 265, 325 300, 315 340 C305 270, 315 200, 335 215 Z" fill="#E2E8F0" opacity="0.98"/>
+  </g>
+  <rect x="24" y="24" width="752" height="952" rx="16" fill="none" stroke="#EAE4D8" stroke-width="1.5"/>
+  <text x="400" y="945" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, serif" font-style="italic" font-size="16" fill="#78716C" letter-spacing="3">
+    В ЧАСТНОЙ КОЛЛЕКЦИИ · ЛИЗА В ЛУННОМ СВЕТЕ
+  </text>
+</svg>

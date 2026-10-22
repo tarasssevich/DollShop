@@ -92,7 +92,7 @@ export const MOCK_DOLLS: Doll[] = [
     images: [
       {
         id: "img-002-1",
-        url: "/mock/dolls/mirabel-1.webp",
+        url: "/mock/dolls/mirabel-1.svg",
         blurDataUrl: BLUR_PLACEHOLDER,
         alt: "Кукла Мирабель в льняном платье",
         width: 1200,
@@ -138,7 +138,7 @@ export const MOCK_DOLLS: Doll[] = [
     images: [
       {
         id: "img-003-1",
-        url: "/mock/dolls/eleonora-1.webp",
+        url: "/mock/dolls/eleonora-1.svg",
         blurDataUrl: BLUR_PLACEHOLDER,
         alt: "Парадная фарфоровая кукла Элеонора",
         width: 1200,
@@ -178,7 +178,7 @@ export const MOCK_DOLLS: Doll[] = [
     images: [
       {
         id: "img-004-1",
-        url: "/mock/dolls/aureliya-1.webp",
+        url: "/mock/dolls/aureliya-1.svg",
         blurDataUrl: BLUR_PLACEHOLDER,
         alt: "Кукла-миниатюра Аурелия",
         width: 1200,
@@ -217,7 +217,7 @@ export const MOCK_DOLLS: Doll[] = [
     images: [
       {
         id: "img-005-1",
-        url: "/mock/dolls/beatris-1.webp",
+        url: "/mock/dolls/beatris-1.svg",
         blurDataUrl: BLUR_PLACEHOLDER,
         alt: "Забронированная кукла Беатрис",
         width: 1200,
@@ -257,7 +257,7 @@ export const MOCK_DOLLS: Doll[] = [
     images: [
       {
         id: "img-006-1",
-        url: "/mock/dolls/klarissa-1.webp",
+        url: "/mock/dolls/mirabel-1.svg",
         blurDataUrl: BLUR_PLACEHOLDER,
         alt: "Кукла Кларисса с истекшим резервом",
         width: 1200,
@@ -297,7 +297,7 @@ export const MOCK_DOLLS: Doll[] = [
     images: [
       {
         id: "img-007-1",
-        url: "/mock/dolls/liza-1.webp",
+        url: "/mock/dolls/liza-1.svg",
         blurDataUrl: BLUR_PLACEHOLDER,
         alt: "Кукла Лиза в лунном свете в частной коллекции",
         width: 1200,
@@ -335,7 +335,7 @@ export const MOCK_DOLLS: Doll[] = [
     images: [
       {
         id: "img-008-1",
-        url: "/mock/dolls/venice-1.webp",
+        url: "/mock/dolls/eleonora-1.svg",
         blurDataUrl: BLUR_PLACEHOLDER,
         alt: "Кукла Венецианская тайна",
         width: 1200,
@@ -374,7 +374,7 @@ export const MOCK_DOLLS: Doll[] = [
     images: [
       {
         id: "img-009-1",
-        url: "/mock/dolls/noktyurn-1.webp",
+        url: "/mock/dolls/beatris-1.svg",
         blurDataUrl: BLUR_PLACEHOLDER,
         alt: "Кукла Ноктюрн в процессе создания",
         width: 1200,
