@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1000" width="100%" height="100%">
+  <defs>
+    <linearGradient id="studio-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FAF8F5"/>
+      <stop offset="50%" stop-color="#F3EFE6"/>
+      <stop offset="100%" stop-color="#EAE4D8"/>
+    </linearGradient>
+    <radialGradient id="sun-halo" cx="65%" cy="30%" r="55%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.9"/>
+      <stop offset="60%" stop-color="#F7EEEA" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#FAF8F5" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="studio-shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#1C1917" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="900" height="1000" fill="url(#studio-bg)"/>
+  <rect width="900" height="1000" fill="url(#sun-halo)"/>
+
+  <!-- Studio Arch Window -->
+  <path d="M550 120 C750 120, 800 240, 800 480 L800 850 L450 850 L450 480 C450 240, 500 120, 550 120 Z" fill="#FFFFFF" opacity="0.6"/>
+  <path d="M550 120 C750 120, 800 240, 800 480 L800 850 L450 850 L450 480 C450 240, 500 120, 550 120 Z" fill="none" stroke="#EAE4D8" stroke-width="2"/>
+  <line x1="625" y1="130" x2="625" y2="850" stroke="#EAE4D8" stroke-width="1.5"/>
+  <line x1="450" y1="460" x2="800" y2="460" stroke="#EAE4D8" stroke-width="1.5"/>
+
+  <!-- Wooden Workbench / Table -->
+  <path d="M80 720 L820 720 L820 940 L80 940 Z" fill="#EAE4D8"/>
+  <path d="M60 710 L840 710 L820 740 L80 740 Z" fill="#DCD3BA"/>
+
+  <!-- Work Elements on Table -->
+  <!-- Linen fabric scroll -->
+  <path d="M120 760 Q200 740 280 770 L260 840 Q180 810 100 830 Z" fill="#F3EFE6" stroke="#DCD3BA" stroke-width="1.5"/>
+  <!-- Paint pots / Pigment jars (Sage, Terracotta) -->
+  <ellipse cx="290" cy="740" rx="16" ry="8" fill="#4A5D4E"/>
+  <rect x="274" y="725" width="32" height="15" fill="#5F7463" rx="3"/>
+  <ellipse cx="330" cy="735" rx="16" ry="8" fill="#9A5B42"/>
+  <rect x="314" y="720" width="32" height="15" fill="#B47157" rx="3"/>
+  <ellipse cx="370" cy="745" rx="18" ry="9" fill="#1C1917"/>
+  <rect x="352" y="730" width="36" height="15" fill="#2D2825" rx="3"/>
+
+  <!-- Fine Sculpting Brushes & Tools -->
+  <line x1="260" y1="760" x2="380" y2="700" stroke="#834B36" stroke-width="3" stroke-linecap="round"/>
+  <line x1="280" y1="770" x2="400" y2="710" stroke="#78716C" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- Master at Work (Silhouette in Warm Light) -->
+  <g filter="url(#studio-shadow)">
+    <!-- Master Body / Linen Apron -->
+    <path d="M160 520 C180 440, 240 400, 310 400 C370 400, 420 440, 440 520 L450 780 L150 780 Z" fill="#2D2825"/>
+    <path d="M220 430 L380 430 L400 750 L200 750 Z" fill="#FAF8F5" opacity="0.95"/>
+    <!-- Apron Straps & Terracotta Stitching -->
+    <line x1="240" y1="430" x2="220" y2="520" stroke="#9A5B42" stroke-width="2"/>
+    <line x1="360" y1="430" x2="380" y2="520" stroke="#9A5B42" stroke-width="2"/>
+
+    <!-- Master Arms leaning over porcelain bust -->
+    <path d="M180 500 Q260 560 350 560" stroke="#2D2825" stroke-width="24" stroke-linecap="round" fill="none"/>
+    <path d="M420 500 Q380 550 340 565" stroke="#2D2825" stroke-width="20" stroke-linecap="round" fill="none"/>
+
+    <!-- Master Head & Profile (Soft contemplative pose) -->
+    <ellipse cx="300" cy="310" rx="42" ry="50" fill="#2D2825"/>
+    <!-- Hair bun / Artist knot -->
+    <ellipse cx="270" cy="275" rx="24" ry="22" fill="#1C1917"/>
+    <!-- Fine brush in hand -->
+    <line x1="350" y1="560" x2="430" y2="585" stroke="#B47157" stroke-width="2.5" stroke-linecap="round"/>
+    <polygon points="430,585 436,587 433,583" fill="#9A5B42"/>
+
+    <!-- Porcelain Doll Bust on Wooden Stand -->
+    <!-- Wooden Turntable -->
+    <ellipse cx="490" cy="680" rx="55" ry="16" fill="#DCD3BA"/>
+    <rect x="475" y="640" width="30" height="40" fill="#C5BA9F"/>
+    <ellipse cx="490" cy="640" rx="40" ry="12" fill="#DCD3BA"/>
+
+    <!-- Porcelain Doll Torso -->
+    <path d="M465 570 L515 570 L505 640 L475 640 Z" fill="#FAF8F5" stroke="#EAE4D8" stroke-width="1.5"/>
+    <!-- Porcelain Neck -->
+    <rect x="482" y="540" width="16" height="30" rx="4" fill="#FAF8F5"/>
+    <!-- Delicate Porcelain Head -->
+    <ellipse cx="490" cy="510" rx="28" ry="34" fill="#FFFDFB"/>
+    <!-- Cheeks blush & Eyes -->
+    <ellipse cx="478" cy="518" rx="6" ry="4" fill="#F7EEEA"/>
+    <ellipse cx="502" cy="518" rx="6" ry="4" fill="#F7EEEA"/>
+    <path d="M476 510 Q480 513 484 510" stroke="#2D2825" stroke-width="1.2" fill="none"/>
+    <path d="M496 510 Q500 513 504 510" stroke="#2D2825" stroke-width="1.2" fill="none"/>
+    <path d="M488 528 Q490 526 492 528" stroke="#9A5B42" stroke-width="1.2" fill="none"/>
+  </g>
+
+  <!-- Framing Border & Title -->
+  <rect x="24" y="24" width="852" height="952" rx="16" fill="none" stroke="#EAE4D8" stroke-width="1.5"/>
+  <text x="450" y="960" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, serif" font-style="italic" font-size="16" fill="#78716C" letter-spacing="3">
+    МАСТЕРСКАЯ АВТОРСКОЙ КУКЛЫ · МИНСК, БЕЛАРУСЬ
+  </text>
+</svg>

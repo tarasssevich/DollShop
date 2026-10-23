@@ -1,5 +1,6 @@
 import { Hero } from "@/components/shop/Hero";
 import { CatalogTabs } from "@/components/shop/CatalogTabs";
+import { AboutSection } from "@/components/shop/AboutSection";
 import { getDollBySlug, getDolls } from "@/lib/data/catalog";
 import { Container } from "@/components/layout/Container";
 import Link from "next/link";
@@ -80,7 +81,10 @@ export default async function HomePage() {
         </Container>
       </section>
 
-      {/* 3. Boutique Values / Philosophy Section */}
+      {/* 3. About Master Showcase Section (Step 2.4) */}
+      <AboutSection />
+
+      {/* 4. Boutique Values / Philosophy Section */}
       <section className="border-t border-linen-dark bg-white py-12 sm:py-16">
         <Container className="space-y-10">
           <div className="text-center max-w-2xl mx-auto space-y-3">
@@ -139,7 +143,7 @@ export default async function HomePage() {
         </Container>
       </section>
 
-      {/* 4. Delivery banner & Styleguide Link */}
+      {/* 5. Delivery banner & Styleguide Link */}
       <section className="border-t border-linen-dark bg-linen/30 py-8">
         <Container className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
