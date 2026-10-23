@@ -1,5 +1,6 @@
+import "server-only";
 import { unstable_cache } from "next/cache";
-import { eq, desc, asc, and, ne } from "drizzle-orm";
+import { eq, desc, asc, and, ne, inArray } from "drizzle-orm";
 import { db } from "@/db/client";
 import { products, productMedia, siteSettings } from "@/db/schema";
 import type { Doll, DollStatus, DollCategory } from "@/types/domain";
@@ -22,20 +23,17 @@ export interface GetDollsFilter {
   includeDrafts?: boolean;
 }
 
-/**
- * Внутренний запрос к БД для получения списка кукол.
- */
-async function fetchDollsFromDb(filter: GetDollsFilter = {}): Promise<Doll[]> {
-  const {
-    status,
-    category,
-    featured,
-    limit,
-    offset = 0,
-    includeDrafts = false,
-  } = filter;
+const VALID_SLUG_REGEX = /^[a-z0-9-]+$/;
 
-  // Базовые условия фильтрации
+/**
+ * Внутренний запрос к БД для получения базового списка кукол (до фильтрации по текущему времени).
+ */
+async function fetchRawDollsFromDb(options: {
+  featured?: boolean;
+  includeDrafts?: boolean;
+} = {}): Promise<Doll[]> {
+  const { featured, includeDrafts = false } = options;
+
   const conditions = [];
 
   if (!includeDrafts) {
@@ -46,44 +44,73 @@ async function fetchDollsFromDb(filter: GetDollsFilter = {}): Promise<Doll[]> {
     conditions.push(eq(products.isFeatured, featured));
   }
 
-  // Получаем список товаров
-  const query = db
+  const dbProducts = await db
     .select()
     .from(products)
     .where(conditions.length > 0 ? and(...conditions) : undefined)
     .orderBy(asc(products.sortOrder), desc(products.createdAt));
 
-  const dbProducts = await query;
   if (dbProducts.length === 0) {
     return [];
   }
 
-  // Загружаем все медиа для найденных кукол одним запросом
-  const allMedia = await db
+  const productIds = dbProducts.map((p) => p.id);
+
+  // Загружаем медиа ТОЛЬКО для найденных кукол одним запросом (inArray)
+  const relevantMedia = await db
     .select()
     .from(productMedia)
+    .where(inArray(productMedia.productId, productIds))
     .orderBy(asc(productMedia.displayOrder));
 
-  const mediaByProductId = new Map<string, typeof allMedia>();
-  for (const media of allMedia) {
+  const mediaByProductId = new Map<string, typeof relevantMedia>();
+  for (const media of relevantMedia) {
     const existing = mediaByProductId.get(media.productId) || [];
     existing.push(media);
     mediaByProductId.set(media.productId, existing);
   }
 
-  const now = new Date();
-
-  let list: Doll[] = dbProducts.map((p) =>
+  return dbProducts.map((p) =>
     mapDbProductToDoll(p, mediaByProductId.get(p.id) || [])
   );
+}
 
-  // Клиентская фильтрация по категории (хранится в jsonb specs)
+/**
+ * Кэшированная выборка опубликованных кукол с тегом 'products'.
+ */
+const getRawDollsCached =
+  process.env.NODE_ENV === "test"
+    ? fetchRawDollsFromDb
+    : unstable_cache(fetchRawDollsFromDb, ["products-list"], {
+        tags: [CACHE_TAGS.products],
+        revalidate: 3600,
+      });
+
+/**
+ * Получение списка кукол с фильтрацией по эффективному статусу (на текущий момент времени).
+ */
+export async function getDolls(filter: GetDollsFilter = {}): Promise<Doll[]> {
+  const {
+    status,
+    category,
+    featured,
+    limit,
+    offset = 0,
+    includeDrafts = false,
+  } = filter;
+
+  // Черновики запрашиваются только админкой напрямую без публичного кэша
+  let list = includeDrafts
+    ? await fetchRawDollsFromDb({ featured, includeDrafts: true })
+    : await getRawDollsCached({ featured, includeDrafts: false });
+
   if (category) {
     list = list.filter((doll) => doll.category === category);
   }
 
-  // Фильтрация по статусу с учетом истечения брони
+  // Фильтрация по статусу с учетом живого времени истечения брони (вне кэша!)
   if (status) {
+    const now = new Date();
     list = list.filter((doll) => {
       const effStatus = getEffectiveDollStatus(doll, now);
       return effStatus === status;
@@ -99,21 +126,6 @@ async function fetchDollsFromDb(filter: GetDollsFilter = {}): Promise<Doll[]> {
   }
 
   return list;
-}
-
-/**
- * Кэшированная версия fetchDollsFromDb с тегом 'products'.
- */
-const getDollsCached =
-  process.env.NODE_ENV === "test"
-    ? fetchDollsFromDb
-    : unstable_cache(fetchDollsFromDb, ["products-list"], {
-        tags: [CACHE_TAGS.products],
-        revalidate: 3600,
-      });
-
-export async function getDolls(filter: GetDollsFilter = {}): Promise<Doll[]> {
-  return getDollsCached(filter);
 }
 
 /**
@@ -149,13 +161,18 @@ async function fetchDollBySlugFromDb(
 }
 
 /**
- * Получение куклы по slug с кэшированием по тегам 'products' и 'product:{slug}'.
+ * Получение куклы по slug с защитой от инъекций в ключи кэша и тегами 'products' / 'product:{slug}'.
  */
 export async function getDollBySlug(
   slug: string,
   options: { includeDrafts?: boolean } = {}
 ): Promise<Doll | null> {
-  if (process.env.NODE_ENV === "test") {
+  // Защита от мусорных/длинных URL (Cache Poisoning / DoS)
+  if (!slug || slug.length > 120 || !VALID_SLUG_REGEX.test(slug)) {
+    return null;
+  }
+
+  if (process.env.NODE_ENV === "test" || options.includeDrafts) {
     return fetchDollBySlugFromDb(slug, options);
   }
 
@@ -172,19 +189,28 @@ export async function getDollBySlug(
 }
 
 /**
- * Поиск куклы по ее id в базе данных.
+ * Поиск куклы по ее UUID в базе данных (по умолчанию скрывает черновики).
  */
-export async function getDollById(id: string): Promise<Doll | null> {
+export async function getDollById(
+  id: string,
+  options: { includeDrafts?: boolean } = {}
+): Promise<Doll | null> {
   const isUuid =
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
       id
     );
   if (!isUuid) return null;
 
+  const { includeDrafts = false } = options;
+  const conditions = [eq(products.id, id)];
+  if (!includeDrafts) {
+    conditions.push(ne(products.status, "draft"));
+  }
+
   const [dbProduct] = await db
     .select()
     .from(products)
-    .where(eq(products.id, id));
+    .where(and(...conditions));
 
   if (!dbProduct) return null;
 

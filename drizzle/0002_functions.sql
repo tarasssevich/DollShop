@@ -1,4 +1,4 @@
--- DollShop Atomic Reservation, Order and Status Functions (Step 3.4)
+-- DollShop Atomic Reservation, Order and Status Functions (Step 3.4 - Hardened)
 
 -- 1. reserve_product: Атомарная бронь куклы
 CREATE OR REPLACE FUNCTION reserve_product(
@@ -13,13 +13,26 @@ RETURNS TABLE (
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, pg_temp
 AS $$
 DECLARE
   v_reserved_until timestamp with time zone;
   v_current_status product_status;
   v_current_reserved_until timestamp with time zone;
   v_existing_token text;
+  v_has_active_order boolean;
 BEGIN
+  -- Валидация входных параметров
+  IF p_token_hash IS NULL OR length(trim(p_token_hash)) < 8 THEN
+    RETURN QUERY SELECT 'ERROR'::text, NULL::timestamp with time zone, 'INVALID_TOKEN'::text;
+    RETURN;
+  END IF;
+
+  IF p_ttl_minutes IS NULL OR p_ttl_minutes < 1 OR p_ttl_minutes > 1440 THEN
+    RETURN QUERY SELECT 'ERROR'::text, NULL::timestamp with time zone, 'INVALID_TTL'::text;
+    RETURN;
+  END IF;
+
   -- Проверка идемпотентности: если кукла уже забронирована этим же токеном и бронь активна
   SELECT r.token_hash, p.reserved_until
     INTO v_existing_token, v_current_reserved_until
@@ -29,6 +42,21 @@ BEGIN
 
   IF v_existing_token = p_token_hash AND v_current_reserved_until >= now() THEN
     RETURN QUERY SELECT 'SUCCESS'::text, v_current_reserved_until, NULL::text;
+    RETURN;
+  END IF;
+
+  -- Проверяем, нет ли по кукле уже оформленного активного заказа (pending/paid/completed)
+  SELECT EXISTS (
+    SELECT 1
+      FROM order_items oi
+      JOIN orders o ON o.id = oi.order_id
+     WHERE oi.product_id = p_product_id
+       AND o.status IN ('pending', 'paid', 'completed')
+  ) INTO v_has_active_order;
+
+  IF v_has_active_order THEN
+    SELECT p.reserved_until INTO v_current_reserved_until FROM products p WHERE p.id = p_product_id;
+    RETURN QUERY SELECT 'ERROR'::text, v_current_reserved_until, 'ALREADY_RESERVED'::text;
     RETURN;
   END IF;
 
@@ -75,7 +103,7 @@ BEGIN
 END;
 $$;
 
--- 2. release_reservation: Отказ покупателя от брони (только с верным токеном)
+-- 2. release_reservation: Отказ покупателя от брони (только с верным токеном и без активного заказа)
 CREATE OR REPLACE FUNCTION release_reservation(
   p_product_id uuid,
   p_token_hash text
@@ -83,8 +111,24 @@ CREATE OR REPLACE FUNCTION release_reservation(
 RETURNS boolean
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, pg_temp
 AS $$
+DECLARE
+  v_has_active_order boolean;
 BEGIN
+  -- Защита: нельзя освободить бронь, если заказ уже оформлен
+  SELECT EXISTS (
+    SELECT 1
+      FROM order_items oi
+      JOIN orders o ON o.id = oi.order_id
+     WHERE oi.product_id = p_product_id
+       AND o.status IN ('pending', 'paid', 'completed')
+  ) INTO v_has_active_order;
+
+  IF v_has_active_order THEN
+    RETURN false;
+  END IF;
+
   DELETE FROM reservations r
    WHERE r.product_id = p_product_id
      AND r.token_hash = p_token_hash;
@@ -126,6 +170,7 @@ RETURNS TABLE (
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, pg_temp
 AS $$
 DECLARE
   v_price numeric(10, 2);
@@ -135,17 +180,41 @@ DECLARE
   v_order_number integer;
   v_public_token uuid;
   v_new_reserved_until timestamp with time zone;
+  v_has_active_order boolean;
 BEGIN
-  -- Проверка активной брони и блокировка строки куклы
+  -- Блокировка строки куклы первой для предотвращения гонок
   SELECT p.price, p.status, p.reserved_until
     INTO v_price, v_status, v_reserved_until
-    FROM reservations r
-    JOIN products p ON p.id = r.product_id
-   WHERE r.product_id = p_product_id
-     AND r.token_hash = p_token_hash
+    FROM products p
+   WHERE p.id = p_product_id
      FOR UPDATE OF p;
 
   IF NOT FOUND THEN
+    RETURN QUERY SELECT NULL::uuid, NULL::integer, NULL::uuid, NULL::numeric, 'INVALID_RESERVATION'::text;
+    RETURN;
+  END IF;
+
+  -- Защита от дублирования заказов на одну куклу
+  SELECT EXISTS (
+    SELECT 1
+      FROM order_items oi
+      JOIN orders o ON o.id = oi.order_id
+     WHERE oi.product_id = p_product_id
+       AND o.status IN ('pending', 'paid', 'completed')
+  ) INTO v_has_active_order;
+
+  IF v_has_active_order THEN
+    RETURN QUERY SELECT NULL::uuid, NULL::integer, NULL::uuid, NULL::numeric, 'ORDER_ALREADY_EXISTS'::text;
+    RETURN;
+  END IF;
+
+  -- Проверка активной брони с совпадающим токеном
+  IF NOT EXISTS (
+    SELECT 1
+      FROM reservations r
+     WHERE r.product_id = p_product_id
+       AND r.token_hash = p_token_hash
+  ) THEN
     RETURN QUERY SELECT NULL::uuid, NULL::integer, NULL::uuid, NULL::numeric, 'INVALID_RESERVATION'::text;
     RETURN;
   END IF;
@@ -156,14 +225,14 @@ BEGIN
   END IF;
 
   -- Расчет продления брони при согласовании (ЕРИП, перевод, наложенный платеж)
-  v_new_reserved_until := now() + (p_hold_hours || ' hours')::interval;
+  v_new_reserved_until := now() + (GREATEST(1, LEAST(COALESCE(p_hold_hours, 24), 168)) || ' hours')::interval;
 
   UPDATE products p
      SET reserved_until = v_new_reserved_until
    WHERE p.id = p_product_id;
 
-  UPDATE reservations r
-     SET expires_at = v_new_reserved_until
+  -- Погашаем одноразовый токен бронирования (теперь куклу держит сам заказ)
+  DELETE FROM reservations r
    WHERE r.product_id = p_product_id;
 
   -- Создание заказа (цена берется СТРОГО из базы данных)
@@ -219,15 +288,17 @@ RETURNS TABLE (
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, pg_temp
 AS $$
 DECLARE
   v_product_id uuid;
   v_product_slug text;
   v_old_status order_status;
+  v_current_prod_status product_status;
   v_new_prod_status product_status;
 BEGIN
-  SELECT oi.product_id, p.slug, o.status
-    INTO v_product_id, v_product_slug, v_old_status
+  SELECT oi.product_id, p.slug, o.status, p.status
+    INTO v_product_id, v_product_slug, v_old_status, v_current_prod_status
     FROM orders o
     JOIN order_items oi ON oi.order_id = o.id
     JOIN products p ON p.id = oi.product_id
@@ -254,16 +325,20 @@ BEGIN
     v_new_prod_status := 'sold';
 
   ELSIF p_new_status = 'cancelled' THEN
-    UPDATE products p
-       SET status = 'available',
-           reserved_until = NULL
-     WHERE p.id = v_product_id;
-
-    DELETE FROM reservations r WHERE r.product_id = v_product_id;
-    v_new_prod_status := 'available';
+    -- Возвращаем куклу в available только если она не продана другому покупателю
+    IF v_current_prod_status <> 'sold' THEN
+      UPDATE products p
+         SET status = 'available',
+             reserved_until = NULL
+       WHERE p.id = v_product_id;
+      DELETE FROM reservations r WHERE r.product_id = v_product_id;
+      v_new_prod_status := 'available';
+    ELSE
+      v_new_prod_status := v_current_prod_status;
+    END IF;
 
   ELSE
-    SELECT p.status INTO v_new_prod_status FROM products p WHERE p.id = v_product_id;
+    v_new_prod_status := v_current_prod_status;
   END IF;
 
   RETURN QUERY SELECT p_order_id, p_new_status, v_product_id, v_new_prod_status, v_product_slug, NULL::text;
@@ -279,6 +354,7 @@ RETURNS TABLE (
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, pg_temp
 AS $$
 BEGIN
   RETURN QUERY
@@ -286,7 +362,7 @@ BEGIN
     SELECT p.id, p.slug
       FROM products p
       LEFT JOIN order_items oi ON oi.product_id = p.id
-      LEFT JOIN orders o ON o.id = oi.order_id AND o.status = 'pending'
+      LEFT JOIN orders o ON o.id = oi.order_id AND o.status IN ('pending', 'paid', 'completed')
      WHERE p.status = 'reserved'
        AND p.reserved_until IS NOT NULL
        AND p.reserved_until < now()

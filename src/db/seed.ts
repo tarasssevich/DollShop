@@ -59,6 +59,13 @@ export async function seedDatabase(): Promise<void> {
     else if (mock.status === "in_progress") dbStatus = "made_to_order";
     if (mock.isDraft) dbStatus = "draft";
 
+    const reservedUntilDate =
+      mock.slug === "beatris"
+        ? new Date(Date.now() + 24 * 60 * 60 * 1000)
+        : mock.reservedUntil
+          ? new Date(mock.reservedUntil)
+          : null;
+
     const [savedProduct] = await db
       .insert(products)
       .values({
@@ -84,7 +91,7 @@ export async function seedDatabase(): Promise<void> {
         price: mock.priceByn.toFixed(2),
         currency: "BYN",
         status: dbStatus,
-        reservedUntil: mock.reservedUntil ? new Date(mock.reservedUntil) : null,
+        reservedUntil: reservedUntilDate,
         isFeatured: Boolean(mock.isFeatured),
         sortOrder: i,
       })
@@ -95,7 +102,7 @@ export async function seedDatabase(): Promise<void> {
           story: mock.story,
           price: mock.priceByn.toFixed(2),
           status: dbStatus,
-          reservedUntil: mock.reservedUntil ? new Date(mock.reservedUntil) : null,
+          reservedUntil: reservedUntilDate,
           isFeatured: Boolean(mock.isFeatured),
           sortOrder: i,
         },

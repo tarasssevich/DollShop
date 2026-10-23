@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { NextRequest } from "next/server";
-import { POST, GET } from "../route";
+import { POST } from "../route";
 import { env } from "@/lib/env";
 
 // Mock next/cache
@@ -9,7 +9,7 @@ vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
 }));
 
-describe("Route Handler /api/revalidate (Step 3.7)", () => {
+describe("Route Handler /api/revalidate (Step 3.7 - Hardened)", () => {
   const secret = env.REVALIDATE_SECRET;
 
   it("возвращает 401 при отсутствии секретного токена", async () => {
@@ -24,7 +24,7 @@ describe("Route Handler /api/revalidate (Step 3.7)", () => {
     expect(json.error).toMatch(/Неверный секретный ключ/i);
   });
 
-  it("возвращает 401 при неверном секретном ключе", async () => {
+  it("возвращает 401 при неверном секретном ключе (timingSafeEqual)", async () => {
     const req = new NextRequest("http://localhost:3000/api/revalidate", {
       method: "POST",
       headers: {
@@ -35,6 +35,34 @@ describe("Route Handler /api/revalidate (Step 3.7)", () => {
 
     const res = await POST(req);
     expect(res.status).toBe(401);
+  });
+
+  it("отклоняет попытку передать секрет в URL query (?secret=...) для защиты логов", async () => {
+    const req = new NextRequest(
+      `http://localhost:3000/api/revalidate?secret=${secret}`,
+      {
+        method: "POST",
+        body: JSON.stringify({ tags: ["products"] }),
+      }
+    );
+
+    const res = await POST(req);
+    expect(res.status).toBe(401);
+  });
+
+  it("возвращает 400 при попытке инвалидировать неизвестный/произвольный тег", async () => {
+    const req = new NextRequest("http://localhost:3000/api/revalidate", {
+      method: "POST",
+      headers: {
+        "x-revalidate-secret": secret,
+      },
+      body: JSON.stringify({ tags: ["evil_unknown_tag"] }),
+    });
+
+    const res = await POST(req);
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toMatch(/Неверный формат/i);
   });
 
   it("возвращает 400 если не переданы ни теги, ни пути", async () => {
@@ -75,7 +103,7 @@ describe("Route Handler /api/revalidate (Step 3.7)", () => {
       headers: {
         authorization: `Bearer ${secret}`,
       },
-      body: JSON.stringify({ tag: "settings" }),
+      body: JSON.stringify({ tag: "settings", path: "/kukly" }),
     });
 
     const res = await POST(req);
@@ -83,17 +111,6 @@ describe("Route Handler /api/revalidate (Step 3.7)", () => {
     const json = await res.json();
     expect(json.revalidated).toBe(true);
     expect(json.tags).toContain("settings");
-  });
-
-  it("поддерживает GET-запрос с query параметрами ?secret=...&tag=...", async () => {
-    const req = new NextRequest(
-      `http://localhost:3000/api/revalidate?secret=${secret}&tag=products`
-    );
-
-    const res = await GET(req);
-    expect(res.status).toBe(200);
-    const json = await res.json();
-    expect(json.revalidated).toBe(true);
-    expect(json.tag).toBe("products");
+    expect(json.paths).toContain("/kukly");
   });
 });

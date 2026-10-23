@@ -1,8 +1,9 @@
+import "server-only";
 import { z } from "zod";
 
 /**
  * Схема валидации переменных окружения DollShop.
- * Строгая типизация и подробные сообщения об ошибках на русском языке.
+ * Строгая типизация, защита server-only и подробные сообщения об ошибках на русском языке.
  */
 export const envSchema = z.object({
   DATABASE_URL: z
@@ -51,12 +52,12 @@ export const envSchema = z.object({
     .default("http://localhost:3000"),
   CRON_SECRET: z
     .string()
-    .min(8, "CRON_SECRET должен содержать минимум 8 символов")
+    .min(16, "CRON_SECRET должен содержать минимум 16 символов")
     .optional()
     .default("dev_cron_secret_dollshop_local"),
   REVALIDATE_SECRET: z
     .string()
-    .min(8, "REVALIDATE_SECRET должен содержать минимум 8 символов")
+    .min(16, "REVALIDATE_SECRET должен содержать минимум 16 символов")
     .optional()
     .default("dev_revalidate_secret_dollshop_local"),
 });

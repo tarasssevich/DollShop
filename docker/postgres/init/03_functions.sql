@@ -1,24 +1,39 @@
--- DollShop Atomic Reservation, Order and Status Functions (Step 3.4)
+-- DollShop Atomic Reservation, Order and Status Functions (Step 3.4 - Hardened)
 
+-- 1. reserve_product: Атомарная бронь куклы
 CREATE OR REPLACE FUNCTION reserve_product(
   p_product_id uuid,
   p_token_hash text,
   p_ttl_minutes integer DEFAULT 15
 )
 RETURNS TABLE (
-  status text,
-  reserved_until timestamp with time zone,
-  error_code text
+  out_status text,
+  out_reserved_until timestamp with time zone,
+  out_error_code text
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, pg_temp
 AS $$
 DECLARE
   v_reserved_until timestamp with time zone;
   v_current_status product_status;
   v_current_reserved_until timestamp with time zone;
   v_existing_token text;
+  v_has_active_order boolean;
 BEGIN
+  -- Валидация входных параметров
+  IF p_token_hash IS NULL OR length(trim(p_token_hash)) < 8 THEN
+    RETURN QUERY SELECT 'ERROR'::text, NULL::timestamp with time zone, 'INVALID_TOKEN'::text;
+    RETURN;
+  END IF;
+
+  IF p_ttl_minutes IS NULL OR p_ttl_minutes < 1 OR p_ttl_minutes > 1440 THEN
+    RETURN QUERY SELECT 'ERROR'::text, NULL::timestamp with time zone, 'INVALID_TTL'::text;
+    RETURN;
+  END IF;
+
+  -- Проверка идемпотентности: если кукла уже забронирована этим же токеном и бронь активна
   SELECT r.token_hash, p.reserved_until
     INTO v_existing_token, v_current_reserved_until
     FROM reservations r
@@ -30,15 +45,32 @@ BEGIN
     RETURN;
   END IF;
 
-  UPDATE products
+  -- Проверяем, нет ли по кукле уже оформленного активного заказа (pending/paid/completed)
+  SELECT EXISTS (
+    SELECT 1
+      FROM order_items oi
+      JOIN orders o ON o.id = oi.order_id
+     WHERE oi.product_id = p_product_id
+       AND o.status IN ('pending', 'paid', 'completed')
+  ) INTO v_has_active_order;
+
+  IF v_has_active_order THEN
+    SELECT p.reserved_until INTO v_current_reserved_until FROM products p WHERE p.id = p_product_id;
+    RETURN QUERY SELECT 'ERROR'::text, v_current_reserved_until, 'ALREADY_RESERVED'::text;
+    RETURN;
+  END IF;
+
+  -- Атомарный UPDATE с row-level lock
+  UPDATE products p
      SET status = 'reserved',
          reserved_until = now() + (p_ttl_minutes || ' minutes')::interval
-   WHERE id = p_product_id
-     AND (status = 'available'
-          OR (status = 'reserved' AND reserved_until IS NOT NULL AND reserved_until < now()))
-  RETURNING products.reserved_until INTO v_reserved_until;
+   WHERE p.id = p_product_id
+     AND (p.status = 'available'
+          OR (p.status = 'reserved' AND p.reserved_until IS NOT NULL AND p.reserved_until < now()))
+  RETURNING p.reserved_until INTO v_reserved_until;
 
   IF FOUND THEN
+    -- Upsert в reservations
     INSERT INTO reservations (product_id, token_hash, expires_at, created_at)
     VALUES (p_product_id, p_token_hash, v_reserved_until, now())
     ON CONFLICT (product_id) DO UPDATE
@@ -49,10 +81,11 @@ BEGIN
     RETURN QUERY SELECT 'SUCCESS'::text, v_reserved_until, NULL::text;
     RETURN;
   ELSE
-    SELECT products.status, products.reserved_until
+    -- Определение точной причины отказа
+    SELECT p.status, p.reserved_until
       INTO v_current_status, v_current_reserved_until
-      FROM products
-     WHERE id = p_product_id;
+      FROM products p
+     WHERE p.id = p_product_id;
 
     IF NOT FOUND THEN
       RETURN QUERY SELECT 'ERROR'::text, NULL::timestamp with time zone, 'NOT_FOUND'::text;
@@ -70,6 +103,7 @@ BEGIN
 END;
 $$;
 
+-- 2. release_reservation: Отказ покупателя от брони (только с верным токеном и без активного заказа)
 CREATE OR REPLACE FUNCTION release_reservation(
   p_product_id uuid,
   p_token_hash text
@@ -77,18 +111,34 @@ CREATE OR REPLACE FUNCTION release_reservation(
 RETURNS boolean
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, pg_temp
 AS $$
+DECLARE
+  v_has_active_order boolean;
 BEGIN
-  DELETE FROM reservations
-   WHERE product_id = p_product_id
-     AND token_hash = p_token_hash;
+  -- Защита: нельзя освободить бронь, если заказ уже оформлен
+  SELECT EXISTS (
+    SELECT 1
+      FROM order_items oi
+      JOIN orders o ON o.id = oi.order_id
+     WHERE oi.product_id = p_product_id
+       AND o.status IN ('pending', 'paid', 'completed')
+  ) INTO v_has_active_order;
+
+  IF v_has_active_order THEN
+    RETURN false;
+  END IF;
+
+  DELETE FROM reservations r
+   WHERE r.product_id = p_product_id
+     AND r.token_hash = p_token_hash;
 
   IF FOUND THEN
-    UPDATE products
+    UPDATE products p
        SET status = 'available',
            reserved_until = NULL
-     WHERE id = p_product_id
-       AND status = 'reserved';
+     WHERE p.id = p_product_id
+       AND p.status = 'reserved';
     RETURN true;
   END IF;
 
@@ -96,6 +146,7 @@ BEGIN
 END;
 $$;
 
+-- 3. create_order: Атомарное создание заказа с валидацией брони и цены из БД
 CREATE OR REPLACE FUNCTION create_order(
   p_product_id uuid,
   p_token_hash text,
@@ -111,17 +162,17 @@ CREATE OR REPLACE FUNCTION create_order(
   p_hold_hours integer DEFAULT 24
 )
 RETURNS TABLE (
-  order_id uuid,
-  order_number integer,
-  public_token uuid,
-  total_amount numeric,
-  error_code text
+  out_order_id uuid,
+  out_order_number integer,
+  out_public_token uuid,
+  out_total_amount numeric,
+  out_error_code text
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, pg_temp
 AS $$
 DECLARE
-  v_res_expires_at timestamp with time zone;
   v_price numeric(10, 2);
   v_status product_status;
   v_reserved_until timestamp with time zone;
@@ -129,16 +180,41 @@ DECLARE
   v_order_number integer;
   v_public_token uuid;
   v_new_reserved_until timestamp with time zone;
+  v_has_active_order boolean;
 BEGIN
-  SELECT r.expires_at, p.price, p.status, p.reserved_until
-    INTO v_res_expires_at, v_price, v_status, v_reserved_until
-    FROM reservations r
-    JOIN products p ON p.id = r.product_id
-   WHERE r.product_id = p_product_id
-     AND r.token_hash = p_token_hash
+  -- Блокировка строки куклы первой для предотвращения гонок
+  SELECT p.price, p.status, p.reserved_until
+    INTO v_price, v_status, v_reserved_until
+    FROM products p
+   WHERE p.id = p_product_id
      FOR UPDATE OF p;
 
   IF NOT FOUND THEN
+    RETURN QUERY SELECT NULL::uuid, NULL::integer, NULL::uuid, NULL::numeric, 'INVALID_RESERVATION'::text;
+    RETURN;
+  END IF;
+
+  -- Защита от дублирования заказов на одну куклу
+  SELECT EXISTS (
+    SELECT 1
+      FROM order_items oi
+      JOIN orders o ON o.id = oi.order_id
+     WHERE oi.product_id = p_product_id
+       AND o.status IN ('pending', 'paid', 'completed')
+  ) INTO v_has_active_order;
+
+  IF v_has_active_order THEN
+    RETURN QUERY SELECT NULL::uuid, NULL::integer, NULL::uuid, NULL::numeric, 'ORDER_ALREADY_EXISTS'::text;
+    RETURN;
+  END IF;
+
+  -- Проверка активной брони с совпадающим токеном
+  IF NOT EXISTS (
+    SELECT 1
+      FROM reservations r
+     WHERE r.product_id = p_product_id
+       AND r.token_hash = p_token_hash
+  ) THEN
     RETURN QUERY SELECT NULL::uuid, NULL::integer, NULL::uuid, NULL::numeric, 'INVALID_RESERVATION'::text;
     RETURN;
   END IF;
@@ -148,16 +224,18 @@ BEGIN
     RETURN;
   END IF;
 
-  v_new_reserved_until := now() + (p_hold_hours || ' hours')::interval;
+  -- Расчет продления брони при согласовании (ЕРИП, перевод, наложенный платеж)
+  v_new_reserved_until := now() + (GREATEST(1, LEAST(COALESCE(p_hold_hours, 24), 168)) || ' hours')::interval;
 
-  UPDATE products
+  UPDATE products p
      SET reserved_until = v_new_reserved_until
-   WHERE id = p_product_id;
+   WHERE p.id = p_product_id;
 
-  UPDATE reservations
-     SET expires_at = v_new_reserved_until
-   WHERE product_id = p_product_id;
+  -- Погашаем одноразовый токен бронирования (теперь куклу держит сам заказ)
+  DELETE FROM reservations r
+   WHERE r.product_id = p_product_id;
 
+  -- Создание заказа (цена берется СТРОГО из базы данных)
   INSERT INTO orders (
     customer_name,
     customer_phone,
@@ -183,9 +261,10 @@ BEGIN
     p_payment_method,
     p_pd_consent_at
   )
-  RETURNING id, orders.order_number, orders.public_token
+  RETURNING orders.id, orders.order_number, orders.public_token
      INTO v_order_id, v_order_number, v_public_token;
 
+  -- Фиксация позиции заказа
   INSERT INTO order_items (order_id, product_id, price_at_purchase)
   VALUES (v_order_id, p_product_id, v_price);
 
@@ -194,29 +273,32 @@ BEGIN
 END;
 $$;
 
+-- 4. set_order_status: Синхронная смена статуса заказа и куклы
 CREATE OR REPLACE FUNCTION set_order_status(
   p_order_id uuid,
   p_new_status order_status
 )
 RETURNS TABLE (
-  order_id uuid,
-  status order_status,
-  product_id uuid,
-  product_status product_status,
-  product_slug text,
-  error_code text
+  out_order_id uuid,
+  out_status order_status,
+  out_product_id uuid,
+  out_product_status product_status,
+  out_product_slug text,
+  out_error_code text
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, pg_temp
 AS $$
 DECLARE
   v_product_id uuid;
   v_product_slug text;
   v_old_status order_status;
+  v_current_prod_status product_status;
   v_new_prod_status product_status;
 BEGIN
-  SELECT oi.product_id, p.slug, o.status
-    INTO v_product_id, v_product_slug, v_old_status
+  SELECT oi.product_id, p.slug, o.status, p.status
+    INTO v_product_id, v_product_slug, v_old_status, v_current_prod_status
     FROM orders o
     JOIN order_items oi ON oi.order_id = o.id
     JOIN products p ON p.id = oi.product_id
@@ -228,30 +310,35 @@ BEGIN
     RETURN;
   END IF;
 
-  UPDATE orders
+  -- Обновление статуса заказа
+  UPDATE orders o
      SET status = p_new_status
-   WHERE id = p_order_id;
+   WHERE o.id = p_order_id;
 
   IF p_new_status IN ('paid', 'completed') THEN
-    UPDATE products
+    UPDATE products p
        SET status = 'sold',
            reserved_until = NULL
-     WHERE id = v_product_id;
+     WHERE p.id = v_product_id;
 
-    DELETE FROM reservations WHERE reservations.product_id = v_product_id;
+    DELETE FROM reservations r WHERE r.product_id = v_product_id;
     v_new_prod_status := 'sold';
 
   ELSIF p_new_status = 'cancelled' THEN
-    UPDATE products
-       SET status = 'available',
-           reserved_until = NULL
-     WHERE id = v_product_id;
-
-    DELETE FROM reservations WHERE reservations.product_id = v_product_id;
-    v_new_prod_status := 'available';
+    -- Возвращаем куклу в available только если она не продана другому покупателю
+    IF v_current_prod_status <> 'sold' THEN
+      UPDATE products p
+         SET status = 'available',
+             reserved_until = NULL
+       WHERE p.id = v_product_id;
+      DELETE FROM reservations r WHERE r.product_id = v_product_id;
+      v_new_prod_status := 'available';
+    ELSE
+      v_new_prod_status := v_current_prod_status;
+    END IF;
 
   ELSE
-    SELECT products.status INTO v_new_prod_status FROM products WHERE id = v_product_id;
+    v_new_prod_status := v_current_prod_status;
   END IF;
 
   RETURN QUERY SELECT p_order_id, p_new_status, v_product_id, v_new_prod_status, v_product_slug, NULL::text;
@@ -259,13 +346,15 @@ BEGIN
 END;
 $$;
 
+-- 5. expire_reservations: Освобождение истёкших броней без активных заказов
 CREATE OR REPLACE FUNCTION expire_reservations()
 RETURNS TABLE (
-  product_id uuid,
-  slug text
+  out_product_id uuid,
+  out_slug text
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, pg_temp
 AS $$
 BEGIN
   RETURN QUERY
@@ -273,7 +362,7 @@ BEGIN
     SELECT p.id, p.slug
       FROM products p
       LEFT JOIN order_items oi ON oi.product_id = p.id
-      LEFT JOIN orders o ON o.id = oi.order_id AND o.status = 'pending'
+      LEFT JOIN orders o ON o.id = oi.order_id AND o.status IN ('pending', 'paid', 'completed')
      WHERE p.status = 'reserved'
        AND p.reserved_until IS NOT NULL
        AND p.reserved_until < now()
@@ -298,6 +387,7 @@ BEGIN
 END;
 $$;
 
+-- Назначение владельца app_owner и прав выполнения для app_user
 ALTER FUNCTION reserve_product(uuid, text, integer) OWNER TO app_owner;
 ALTER FUNCTION release_reservation(uuid, text) OWNER TO app_owner;
 ALTER FUNCTION create_order(uuid, text, text, text, text, contact_channel, text, text, text, payment_method, timestamp with time zone, integer) OWNER TO app_owner;
