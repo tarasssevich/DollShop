@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:race": "tsx --conditions=react-server --env-file=.env.local scripts/race-reserve.ts",
     "format": "prettier --write \"src/**/*.{ts,tsx,css,md}\"",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx --conditions=react-server --env-file=.env.local src/db/migrate.ts",
