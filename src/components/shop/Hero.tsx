@@ -119,8 +119,25 @@ export function Hero({ featuredDoll }: HeroProps) {
                       className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
                     />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center font-serif italic text-muted">
-                      Фото куклы
+                    <div className="flex flex-col h-full w-full items-center justify-center p-6 text-center bg-gradient-to-br from-linen via-white to-linen/60">
+                      <div className="relative h-20 w-20 mb-4 rounded-full overflow-hidden border border-linen-dark/80 bg-white shadow-sm">
+                        <Image
+                          src="/images/logo-128.webp"
+                          alt="DollShop"
+                          fill
+                          sizes="80px"
+                          className="object-cover"
+                        />
+                      </div>
+                      <p className="font-serif text-2xl text-espresso font-light">
+                        DollShop
+                      </p>
+                      <p className="font-serif italic text-xs text-muted mt-1">
+                        ателье авторских кукол ручной работы
+                      </p>
+                      <p className="text-xs text-muted/80 mt-4 max-w-[240px] leading-relaxed">
+                        Новая авторская коллекция интерьерных фей готовится к публикации
+                      </p>
                     </div>
                   )}
 
