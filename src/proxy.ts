@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 /**
- * Охранный прокси маршрутов админки.
+ * Охранный прокси маршрутов админки (Next.js 16 proxy API).
  * Защищает раздел /admin от неавторизованного доступа на уровне HTTP-запроса.
  */
-export function adminProxy(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // Исключаем страницу логина и публичные статические файлы
@@ -28,3 +28,10 @@ export function adminProxy(req: NextRequest) {
 
   return NextResponse.next();
 }
+
+// Экспортируем также как adminProxy для обратной совместимости в тестах
+export const adminProxy = proxy;
+
+export const config = {
+  matcher: ["/admin/:path*"],
+};
