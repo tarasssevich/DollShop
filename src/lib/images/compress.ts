@@ -128,10 +128,23 @@ export async function processDollImage(
   file: File
 ): Promise<DollImageProcessingResult> {
   // Декодируем изображение
-  let imgBitmap: ImageBitmap | HTMLImageElement;
-  if (typeof createImageBitmap === "function") {
-    imgBitmap = await createImageBitmap(file);
-  } else {
+  let imgBitmap!: ImageBitmap | HTMLImageElement;
+  let useFallback = typeof createImageBitmap !== "function";
+
+  if (!useFallback) {
+    try {
+      // Поддержка ориентации EXIF для мобильных устройств
+      imgBitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+    } catch {
+      try {
+        imgBitmap = await createImageBitmap(file);
+      } catch {
+        useFallback = true;
+      }
+    }
+  }
+
+  if (useFallback) {
     const url = URL.createObjectURL(file);
     const img = new Image();
     img.src = url;

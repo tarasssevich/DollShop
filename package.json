@@ -19,6 +19,7 @@
     "db:seed": "tsx --conditions=react-server --env-file=.env.local src/db/seed.ts",
     "db:clear-dolls": "tsx --conditions=react-server --env-file=.env.local scripts/clear-dolls.ts",
     "auth:create-admin": "tsx --conditions=react-server --env-file=.env.local scripts/create-admin.ts",
+    "tg:poll": "tsx --conditions=react-server --env-file=.env.local scripts/telegram-polling.ts",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio"
   },

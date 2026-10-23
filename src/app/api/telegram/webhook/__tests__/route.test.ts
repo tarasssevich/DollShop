@@ -16,6 +16,7 @@ describe("Step 5.3 — Telegram Webhook: Интерактивные кнопки
 
   beforeEach(async () => {
     process.env = { ...originalEnv };
+    delete process.env.TELEGRAM_WEBHOOK_SECRET;
     process.env.TELEGRAM_BOT_TOKEN = "test_bot_token";
     process.env.TELEGRAM_CHAT_ID = "123456789";
 
