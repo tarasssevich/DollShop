@@ -213,6 +213,7 @@ erDiagram
   orders ||--|{ order_items : contains
   products ||--o{ custom_requests : "referenced by"
   products ||--o| reservations : "held by"
+  products ||--o| custom_requests : "response to"
 
   products {
     uuid id PK
@@ -225,6 +226,8 @@ erDiagram
     product_status status
     timestamptz reserved_until
     boolean is_featured
+    boolean is_custom_order
+    uuid custom_request_id FK
     int sort_order
     timestamptz created_at
     timestamptz updated_at
@@ -274,9 +277,12 @@ erDiagram
   custom_requests {
     uuid id PK
     uuid reference_product_id FK
+    uuid response_product_id FK
+    uuid public_token
     text customer_name
     text customer_contact
     text wishes
+    text[] reference_photo_urls
     request_status status
     timestamptz pd_consent_at
     timestamptz created_at
@@ -287,13 +293,14 @@ erDiagram
 
 | Таблица | Поле | Зачем |
 |---|---|---|
-| `products` | `currency` default `'BYN'` + CHECK, ➕ `updated_at` | Одна валюта; поле оставлено на будущее |
+| `products` | `currency` default `'BYN'` + CHECK, ➕ `updated_at`, ➕ `is_custom_order`, ➕ `custom_request_id` | Сокрытие индивидуальной куклы-ответа из общего каталога витрины, связь с заявкой |
 | `product_media` | ➕ `storage_key`, `width`, `height`, `alt` | Удаление из S3, CLS = 0, доступность |
 | ➕ `reservations` | `product_id` PK, `token_hash`, `expires_at` | Кто держит бронь (токен не попадает на витрину) |
 | `orders` | `shipping_address` разделён на ➕ `delivery_city`, `delivery_branch` (город и почтовое отделение/индекс либо «Самовывоз (Минск)») | Данные для почтовой пересылки или самовывоза |
 | `orders` | ➕ `customer_phone` (обязателен, `+375…`), `contact_channel` (`telegram` / `viber` / `phone`) | Телефон для СМС о прибытии посылки; в РБ популярен Viber |
 | `orders` | ➕ `public_token`, `payment_method` (`erip_invoice` / `bank_transfer` / `cod` / `online_card` / `online_erip`), `payment_id`, `updated_at` | Страница заказа, гибридная оплата, идемпотентность вебхуков |
 | `orders`, `custom_requests` | ➕ `pd_consent_at` | Фиксация согласия на обработку ПД (Закон РБ № 99-З) |
+| `custom_requests` | ➕ `response_product_id`, ➕ `public_token`, ➕ `reference_photo_urls` | Привязка куклы-ответа, безопасный токен и фото-референсы заказчика |
 | ➕ `site_settings` | singleton: `checkout_mode`, разрешённые `payment_methods`, `reservation_ttl_minutes`, `erip_hold_hours`, стоимость/условия отправки почтой и самовывоза, реквизиты ИП (ФИО, УНП, № в Торговом реестре), контакты, тексты «О мастере» | Всё меняется без деплоя |
 | ➕ `rate_limits` | `key`, `window_start`, `count` | Rate-limit форм без Redis |
 | ➕ таблицы Better Auth | `user`, `session`, `account`, `verification` | Генерируются CLI Better Auth |

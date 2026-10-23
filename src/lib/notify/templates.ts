@@ -189,3 +189,20 @@ export function formatCustomRequestMessage(
 
   return message;
 }
+
+/**
+ * Формирование теплого текста уведомления покупателя о готовности куклы по индивидуальному заказу.
+ */
+export function buildCustomOrderNotificationText(params: {
+  customerName: string;
+  dollTitle: string;
+  priceByn: number;
+  slug: string;
+  appUrl?: string;
+}): string {
+  const firstName = params.customerName.split(" ")[0] || params.customerName;
+  const baseUrl = params.appUrl || process.env.NEXT_PUBLIC_APP_URL || "https://dollshop.by";
+  const link = `${baseUrl}/kukly/${params.slug}`;
+
+  return `Здравствуйте, ${firstName}! ✨ Ваша куколка «${params.dollTitle}» по индивидуальной заявке готова!\n\nСтоимость: ${params.priceByn.toFixed(2)} BYN.\nПосмотреть фотографии куклы и оформить получение можно по ссылке:\n${link}\n\nБуду рада бережно отправить её вам почтой по Беларуси или передать при встрече в Минске!`;
+}

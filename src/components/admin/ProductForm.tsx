@@ -19,27 +19,55 @@ import type { Doll } from "@/types/domain";
 
 interface ProductFormProps {
   initialDoll?: Doll | null;
+  customRequestId?: string;
+  customerName?: string;
+  referenceDollTitle?: string;
+  onSuccess?: (doll: { id: string; slug: string; title: string }) => void;
+  onCancel?: () => void;
 }
 
-export function ProductForm({ initialDoll }: ProductFormProps) {
+export function ProductForm({
+  initialDoll,
+  customRequestId,
+  customerName,
+  referenceDollTitle,
+  onSuccess,
+  onCancel,
+}: ProductFormProps) {
   const router = useRouter();
+  const isCustomMode = Boolean(customRequestId || initialDoll?.isCustomOrder);
   const [currentProductId, setCurrentProductId] = useState<string | undefined>(
     initialDoll?.id
   );
   const isEditing = Boolean(currentProductId);
-  const localStorageKey = `dollshop_draft_form_${currentProductId || "new"}`;
+  const localStorageKey = isCustomMode
+    ? `dollshop_custom_req_${customRequestId || "edit"}`
+    : `dollshop_draft_form_${currentProductId || "new"}`;
 
   // Form states
-  const [title, setTitle] = useState(initialDoll?.name || "");
+  const [title, setTitle] = useState(
+    initialDoll?.name ||
+      (isCustomMode
+        ? referenceDollTitle
+          ? `${referenceDollTitle} (для ${customerName?.split(" ")[0] || "заказчика"})`
+          : customerName
+          ? `Кукла для ${customerName.split(" ")[0]}`
+          : "Индивидуальная кукла"
+        : "")
+  );
   const [story, setStory] = useState(initialDoll?.story || "");
   const [price, setPrice] = useState<string>(
-    initialDoll?.priceByn ? String(initialDoll.priceByn) : ""
+    initialDoll?.priceByn
+      ? String(initialDoll.priceByn)
+      : isCustomMode
+      ? "65.00"
+      : ""
   );
   const [heightCm, setHeightCm] = useState<string>(
     initialDoll?.heightCm ? String(initialDoll.heightCm) : "20"
   );
   const [collection, setCollection] = useState(
-    initialDoll?.collection || "Времена года"
+    initialDoll?.collection || (isCustomMode ? "Индивидуальный заказ" : "Времена года")
   );
   const [materials, setMaterials] = useState<string[]>(
     initialDoll?.materials || ["Эко-хлопок макраме", "Резное дерево", "Фатин с ромашками"]
@@ -48,7 +76,7 @@ export function ProductForm({ initialDoll }: ProductFormProps) {
     initialDoll?.isDraft ? "draft" : (initialDoll?.status as "available" | "sold" | "made_to_order") || "available"
   );
   const [isFeatured, setIsFeatured] = useState<boolean>(
-    initialDoll?.isFeatured ?? false
+    isCustomMode ? false : (initialDoll?.isFeatured ?? false)
   );
 
   // UI state
@@ -106,16 +134,18 @@ export function ProductForm({ initialDoll }: ProductFormProps) {
   const ensureProductId = async (): Promise<string> => {
     if (currentProductId) return currentProductId;
 
-    const draftTitle = title.trim() || "Новая кукла";
+    const draftTitle = title.trim() || (isCustomMode ? "Кукла на заказ" : "Новая кукла");
     const draftPayload: ProductFormInput = {
       title: draftTitle,
-      story: story.trim() || "Черновик описания",
-      price: parseFloat(price.replace(",", ".")) || 100,
+      story: story.trim() || (isCustomMode ? "Черновик описания куклы на заказ" : "Черновик описания"),
+      price: parseFloat(price.replace(",", ".")) || (isCustomMode ? 65 : 100),
       heightCm: parseInt(heightCm, 10) || 20,
-      collection: collection.trim() || "Авторская серия",
+      collection: collection.trim() || (isCustomMode ? "Индивидуальный заказ" : "Авторская серия"),
       materials: materials.length > 0 ? materials : ["Эко-хлопок макраме"],
       status: "draft",
       isFeatured: false,
+      isCustomOrder: isCustomMode || Boolean(initialDoll?.isCustomOrder),
+      customRequestId: customRequestId || initialDoll?.customRequestId || null,
     };
 
     const res = await saveProductAction(draftPayload);
@@ -124,7 +154,7 @@ export function ProductForm({ initialDoll }: ProductFormProps) {
     }
 
     setCurrentProductId(res.data.id);
-    if (typeof window !== "undefined") {
+    if (!isCustomMode && typeof window !== "undefined") {
       window.history.replaceState(null, "", `/admin/kukly/${res.data.id}`);
     }
     return res.data.id;
@@ -179,10 +209,12 @@ export function ProductForm({ initialDoll }: ProductFormProps) {
       story: story.trim(),
       price: numericPrice,
       heightCm: numericHeight,
-      collection: collection.trim() || "Авторская серия",
+      collection: collection.trim() || (isCustomMode ? "Индивидуальный заказ" : "Авторская серия"),
       materials,
       status: chosenStatus,
-      isFeatured,
+      isFeatured: isCustomMode ? false : isFeatured,
+      isCustomOrder: isCustomMode || Boolean(initialDoll?.isCustomOrder),
+      customRequestId: customRequestId || initialDoll?.customRequestId || null,
       details: {
         wingMaterial: materials.find((m) => m.toLowerCase().includes("дерев")) || "Резное дерево",
         hairMaterial: materials.find((m) => m.toLowerCase().includes("хлопок")) || "Хлопковая пряжа",
@@ -208,10 +240,19 @@ export function ProductForm({ initialDoll }: ProductFormProps) {
       }
 
       setSuccessBanner(
-        chosenStatus === "draft"
+        isCustomMode
+          ? "Кукла успешно прикреплена как ответ к заявке!"
+          : chosenStatus === "draft"
           ? "Черновик куклы успешно сохранен!"
           : "Кукла успешно сохранена и опубликована на витрине!"
       );
+
+      if (onSuccess) {
+        setTimeout(() => {
+          onSuccess({ id: res.data.id, slug: res.data.slug, title: title.trim() });
+        }, 600);
+        return;
+      }
 
       setTimeout(() => {
         router.push("/admin/kukly");
@@ -250,15 +291,26 @@ export function ProductForm({ initialDoll }: ProductFormProps) {
     <div className="space-y-6 max-w-2xl mx-auto">
       {/* Навигация назад */}
       <div className="flex items-center justify-between">
-        <Link
-          href="/admin/kukly"
-          className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-espresso transition py-2"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>К списку кукол</span>
-        </Link>
+        {onCancel ? (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-espresso transition py-2 cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Вернуться к заявкам</span>
+          </button>
+        ) : (
+          <Link
+            href="/admin/kukly"
+            className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-espresso transition py-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>К списку кукол</span>
+          </Link>
+        )}
 
-        {isEditing && (
+        {isEditing && !isCustomMode && (
           <button
             type="button"
             onClick={handleDelete}
@@ -274,10 +326,18 @@ export function ProductForm({ initialDoll }: ProductFormProps) {
       {/* Заголовок */}
       <div>
         <h1 className="font-serif text-2xl sm:text-3xl font-light text-espresso">
-          {isEditing ? `Редактирование: ${initialDoll?.name}` : "Новая авторская кукла"}
+          {isCustomMode
+            ? isEditing
+              ? `Редактирование куклы: ${title}`
+              : `Кукла в ответ на заявку${customerName ? ` (${customerName})` : ""}`
+            : isEditing
+            ? `Редактирование: ${initialDoll?.name}`
+            : "Новая авторская кукла"}
         </h1>
         <p className="text-xs text-muted mt-0.5">
-          Заполните данные о кукле — технический адрес и сортировка настроятся автоматически
+          {isCustomMode
+            ? "Кукла будет персональным ответом на заявку и не появится в общем каталоге магазина"
+            : "Заполните данные о кукле — технический адрес и сортировка настроятся автоматически"}
         </p>
       </div>
 
@@ -515,23 +575,25 @@ export function ProductForm({ initialDoll }: ProductFormProps) {
           </div>
         </div>
 
-        {/* 7. Флаг «Избранная работа» */}
-        <label className="flex items-center gap-2.5 p-3 rounded-xl border border-linen-dark hover:bg-linen/30 transition cursor-pointer">
-          <input
-            type="checkbox"
-            checked={isFeatured}
-            onChange={(e) => setIsFeatured(e.target.checked)}
-            className="w-4 h-4 rounded text-terracotta accent-terracotta"
-          />
-          <div className="text-xs">
-            <span className="font-medium text-espresso block">
-              Показывать на главной витрине
-            </span>
-            <span className="text-muted text-[11px]">
-              Выводить в блоке «Избранные работы»
-            </span>
-          </div>
-        </label>
+        {/* 7. Флаг «Избранная работа» (только для обычного каталога) */}
+        {!isCustomMode && (
+          <label className="flex items-center gap-2.5 p-3 rounded-xl border border-linen-dark hover:bg-linen/30 transition cursor-pointer">
+            <input
+              type="checkbox"
+              checked={isFeatured}
+              onChange={(e) => setIsFeatured(e.target.checked)}
+              className="w-4 h-4 rounded text-terracotta accent-terracotta"
+            />
+            <div className="text-xs">
+              <span className="font-medium text-espresso block">
+                Показывать на главной витрине
+              </span>
+              <span className="text-muted text-[11px]">
+                Выводить в блоке «Избранные работы»
+              </span>
+            </div>
+          </label>
+        )}
       </div>
 
       {/* Кнопки сохранения */}
@@ -548,18 +610,39 @@ export function ProductForm({ initialDoll }: ProductFormProps) {
               <span>Сохранение...</span>
             </>
           ) : (
-            <span>{isEditing ? "Сохранить изменения" : "Опубликовать куклу"}</span>
+            <span>
+              {isCustomMode
+                ? isEditing
+                  ? "Сохранить изменения куклы"
+                  : "Прикрепить куклу к заявке"
+                : isEditing
+                ? "Сохранить изменения"
+                : "Опубликовать куклу"}
+            </span>
           )}
         </button>
 
-        <button
-          type="button"
-          onClick={() => handleSubmit("draft")}
-          disabled={isSubmitting}
-          className="py-3 px-5 rounded-xl border border-linen-dark bg-white text-muted hover:text-espresso hover:bg-linen/50 active:scale-[0.99] transition text-xs font-medium cursor-pointer"
-        >
-          Сохранить как черновик
-        </button>
+        {isCustomMode ? (
+          onCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              disabled={isSubmitting}
+              className="py-3 px-5 rounded-xl border border-linen-dark bg-white text-muted hover:text-espresso hover:bg-linen/50 active:scale-[0.99] transition text-xs font-medium cursor-pointer"
+            >
+              Отмена
+            </button>
+          )
+        ) : (
+          <button
+            type="button"
+            onClick={() => handleSubmit("draft")}
+            disabled={isSubmitting}
+            className="py-3 px-5 rounded-xl border border-linen-dark bg-white text-muted hover:text-espresso hover:bg-linen/50 active:scale-[0.99] transition text-xs font-medium cursor-pointer"
+          >
+            Сохранить как черновик
+          </button>
+        )}
       </div>
     </div>
   );

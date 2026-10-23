@@ -96,6 +96,8 @@ export function mapDbProductToDoll(
     images,
     isFeatured: product.isFeatured,
     isDraft: product.status === "draft",
+    isCustomOrder: product.isCustomOrder ?? false,
+    customRequestId: product.customRequestId ?? null,
     createdAt: product.createdAt.toISOString(),
     updatedAt: product.updatedAt.toISOString(),
   };

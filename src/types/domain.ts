@@ -48,6 +48,8 @@ export interface Doll {
   images: DollImage[];
   isFeatured?: boolean;
   isDraft?: boolean;
+  isCustomOrder?: boolean;
+  customRequestId?: string | null;
   createdAt: string;
   updatedAt: string;
 }

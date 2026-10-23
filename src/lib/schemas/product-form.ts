@@ -22,6 +22,8 @@ export const productFormSchema = z.object({
   materials: z.array(z.string().min(1)).min(1, "Добавьте хотя бы один материал"),
   status: z.enum(["available", "sold", "made_to_order", "draft"]),
   isFeatured: z.boolean().default(false),
+  isCustomOrder: z.boolean().default(false),
+  customRequestId: z.string().uuid().optional().nullable(),
   details: z
     .object({
       wingMaterial: z.string().optional(),

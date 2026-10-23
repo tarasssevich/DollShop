@@ -4,7 +4,7 @@ import { z } from "zod";
 import { eq, ne } from "drizzle-orm";
 import { revalidateTag, revalidatePath } from "next/cache";
 import { db } from "@/db/client";
-import { products, type ProductSpecs } from "@/db/schema";
+import { products, customRequests, type ProductSpecs } from "@/db/schema";
 import { requireAdminAction } from "@/lib/auth/guard";
 import { slugify } from "@/lib/utils/slugify";
 import { CACHE_TAGS } from "@/lib/cache/tags";
@@ -100,9 +100,21 @@ export async function saveProductAction(
           status: data.status,
           specs,
           isFeatured: data.isFeatured,
+          isCustomOrder: data.isCustomOrder ?? existing.isCustomOrder,
+          customRequestId:
+            data.customRequestId !== undefined
+              ? data.customRequestId
+              : existing.customRequestId,
           updatedAt: new Date(),
         })
         .where(eq(products.id, data.id));
+
+      if (data.customRequestId) {
+        await db
+          .update(customRequests)
+          .set({ responseProductId: data.id, updatedAt: new Date() })
+          .where(eq(customRequests.id, data.customRequestId));
+      }
 
       // Инвалидация кэша Next.js ISR и обновление витрины и админки
       try {
@@ -114,6 +126,7 @@ export async function saveProductAction(
         revalidatePath("/cart", "page");
         revalidatePath("/galereya", "page");
         revalidatePath("/admin/kukly", "page");
+        revalidatePath("/admin/zayavki", "page");
       } catch {
         // Игнорируем вне Next.js
       }
@@ -137,12 +150,21 @@ export async function saveProductAction(
           status: data.status,
           specs,
           isFeatured: data.isFeatured,
+          isCustomOrder: data.isCustomOrder ?? false,
+          customRequestId: data.customRequestId || null,
           sortOrder: 0,
         })
         .returning({ id: products.id, slug: products.slug });
 
       if (!created) {
         return { success: false, error: "Не удалось сохранить куклу" };
+      }
+
+      if (data.customRequestId) {
+        await db
+          .update(customRequests)
+          .set({ responseProductId: created.id, updatedAt: new Date() })
+          .where(eq(customRequests.id, data.customRequestId));
       }
 
       // Инвалидация кэша Next.js ISR и обновление витрины и админки
@@ -155,6 +177,7 @@ export async function saveProductAction(
         revalidatePath("/cart", "page");
         revalidatePath("/galereya", "page");
         revalidatePath("/admin/kukly", "page");
+        revalidatePath("/admin/zayavki", "page");
       } catch {
         // Игнорируем вне Next.js
       }
@@ -202,6 +225,39 @@ export async function deleteProductAction(
     }
 
     return { success: true, data: { deleted: true } };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Неизвестная ошибка";
+    return { success: false, error: message };
+  }
+}
+
+/**
+ * Отвязка куклы-ответа от индивидуальной заявки.
+ */
+export async function detachResponseDollAction(
+  requestId: string
+): Promise<ActionResult<{ detached: boolean }>> {
+  try {
+    await requireAdminAction();
+
+    await db
+      .update(customRequests)
+      .set({ responseProductId: null, updatedAt: new Date() })
+      .where(eq(customRequests.id, requestId));
+
+    await db
+      .update(products)
+      .set({ customRequestId: null, updatedAt: new Date() })
+      .where(eq(products.customRequestId, requestId));
+
+    try {
+      revalidatePath("/admin/zayavki", "page");
+      revalidatePath("/admin/kukly", "page");
+    } catch {
+      // Игнорируем вне Next.js
+    }
+
+    return { success: true, data: { detached: true } };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Неизвестная ошибка";
     return { success: false, error: message };

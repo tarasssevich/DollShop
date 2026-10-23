@@ -26,6 +26,13 @@ describe("catalog repository layer", () => {
     }
   });
 
+  it("never includes custom order dolls in public getDolls() queries", async () => {
+    const dolls = await getDolls();
+    for (const d of dolls) {
+      expect(d.isCustomOrder).toBeFalsy();
+    }
+  });
+
   it("finds a published doll by slug ('selesta')", async () => {
     const doll = await getDollBySlug("selesta");
     expect(doll).not.toBeNull();

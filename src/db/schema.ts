@@ -103,6 +103,8 @@ export const products = pgTable(
     status: productStatusEnum("status").notNull().default("draft"),
     reservedUntil: timestamp("reserved_until", { withTimezone: true }),
     isFeatured: boolean("is_featured").notNull().default(false),
+    isCustomOrder: boolean("is_custom_order").notNull().default(false),
+    customRequestId: uuid("custom_request_id"),
     sortOrder: integer("sort_order").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
@@ -115,6 +117,8 @@ export const products = pgTable(
     index("products_slug_idx").on(table.slug),
     index("products_status_idx").on(table.status),
     index("products_is_featured_idx").on(table.isFeatured),
+    index("products_is_custom_order_idx").on(table.isCustomOrder),
+    index("products_custom_request_id_idx").on(table.customRequestId),
     index("products_sort_order_idx").on(table.sortOrder),
     check("product_price_non_negative", sql`${table.price} >= 0`),
     check("product_currency_byn", sql`${table.currency} = 'BYN'`),
@@ -245,6 +249,11 @@ export const customRequests = pgTable(
       () => products.id,
       { onDelete: "set null" }
     ),
+    responseProductId: uuid("response_product_id").references(
+      () => products.id,
+      { onDelete: "set null" }
+    ),
+    publicToken: uuid("public_token").notNull().defaultRandom().unique(),
     customerName: text("customer_name").notNull(),
     customerPhone: text("customer_phone").notNull(),
     customerContact: text("customer_contact"),
@@ -267,6 +276,8 @@ export const customRequests = pgTable(
   },
   (table) => [
     index("custom_requests_reference_product_id_idx").on(table.referenceProductId),
+    index("custom_requests_response_product_id_idx").on(table.responseProductId),
+    index("custom_requests_public_token_idx").on(table.publicToken),
     index("custom_requests_status_idx").on(table.status),
     index("custom_requests_created_at_idx").on(table.createdAt),
   ]
@@ -437,6 +448,10 @@ export const productsRelations = relations(products, ({ many, one }) => ({
   media: many(productMedia),
   orderItems: many(orderItems),
   customRequests: many(customRequests),
+  customRequestOrigin: one(customRequests, {
+    fields: [products.customRequestId],
+    references: [customRequests.id],
+  }),
   reservation: one(reservations, {
     fields: [products.id],
     references: [reservations.productId],
@@ -475,6 +490,10 @@ export const orderItemsRelations = relations(orderItems, ({ one }) => ({
 export const customRequestsRelations = relations(customRequests, ({ one }) => ({
   referenceProduct: one(products, {
     fields: [customRequests.referenceProductId],
+    references: [products.id],
+  }),
+  responseProduct: one(products, {
+    fields: [customRequests.responseProductId],
     references: [products.id],
   }),
 }));

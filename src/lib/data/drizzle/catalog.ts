@@ -22,6 +22,7 @@ export interface GetDollsFilter {
   offset?: number;
   includeDrafts?: boolean;
   hasImages?: boolean;
+  includeCustomOrders?: boolean;
 }
 
 const VALID_SLUG_REGEX = /^[a-z0-9-]+$/;
@@ -32,13 +33,18 @@ const VALID_SLUG_REGEX = /^[a-z0-9-]+$/;
 async function fetchRawDollsFromDb(options: {
   featured?: boolean;
   includeDrafts?: boolean;
+  includeCustomOrders?: boolean;
 } = {}): Promise<Doll[]> {
-  const { featured, includeDrafts = false } = options;
+  const { featured, includeDrafts = false, includeCustomOrders = false } = options;
 
   const conditions = [];
 
   if (!includeDrafts) {
     conditions.push(ne(products.status, "draft"));
+  }
+
+  if (!includeCustomOrders) {
+    conditions.push(eq(products.isCustomOrder, false));
   }
 
   if (featured !== undefined) {
@@ -94,12 +100,13 @@ export async function getDolls(filter: GetDollsFilter = {}): Promise<Doll[]> {
     offset = 0,
     includeDrafts = false,
     hasImages,
+    includeCustomOrders = false,
   } = filter;
 
   // Черновики запрашиваются только админкой напрямую без публичного кэша
   let list = includeDrafts
-    ? await fetchRawDollsFromDb({ featured, includeDrafts: true })
-    : await getRawDollsCached({ featured, includeDrafts: false });
+    ? await fetchRawDollsFromDb({ featured, includeDrafts: true, includeCustomOrders })
+    : await getRawDollsCached({ featured, includeDrafts: false, includeCustomOrders });
 
   if (category) {
     list = list.filter((doll) => doll.category === category);

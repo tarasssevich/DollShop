@@ -2,7 +2,10 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
   getAdminRequestsAction,
   updateAdminRequestStatusAction,
+  getAdminDollByIdAction,
 } from "../requests";
+import { buildCustomOrderNotificationText } from "@/lib/notify/templates";
+import { detachResponseDollAction } from "@/actions/admin/products";
 import { client } from "@/db/client";
 import * as guardModule from "@/lib/auth/guard";
 
@@ -120,5 +123,72 @@ describe("Admin Requests Actions (Step 5.6 - Zero-IT UX)", () => {
 
     expect(res.success).toBe(false);
     expect(res.error).toBeDefined();
+  });
+
+  it("корректно связывает куклу-ответ с заявкой и возвращает в getAdminRequestsAction", async () => {
+    // 1. Создаем куклу-ответ
+    const [respDoll] = await client`
+      INSERT INTO products (
+        title, slug, story, price, specs, status, is_custom_order, custom_request_id
+      ) VALUES (
+        'Индивидуальная фея Ромашка',
+        ${`response-doll-${Date.now()}`},
+        'Создана специально по индивидуальной заявке',
+        65.00,
+        '{"height_cm": 20, "materials": ["Хлопок", "Бусины"]}'::jsonb,
+        'available',
+        true,
+        ${testRequestId}::uuid
+      ) RETURNING id, slug, title
+    `;
+
+    // 2. Привязываем к заявке
+    await client`
+      UPDATE custom_requests
+      SET response_product_id = ${respDoll!.id}::uuid, status = 'accepted'
+      WHERE id = ${testRequestId}::uuid
+    `;
+
+    // 3. Проверяем получение через getAdminRequestsAction
+    const res = await getAdminRequestsAction();
+    expect(res.success).toBe(true);
+
+    const found = res.requests.find((r) => r.id === testRequestId);
+    expect(found).toBeDefined();
+    expect(found?.status).toBe("accepted");
+    expect(found?.responseDoll).toBeDefined();
+    expect(found?.responseDoll?.id).toBe(respDoll!.id);
+    expect(found?.responseDoll?.title).toBe("Индивидуальная фея Ромашка");
+    expect(found?.responseDoll?.priceByn).toBe(65);
+    expect(found?.responseDoll?.isCustomOrder).toBe(true);
+
+    // 4. Проверяем getAdminDollByIdAction
+    const dollByIdRes = await getAdminDollByIdAction(respDoll!.id);
+    expect(dollByIdRes.success).toBe(true);
+    expect(dollByIdRes.doll?.name).toBe("Индивидуальная фея Ромашка");
+
+    // 5. Проверяем формирование уведомления
+    const notifText = buildCustomOrderNotificationText({
+      customerName: "Анастасия",
+      dollTitle: "Индивидуальная фея Ромашка",
+      priceByn: 65,
+      slug: respDoll!.slug,
+    });
+    expect(notifText).toContain("Анастасия");
+    expect(notifText).toContain("Индивидуальная фея Ромашка");
+    expect(notifText).toContain("65.00 BYN");
+    expect(notifText).toContain(`/kukly/${respDoll!.slug}`);
+
+    // 6. Проверяем detachResponseDollAction
+    const detachRes = await detachResponseDollAction(testRequestId);
+    expect(detachRes.success).toBe(true);
+
+    const [reqAfter] = await client<Array<{ response_product_id: string | null }>>`
+      SELECT response_product_id FROM custom_requests WHERE id = ${testRequestId}::uuid
+    `;
+    expect(reqAfter?.response_product_id).toBeNull();
+
+    // Чистим куклу-ответ
+    await client`DELETE FROM products WHERE id = ${respDoll!.id}::uuid`;
   });
 });

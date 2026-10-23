@@ -7,6 +7,7 @@ import {
   ShieldCheck,
   HeartHandshake,
   ArrowRight,
+  Sparkles,
 } from "lucide-react";
 import { Container } from "@/components/layout/Container";
 import { ProductGallery } from "@/components/shop/ProductGallery";
@@ -74,6 +75,7 @@ export async function generateMetadata({
       title: `${doll.name} · Кукла ручной работы (${doll.priceByn} BYN)`,
       description: doll.description,
     },
+    robots: doll.isCustomOrder ? { index: false, follow: false } : undefined,
   };
 }
 
@@ -88,7 +90,9 @@ export default async function DollDetailPage({ params }: PageProps) {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://dollshop.by";
   const breadcrumbs = [
     { name: "Главная", url: `${baseUrl}/` },
-    { name: "Куклы в наличии", url: `${baseUrl}/kukly` },
+    doll.isCustomOrder
+      ? { name: "Индивидуальный заказ", url: `${baseUrl}/na-zakaz` }
+      : { name: "Куклы в наличии", url: `${baseUrl}/kukly` },
     { name: doll.name, url: `${baseUrl}/kukly/${doll.slug}` },
   ];
 
@@ -151,6 +155,13 @@ export default async function DollDetailPage({ params }: PageProps) {
           <div className="lg:col-span-6 space-y-6">
             {/* Header info */}
             <div className="space-y-2">
+              {doll.isCustomOrder && (
+                <div className="rounded-xl border border-terracotta/30 bg-terracotta/10 px-3.5 py-2 text-xs text-terracotta flex items-center gap-2 font-medium">
+                  <Sparkles className="h-4 w-4 shrink-0 text-terracotta" />
+                  <span>Кукла создана по вашей индивидуальной заявке и готова к заказу</span>
+                </div>
+              )}
+
               <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-muted font-semibold">
                 <span>{doll.collection || "Авторская серия"}</span>
                 <span>·</span>

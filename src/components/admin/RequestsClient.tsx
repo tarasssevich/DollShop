@@ -15,14 +15,23 @@ import {
   XCircle,
   Clock,
   ExternalLink,
+  Plus,
+  Gift,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { formatBelarusPhone } from "@/lib/utils/phone";
 import {
   updateAdminRequestStatusAction,
+  getAdminRequestsAction,
+  getAdminDollByIdAction,
   type AdminCustomRequestItem,
 } from "@/actions/admin/requests";
+import { buildCustomOrderNotificationText } from "@/lib/notify/templates";
+import { detachResponseDollAction } from "@/actions/admin/products";
+import { ProductForm } from "@/components/admin/ProductForm";
+import type { Doll } from "@/types/domain";
 
 interface RequestsClientProps {
   initialRequests: AdminCustomRequestItem[];
@@ -34,11 +43,22 @@ export function RequestsClient({ initialRequests }: RequestsClientProps) {
     "all" | "new" | "in_discussion" | "accepted" | "declined"
   >("all");
   const [copiedId, setCopiedId] = React.useState<string | null>(null);
+  const [copiedNotifyId, setCopiedNotifyId] = React.useState<string | null>(null);
+
+  // Состояние модального окна создания/редактирования куклы-ответа
+  const [activeDollFormRequestId, setActiveDollFormRequestId] = React.useState<string | null>(null);
+  const [editingDoll, setEditingDoll] = React.useState<Doll | null>(null);
+  const [loadingDollId, setLoadingDollId] = React.useState<string | null>(null);
 
   const filteredRequests = React.useMemo(() => {
     if (filter === "all") return requests;
     return requests.filter((r) => r.status === filter);
   }, [requests, filter]);
+
+  const activeRequest = React.useMemo(() => {
+    if (!activeDollFormRequestId) return null;
+    return requests.find((r) => r.id === activeDollFormRequestId) || null;
+  }, [requests, activeDollFormRequestId]);
 
   const handleStatusChange = async (
     requestId: string,
@@ -52,7 +72,7 @@ export function RequestsClient({ initialRequests }: RequestsClientProps) {
         );
         toast.success(
           newStatus === "accepted"
-            ? "Заявка принята в работу!"
+            ? "Заявка принята в работу! Теперь вы можете подготовить куклу-ответ."
             : newStatus === "in_discussion"
             ? "Заявка переведена в обсуждение."
             : newStatus === "declined"
@@ -81,6 +101,74 @@ export function RequestsClient({ initialRequests }: RequestsClientProps) {
     setCopiedId(req.id);
     toast.success("Шаблон ответа клиенту скопирован!");
     setTimeout(() => setCopiedId(null), 3000);
+  };
+
+  const handleOpenDollForm = (req: AdminCustomRequestItem) => {
+    setEditingDoll(null);
+    setActiveDollFormRequestId(req.id);
+  };
+
+  const handleEditDoll = async (req: AdminCustomRequestItem) => {
+    if (!req.responseDoll) return;
+    setLoadingDollId(req.id);
+    try {
+      const res = await getAdminDollByIdAction(req.responseDoll.id);
+      if (res.success && res.doll) {
+        setEditingDoll(res.doll);
+        setActiveDollFormRequestId(req.id);
+      } else {
+        toast.error(res.error || "Не удалось загрузить данные куклы для редактирования");
+      }
+    } catch {
+      toast.error("Ошибка соединения при загрузке куклы");
+    } finally {
+      setLoadingDollId(null);
+    }
+  };
+
+  const handleDetachDoll = async (requestId: string) => {
+    if (!window.confirm("Вы уверены, что хотите отвязать куклу от этой заявки?")) {
+      return;
+    }
+    try {
+      const res = await detachResponseDollAction(requestId);
+      if (res.success) {
+        setRequests((prev) =>
+          prev.map((r) => (r.id === requestId ? { ...r, responseDoll: null } : r))
+        );
+        toast.success("Кукла отвязана от заявки");
+      } else {
+        toast.error(res.error || "Не удалось отвязать куклу");
+      }
+    } catch {
+      toast.error("Ошибка при отвязке куклы");
+    }
+  };
+
+  const handleDollSaved = async (
+    requestId: string,
+    dollInfo: { id: string; slug: string; title: string }
+  ) => {
+    setActiveDollFormRequestId(null);
+    setEditingDoll(null);
+    toast.success(`Кукла «${dollInfo.title}» успешно сохранена и прикреплена к заявке!`);
+
+    // Мгновенная перезагрузка актуального списка заявок с сервера
+    try {
+      const res = await getAdminRequestsAction();
+      if (res.success) {
+        setRequests(res.requests);
+      }
+    } catch {
+      // Игнорируем фоновое обновление
+    }
+  };
+
+  const handleCopyNotification = (req: AdminCustomRequestItem, text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedNotifyId(req.id);
+    toast.success("Сообщение для покупателя скопировано в буфер обмена!");
+    setTimeout(() => setCopiedNotifyId(null), 3500);
   };
 
   return (
@@ -151,12 +239,21 @@ export function RequestsClient({ initialRequests }: RequestsClientProps) {
             const cleanDigits = req.customerPhone.replace(/\D/g, "");
             const tgHandle = req.customerContact?.replace(/^@/, "");
 
+            const notificationText = req.responseDoll
+              ? buildCustomOrderNotificationText({
+                  customerName: req.customerName,
+                  dollTitle: req.responseDoll.title,
+                  priceByn: req.responseDoll.priceByn,
+                  slug: req.responseDoll.slug,
+                })
+              : "";
+
             return (
               <div
                 key={req.id}
                 className="bg-white rounded-2xl border border-linen-dark p-5 sm:p-6 shadow-sm space-y-4"
               >
-                {/* Хедер */}
+                {/* Хедер карточки */}
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-linen-dark pb-3">
                   <div className="flex items-center gap-2">
                     <span className="font-serif text-lg font-medium text-espresso">
@@ -222,7 +319,7 @@ export function RequestsClient({ initialRequests }: RequestsClientProps) {
                             {req.referenceDoll.title}
                           </p>
                           <Link
-                            href={`/catalog/${req.referenceDoll.slug}`}
+                            href={`/kukly/${req.referenceDoll.slug}`}
                             target="_blank"
                             className="text-[11px] text-terracotta hover:underline inline-flex items-center gap-1"
                           >
@@ -279,7 +376,7 @@ export function RequestsClient({ initialRequests }: RequestsClientProps) {
                     {req.referencePhotoUrls.length > 0 && (
                       <div className="space-y-1.5">
                         <p className="text-[10px] text-muted uppercase tracking-wider">
-                          Фото-референс:
+                          Фото-референс от заказчика:
                         </p>
                         <div className="flex flex-wrap gap-2">
                           {req.referencePhotoUrls.map((url) => (
@@ -288,7 +385,7 @@ export function RequestsClient({ initialRequests }: RequestsClientProps) {
                               href={url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="block h-20 w-20 overflow-hidden rounded-lg border border-linen-dark bg-linen"
+                              className="block h-20 w-20 overflow-hidden rounded-lg border border-linen-dark bg-linen hover:opacity-90 transition"
                             >
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img src={url} alt="Фото-референс" className="h-full w-full object-cover" />
@@ -299,6 +396,185 @@ export function RequestsClient({ initialRequests }: RequestsClientProps) {
                     )}
                   </div>
                 </div>
+
+                {/* БЛОК КУКЛЫ-ОТВЕТА (КОГДА ЗАЯВКА ПРИНЯТА В РАБОТУ) */}
+                {req.status === "accepted" && (
+                  <div className="pt-2">
+                    {req.responseDoll ? (
+                      <div className="rounded-2xl border border-linen-dark bg-alabaster/40 p-4 space-y-3.5">
+                        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-linen-dark pb-2">
+                          <span className="text-xs font-semibold uppercase tracking-wider text-terracotta flex items-center gap-1.5">
+                            <Gift className="h-4 w-4 text-terracotta" />
+                            Кукла-ответ к этой заявке
+                          </span>
+                          <span className="text-[11px] text-muted bg-linen px-2 py-0.5 rounded-full border border-linen-dark">
+                            🔒 Скрыта из общего каталога
+                          </span>
+                        </div>
+
+                        {/* Карточка готовой куклы */}
+                        <div className="flex flex-col sm:flex-row gap-3.5 items-start bg-white p-3.5 rounded-xl border border-linen-dark shadow-2xs">
+                          {req.responseDoll.coverUrl && (
+                            <div className="relative h-24 w-20 shrink-0 overflow-hidden rounded-lg border border-linen-dark bg-linen">
+                              <Image
+                                src={req.responseDoll.coverUrl}
+                                alt={req.responseDoll.title}
+                                fill
+                                sizes="80px"
+                                className="object-cover"
+                              />
+                            </div>
+                          )}
+                          <div className="space-y-1 min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <h4 className="font-serif text-base font-medium text-espresso truncate">
+                                {req.responseDoll.title}
+                              </h4>
+                              <span className="font-sans font-bold text-sm text-terracotta">
+                                {req.responseDoll.priceByn.toFixed(2)} BYN
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-muted">
+                              Рост: {req.responseDoll.heightCm} см · Материалы:{" "}
+                              {req.responseDoll.materials.join(", ")}
+                            </p>
+                            {req.responseDoll.story && (
+                              <p className="text-xs text-espresso/80 line-clamp-2 italic">
+                                «{req.responseDoll.story}»
+                              </p>
+                            )}
+                            <div className="flex flex-wrap items-center gap-2 pt-1.5">
+                              <Link
+                                href={`/kukly/${req.responseDoll.slug}`}
+                                target="_blank"
+                                className="text-xs text-terracotta hover:underline inline-flex items-center gap-1 font-medium"
+                              >
+                                Открыть карточку для проверки <ExternalLink className="h-3 w-3" />
+                              </Link>
+                              <span className="text-muted text-xs">·</span>
+                              <button
+                                type="button"
+                                onClick={() => handleEditDoll(req)}
+                                disabled={loadingDollId === req.id}
+                                className="text-xs text-muted hover:text-espresso underline cursor-pointer disabled:opacity-50"
+                              >
+                                {loadingDollId === req.id ? "Загрузка..." : "Редактировать куклу"}
+                              </button>
+                              <span className="text-muted text-xs">·</span>
+                              <button
+                                type="button"
+                                onClick={() => handleDetachDoll(req.id)}
+                                className="text-xs text-red-600 hover:text-red-700 underline cursor-pointer"
+                              >
+                                Отвязать
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Уведомление покупателя со ссылкой на готовую куклу */}
+                        <div className="rounded-xl bg-emerald-50/70 border border-emerald-200/80 p-3.5 space-y-2.5">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-xs font-semibold text-emerald-900 flex items-center gap-1.5">
+                              <Send className="h-3.5 w-3.5 text-emerald-700" />
+                              Уведомление для покупателя:
+                            </span>
+                            <span className="text-[11px] text-emerald-800 font-medium">
+                              {req.contactChannel === "telegram"
+                                ? "💬 Telegram"
+                                : req.contactChannel === "viber"
+                                ? "🟣 Viber"
+                                : "📞 Звонок"}
+                            </span>
+                          </div>
+
+                          <div className="bg-white rounded-lg p-3 text-xs text-espresso/90 border border-emerald-100 font-sans whitespace-pre-line leading-relaxed shadow-2xs">
+                            {notificationText}
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-2 pt-1">
+                            <Button
+                              type="button"
+                              size="sm"
+                              className="h-8 text-xs bg-emerald-700 hover:bg-emerald-800 text-white gap-1.5"
+                              onClick={() => handleCopyNotification(req, notificationText)}
+                            >
+                              {copiedNotifyId === req.id ? (
+                                <>
+                                  <Check className="h-3.5 w-3.5 text-white" />
+                                  Сообщение скопировано!
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="h-3.5 w-3.5" />
+                                  Скопировать сообщение со ссылкой
+                                </>
+                              )}
+                            </Button>
+
+                            {tgHandle && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="h-8 text-xs border-emerald-300 hover:bg-emerald-100 text-emerald-900 gap-1.5"
+                                asChild
+                              >
+                                <a
+                                  href={`https://t.me/${tgHandle}?text=${encodeURIComponent(
+                                    notificationText
+                                  )}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  <Send className="h-3.5 w-3.5 text-emerald-700" />
+                                  Отправить в Telegram
+                                </a>
+                              </Button>
+                            )}
+
+                            {req.contactChannel === "viber" && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="h-8 text-xs border-emerald-300 hover:bg-emerald-100 text-emerald-900 gap-1.5"
+                                asChild
+                              >
+                                <a href={`viber://chat?number=%2B${cleanDigits}`}>
+                                  <MessageCircle className="h-3.5 w-3.5 text-emerald-700" />
+                                  Открыть диалог в Viber
+                                </a>
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      /* Заявка принята, кукла еще не добавлена */
+                      <div className="rounded-xl border border-dashed border-terracotta/40 bg-terracotta/5 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-1.5 text-xs font-semibold text-terracotta">
+                            <Sparkles className="h-4 w-4" />
+                            Заявка принята в работу: добавьте куклу-ответ
+                          </div>
+                          <p className="text-[11px] text-muted">
+                            Создайте куклу прямо здесь с фотографиями и ценой. Она будет привязана к этой заявке, не попадет в каталог, и сформирует ссылку для покупателя.
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="bg-terracotta hover:bg-terracotta-dark text-white text-xs gap-1.5 shrink-0"
+                          onClick={() => handleOpenDollForm(req)}
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                          Дать ответ в виде куклы
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Панель быстрых действий */}
                 <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-linen-dark">
@@ -438,6 +714,38 @@ export function RequestsClient({ initialRequests }: RequestsClientProps) {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* МОДАЛЬНОЕ ОКНО СОЗДАНИЯ / РЕДАКТИРОВАНИЯ КУКЛЫ-ОТВЕТА */}
+      {activeRequest && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200">
+          <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl p-5 sm:p-7 border border-linen-dark max-h-[92vh] overflow-y-auto">
+            {/* Кнопка закрытия модалки */}
+            <button
+              type="button"
+              onClick={() => {
+                setActiveDollFormRequestId(null);
+                setEditingDoll(null);
+              }}
+              className="absolute top-4 right-4 p-2 text-muted hover:text-espresso rounded-full hover:bg-linen transition cursor-pointer"
+              title="Закрыть"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <ProductForm
+              customRequestId={activeRequest.id}
+              customerName={activeRequest.customerName}
+              referenceDollTitle={activeRequest.referenceDoll?.title}
+              initialDoll={editingDoll}
+              onSuccess={(saved) => handleDollSaved(activeRequest.id, saved)}
+              onCancel={() => {
+                setActiveDollFormRequestId(null);
+                setEditingDoll(null);
+              }}
+            />
+          </div>
         </div>
       )}
     </div>

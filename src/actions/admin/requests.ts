@@ -4,8 +4,10 @@ import { z } from "zod";
 import { eq, desc, inArray, asc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db/client";
-import { customRequests, products, productMedia } from "@/db/schema";
+import { customRequests, products, productMedia, type ProductSpecs } from "@/db/schema";
 import { requireAdminAction } from "@/lib/auth/guard";
+import { mapDbProductToDoll } from "@/lib/data/drizzle/mappers";
+import type { Doll } from "@/types/domain";
 
 export interface AdminCustomRequestItem {
   id: string;
@@ -17,11 +19,25 @@ export interface AdminCustomRequestItem {
   referencePhotoUrls: string[];
   status: "new" | "in_discussion" | "accepted" | "declined";
   createdAt: string;
+  publicToken?: string;
   referenceDoll: {
     id: string;
     title: string;
     slug: string;
     coverUrl: string | null;
+  } | null;
+  responseDoll: {
+    id: string;
+    title: string;
+    slug: string;
+    priceByn: number;
+    heightCm: number;
+    story: string;
+    materials: string[];
+    collection?: string;
+    coverUrl: string | null;
+    status: string;
+    isCustomOrder: boolean;
   } | null;
 }
 
@@ -45,30 +61,42 @@ export async function getAdminRequestsAction(): Promise<{
       return { success: true, requests: [] };
     }
 
-    // Собираем все уникальные id кукол-ориентиров для O(1) batch-выборки
-    const refProductIds = Array.from(
-      new Set(
-        rawRequests
-          .map((r) => r.referenceProductId)
-          .filter((id): id is string => Boolean(id))
-      )
-    );
+    // Собираем все уникальные id кукол-ориентиров и кукол-ответов для O(1) batch-выборки
+    const productIdsSet = new Set<string>();
+    for (const r of rawRequests) {
+      if (r.referenceProductId) productIdsSet.add(r.referenceProductId);
+      if (r.responseProductId) productIdsSet.add(r.responseProductId);
+    }
+    const allUniqueProductIds = Array.from(productIdsSet);
 
-    const productsById = new Map<
-      string,
-      { id: string; title: string; slug: string }
-    >();
+    type ProductMapItem = {
+      id: string;
+      title: string;
+      slug: string;
+      price: string;
+      specs: ProductSpecs;
+      story: string;
+      status: string;
+      isCustomOrder: boolean;
+    };
+
+    const productsById = new Map<string, ProductMapItem>();
     const coversByProductId = new Map<string, string>();
 
-    if (refProductIds.length > 0) {
+    if (allUniqueProductIds.length > 0) {
       const allProducts = await db
         .select({
           id: products.id,
           title: products.title,
           slug: products.slug,
+          price: products.price,
+          specs: products.specs,
+          story: products.story,
+          status: products.status,
+          isCustomOrder: products.isCustomOrder,
         })
         .from(products)
-        .where(inArray(products.id, refProductIds));
+        .where(inArray(products.id, allUniqueProductIds));
 
       for (const p of allProducts) {
         productsById.set(p.id, p);
@@ -80,7 +108,7 @@ export async function getAdminRequestsAction(): Promise<{
           url: productMedia.url,
         })
         .from(productMedia)
-        .where(inArray(productMedia.productId, refProductIds))
+        .where(inArray(productMedia.productId, allUniqueProductIds))
         .orderBy(asc(productMedia.displayOrder));
 
       for (const m of allMedia) {
@@ -92,6 +120,7 @@ export async function getAdminRequestsAction(): Promise<{
 
     const result: AdminCustomRequestItem[] = rawRequests.map((req) => {
       let referenceDoll: AdminCustomRequestItem["referenceDoll"] = null;
+      let responseDoll: AdminCustomRequestItem["responseDoll"] = null;
 
       if (req.referenceProductId) {
         const prod = productsById.get(req.referenceProductId);
@@ -101,6 +130,25 @@ export async function getAdminRequestsAction(): Promise<{
             title: prod.title,
             slug: prod.slug,
             coverUrl: coversByProductId.get(prod.id) ?? null,
+          };
+        }
+      }
+
+      if (req.responseProductId) {
+        const respProd = productsById.get(req.responseProductId);
+        if (respProd) {
+          responseDoll = {
+            id: respProd.id,
+            title: respProd.title,
+            slug: respProd.slug,
+            priceByn: parseFloat(respProd.price),
+            heightCm: respProd.specs.height_cm || 20,
+            story: respProd.story,
+            materials: respProd.specs.materials || [],
+            collection: respProd.specs.collection,
+            coverUrl: coversByProductId.get(respProd.id) ?? null,
+            status: respProd.status,
+            isCustomOrder: respProd.isCustomOrder,
           };
         }
       }
@@ -115,7 +163,9 @@ export async function getAdminRequestsAction(): Promise<{
         referencePhotoUrls: req.referencePhotoUrls ?? [],
         status: req.status as "new" | "in_discussion" | "accepted" | "declined",
         createdAt: req.createdAt.toISOString(),
+        publicToken: req.publicToken,
         referenceDoll,
+        responseDoll,
       };
     });
 
@@ -123,6 +173,38 @@ export async function getAdminRequestsAction(): Promise<{
   } catch (err) {
     console.error("Ошибка при получении заявок:", err);
     return { success: false, requests: [], error: "Не удалось загрузить заявки" };
+  }
+}
+
+/**
+ * Получение полной модели куклы по ID для редактирования в модальном окне админки.
+ */
+export async function getAdminDollByIdAction(
+  id: string
+): Promise<{ success: boolean; doll?: Doll | null; error?: string }> {
+  await requireAdminAction();
+
+  try {
+    const [product] = await db
+      .select()
+      .from(products)
+      .where(eq(products.id, id));
+
+    if (!product) {
+      return { success: false, error: "Кукла не найдена" };
+    }
+
+    const media = await db
+      .select()
+      .from(productMedia)
+      .where(eq(productMedia.productId, id))
+      .orderBy(asc(productMedia.displayOrder));
+
+    const doll = mapDbProductToDoll(product, media);
+    return { success: true, doll };
+  } catch (err) {
+    console.error("Ошибка загрузки куклы по ID:", err);
+    return { success: false, error: "Не удалось загрузить данные куклы" };
   }
 }
 
