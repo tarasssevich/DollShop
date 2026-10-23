@@ -166,7 +166,7 @@
 - **Файлы:** `src/app/admin/(panel)/layout.tsx`, `src/app/admin/(panel)/page.tsx`, `src/app/admin/(panel)/kukly/page.tsx`, `src/app/admin/(panel)/{zakazy,zayavki,nastrojki}/page.tsx`, `src/components/admin/{AdminHeader,AdminBottomNav,DollsListClient}.tsx`, `src/components/admin/__tests__/DollsListClient.test.ts`.
 - **✅ Готово:** Оболочка админки полностью реализована под концепцию Zero-IT UX: мобильный таб-бар с безопасными отступами под жесты iOS; список кукол с крупными превью, индикаторами статусов и горизонтальными фильтр-чипами; поиск по названию; плавающая кнопка (FAB) «+ Новая кукла»; `npm test` ✅ (112 тестов зелёные, 20 сьютов), `npm run typecheck` ✅, `npm run lint` ✅.
 
-### Step 4.3 — Форма куклы «Zero-IT UX» (в один экран)
+### Step 4.3 — Форма куклы «Zero-IT UX» (в один экран) [x]
 - **Что делаем:**
   - **Форма в один экран:** все поля помещаются на одном чистом вертикальном экране без вкладок, аккордеонов и сложных таблиц.
   - **Полное сокрытие технических полей:** поля `slug`, `blur_data_url`, `sort_order`, `id` полностью скрыты от мастера.
@@ -179,8 +179,8 @@
     - «✨ На заказ»
     - отдельная кнопка «📝 Сохранить черновик»
   - Цена в BYN (`inputMode="decimal"`), блок истории с AI-ассистентом, автосохранение черновика в `localStorage` (защита от случайного закрытия браузера), Server Actions + Zod + `requireAdmin()`, инвалидация `revalidateTag`.
-- **Файлы:** `src/app/admin/(panel)/kukly/{new,[id]}/page.tsx`, `src/components/admin/{ProductForm,StatusChips,SpecsFields,MaterialChips}.tsx`, `src/actions/admin/products.ts`.
-- **✅ Готово, когда:** создаю куклу с телефона в один экран без единого IT-термина → она сразу на первом месте витрины; черновик сохраняется локально; дубли slug исключены.
+- **Файлы:** `src/app/admin/(panel)/kukly/{new,[id]}/page.tsx`, `src/components/admin/{ProductForm,MaterialChips}.tsx`, `src/actions/admin/products.ts`, `src/actions/admin/__tests__/products.test.ts`.
+- **✅ Готово:** Форма куклы в один экран разработана по концепции Zero-IT UX: все технические атрибуты (`slug`, `sort_order`, `blur_data_url`) скрыты; автоматическая генерация уникального транслитерированного slug на сервере с разрешением коллизий; кликабельные чипы материалов мгновенно добавляют теги без ручного ввода; человеческие кнопки статусов («🟢 Ищет дом», «🏡 Нашла дом», «✨ На заказ», «📝 Сохранить черновик»); автосохранение черновика в `localStorage` с ненавязчивым баннером восстановления; защищённые Server Actions `saveProductAction` и `deleteProductAction` с проверкой сессии мастера и инвалидацией тегов каталога; 5/5 тестов в `src/actions/admin/__tests__/products.test.ts` ✅, общий сьют 117 тестов ✅, `tsc` и `eslint` ✅.
 
 ### Step 4.4 — S3-хранилище и presigned URL
 - **Что делаем:** аккаунт hoster.by и dev-бакет S3 (или S3-эмулятор в `docker-compose.yml`), CORS для `PUT`, `StorageAdapter` + S3-реализация, Server Action `createUploadUrls` (`requireAdmin`, MIME-whitelist, лимит размера, ключи `products/{productId}/{mediaId}/{size}.webp`, TTL 5 мин, `immutable`). Выбираем способ раздачи: напрямую из S3 или через nginx.
