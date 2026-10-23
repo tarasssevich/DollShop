@@ -304,7 +304,10 @@ erDiagram
 
 ### 6.3 Доступ к БД
 - Порт Postgres закрыт снаружи. К БД подключается только контейнер `web` по внутренней сети Docker.
-- Две роли: `app_owner` (миграции, DDL) и `app_user` (только DML и `EXECUTE` нужных функций).
+- Две роли (миграция `drizzle/0001_roles.sql` и скрипт `docker/postgres/init/02_roles.sql`):
+  - `app_owner`: владелец схемы `public` и `drizzle`, выполнение миграций и DDL (`DATABASE_OWNER_URL`).
+  - `app_user`: runtime-пользователь приложения (`DATABASE_URL`), только DML (`SELECT`, `INSERT`, `UPDATE`, `DELETE`) и `EXECUTE` функций; любые попытки `DROP`, `ALTER`, `TRUNCATE` или создания таблиц блокируются с ошибкой `42501 insufficient_privilege`.
+- У роли `PUBLIC` полностью отозваны права на создание объектов в схеме `public`.
 - Граница авторизации — сервер: публичные запросы фильтруют `status <> 'draft'` в репозитории, каждая admin Server Action вызывает `requireAdmin()`. RLS не нужен, потому что у БД нет публичного API, как у Supabase.
 
 ---

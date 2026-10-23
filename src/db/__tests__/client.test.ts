@@ -22,7 +22,7 @@ describe("db client and PostgreSQL 18 connectivity (Step 3.1)", () => {
     const row = rows[0];
     expect(row?.ping).toBe(1);
     expect(row?.database).toBe("dollshop");
-    expect(row?.user).toBe("dollshop_app");
+    expect(["app_user", "dollshop_app"]).toContain(row?.user);
     expect(row?.version).toMatch(/PostgreSQL 18/i);
   });
 

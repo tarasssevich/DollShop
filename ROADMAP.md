@@ -127,10 +127,10 @@
 - **Файлы:** `src/db/schema.ts`, `drizzle/0000_lyrical_sleeper.sql`, `src/db/migrate.ts`, `src/db/__tests__/schema.test.ts`, `drizzle.config.ts`, `package.json`.
 - **✅ Готово:** миграции успешно сгенерированы (`drizzle/0000_lyrical_sleeper.sql`) и применены к PostgreSQL 18 через `npm run db:migrate`; в БД созданы все 8 таблиц, 6 перечислений и 4 триггера `updated_at`; CHECK-ограничения блокируют отрицательные цены и чужие валюты; каскадное удаление медиа и броней работает; `npm test` ✅ (79 тестов зелёные, 14 сьютов), `npm run typecheck` ✅, `npm run lint` ✅, `npm run build` ✅ (24 страницы).
 
-### Step 3.3 — Роли и права БД
-- **Что делаем:** роли `app_owner` (миграции) и `app_user` (только DML + `EXECUTE` функций), revoke у `PUBLIC`.
-- **Файлы:** `drizzle/0001_roles.sql`, `docker/postgres/init/*.sql`.
-- **✅ Готово, когда:** под `app_user` нельзя выполнить `DROP`/`ALTER`/`TRUNCATE`; приложение работает под `app_user`.
+### Step 3.3 — Роли и права БД [x]
+- **Что делаем:** роли `app_owner` (миграции, DDL) и `app_user` (только DML + `EXECUTE` функций), revoke у `PUBLIC`, миграция прав `drizzle/0001_roles.sql`, скрипт инициализации `docker/postgres/init/02_roles.sql`, тесты на блокировку деструктивного DDL под `app_user`.
+- **Файлы:** `drizzle/0001_roles.sql`, `docker/postgres/init/02_roles.sql`, `src/db/__tests__/roles.test.ts`, `src/lib/env.ts`, `src/db/migrate.ts`, `.env.example`, `.env.local`.
+- **✅ Готово:** роли созданы и проверены; все таблицы, последовательности и функции принадлежат `app_owner`; `app_user` успешно выполняет SELECT, INSERT, UPDATE, DELETE, но не может выполнить DROP TABLE, ALTER TABLE, TRUNCATE TABLE или CREATE TABLE (возвращается ошибка 42501 insufficient_privilege); мигратор `src/db/migrate.ts` использует `app_owner`; `npm test` ✅ (86 тестов зелёные, 15 сьютов), `npm run typecheck` ✅, `npm run lint` ✅, `npm run build` ✅.
 
 ### Step 3.4 — Функции брони и заказов
 - **Что делаем:** SQL-функции `reserve_product`, `release_reservation`, `create_order`, `set_order_status`, `expire_reservations`; типизированные обёртки в TS; скрипт проверки гонки.

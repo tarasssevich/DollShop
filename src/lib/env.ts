@@ -18,6 +18,16 @@ export const envSchema = z.object({
           "DATABASE_URL должна начинаться с postgres:// или postgresql://",
       }
     ),
+  DATABASE_OWNER_URL: z
+    .string()
+    .refine(
+      (val) => val.startsWith("postgres://") || val.startsWith("postgresql://"),
+      {
+        message:
+          "DATABASE_OWNER_URL должна начинаться с postgres:// или postgresql://",
+      }
+    )
+    .optional(),
   DATABASE_MAX_CONNECTIONS: z
     .string()
     .optional()
