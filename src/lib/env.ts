@@ -74,6 +74,12 @@ export const envSchema = z.object({
   S3_ACCESS_KEY_ID: z.string().optional(),
   S3_SECRET_ACCESS_KEY: z.string().optional(),
   S3_BUCKET_MEDIA: z.string().optional().default("dollshop-media"),
+  S3_PUBLIC_URL: z.string().optional(),
+  S3_FORCE_PATH_STYLE: z
+    .string()
+    .optional()
+    .transform((val) => (val !== undefined ? val === "true" || val === "1" : undefined)),
+  STORAGE_DRIVER: z.enum(["s3", "local"]).optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
