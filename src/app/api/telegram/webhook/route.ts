@@ -1,7 +1,15 @@
+import crypto from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { setOrderStatus } from "@/db/functions";
 import { CACHE_TAGS } from "@/lib/cache/tags";
+
+function verifyWebhookSecretTimingSafe(provided: string | null, expected: string): boolean {
+  if (!provided || !expected) return false;
+  const providedHash = crypto.createHash("sha256").update(provided).digest();
+  const expectedHash = crypto.createHash("sha256").update(expected).digest();
+  return crypto.timingSafeEqual(providedHash, expectedHash);
+}
 
 interface TelegramCallbackQuery {
   id: string;
@@ -84,10 +92,16 @@ export async function POST(req: NextRequest) {
   const authorizedChatId = process.env.TELEGRAM_CHAT_ID;
   const webhookSecret = process.env.TELEGRAM_WEBHOOK_SECRET;
 
-  // Проверка секретного токена вебхука, если он настроен
+  // В продакшене секретный токен вебхука обязателен
+  if (process.env.NODE_ENV === "production" && !webhookSecret) {
+    console.error("Критическая ошибка: TELEGRAM_WEBHOOK_SECRET не установлен в продакшене");
+    return NextResponse.json({ error: "Server misconfiguration" }, { status: 500 });
+  }
+
+  // Проверка секретного токена вебхука с защитой от Timing Attack
   if (webhookSecret) {
     const receivedSecret = req.headers.get("x-telegram-bot-api-secret-token");
-    if (receivedSecret !== webhookSecret) {
+    if (!verifyWebhookSecretTimingSafe(receivedSecret, webhookSecret)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
   }

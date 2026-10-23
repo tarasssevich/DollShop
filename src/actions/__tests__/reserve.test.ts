@@ -10,6 +10,8 @@ import {
 } from "@/lib/reservation/token";
 import { client } from "@/db/client";
 
+import { resetRateLimit } from "@/lib/security/rate-limit";
+
 // In-memory cookie store mock for simulating browser sessions
 const cookieJar = new Map<string, { value: string; options?: unknown }>();
 
@@ -23,6 +25,7 @@ vi.mock("next/headers", () => ({
       cookieJar.delete(name);
     },
   })),
+  headers: vi.fn().mockImplementation(async () => new Headers({ "x-forwarded-for": "127.0.0.1" })),
 }));
 
 vi.mock("next/cache", () => ({
@@ -35,6 +38,7 @@ describe("Step 5.1 — Server Actions: Атомарная бронь куклы 
   const testSlug = `fairy-reserve-test-${Date.now()}`;
 
   beforeEach(async () => {
+    resetRateLimit();
     cookieJar.clear();
 
     // Создаем тестовую куклу со статусом 'available'
@@ -219,6 +223,28 @@ describe("Step 5.1 — Server Actions: Атомарная бронь куклы 
     if (!res.success) {
       expect(res.code).toBe("SOLD");
       expect(res.error).toContain("уже обрела свой дом");
+    }
+  });
+
+  it("отклоняет запросы при превышении лимита (RATE_LIMITED)", async () => {
+    // Выполняем 15 запросов (допустимый лимит)
+    for (let i = 0; i < 15; i++) {
+      await reserveProductAction({
+        productId: testProductId,
+        slug: testSlug,
+      });
+    }
+
+    // 16-й запрос должен быть заблокирован rate-limiter
+    const blockedRes = await reserveProductAction({
+      productId: testProductId,
+      slug: testSlug,
+    });
+
+    expect(blockedRes.success).toBe(false);
+    if (!blockedRes.success) {
+      expect(blockedRes.code).toBe("RATE_LIMITED");
+      expect(blockedRes.error).toContain("Слишком много попыток бронирования");
     }
   });
 });

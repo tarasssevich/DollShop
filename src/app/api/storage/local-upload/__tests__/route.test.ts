@@ -65,4 +65,23 @@ describe("Local Upload Route Handler (Step 4.4)", () => {
     const saved = await fs.readFile(fullPath);
     expect(saved.toString()).toBe("fake-webp-binary-data");
   });
+
+  it("отклоняет загрузку опасных расширений (.html, .svg, .js) со статусом 400", async () => {
+    const dangerousKeys = ["malicious.html", "xss.svg", "payload.js", "script.php"];
+
+    for (const key of dangerousKeys) {
+      const req = new NextRequest(
+        `http://localhost:3000/api/storage/local-upload?key=${key}`,
+        {
+          method: "PUT",
+          body: Buffer.from("<script>alert(1)</script>"),
+        }
+      );
+
+      const res = await PUT(req);
+      expect(res.status).toBe(400);
+      const data = await res.json();
+      expect(data.error).toMatch(/Недопустимый тип файла/);
+    }
+  });
 });

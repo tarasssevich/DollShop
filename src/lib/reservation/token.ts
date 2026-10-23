@@ -20,7 +20,13 @@ export type ReserveActionResult =
     }
   | {
       success: false;
-      code: "ALREADY_RESERVED" | "SOLD" | "NOT_FOUND" | "UNAVAILABLE" | "VALIDATION_ERROR";
+      code:
+        | "ALREADY_RESERVED"
+        | "SOLD"
+        | "NOT_FOUND"
+        | "UNAVAILABLE"
+        | "VALIDATION_ERROR"
+        | "RATE_LIMITED";
       error: string;
     };
 

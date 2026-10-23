@@ -262,6 +262,7 @@ export const customRequests = pgTable(
       .defaultNow(),
   },
   (table) => [
+    index("custom_requests_reference_product_id_idx").on(table.referenceProductId),
     index("custom_requests_status_idx").on(table.status),
     index("custom_requests_created_at_idx").on(table.createdAt),
   ]
@@ -354,7 +355,7 @@ export const user = pgTable("user", {
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").notNull().default(false),
   image: text("image"),
-  role: text("role").notNull().default("admin"),
+  role: text("role").notNull().default("viewer"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

@@ -2,13 +2,14 @@
 
 import crypto from "node:crypto";
 import { z } from "zod";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { revalidateTag } from "next/cache";
 import { eq, and, gt } from "drizzle-orm";
 import { db } from "@/db/client";
 import { reservations, products } from "@/db/schema";
 import { reserveProduct, releaseReservation } from "@/db/functions";
 import { CACHE_TAGS } from "@/lib/cache/tags";
+import { checkRateLimit } from "@/lib/security/rate-limit";
 import {
   RESERVATION_TTL_MINUTES,
   RESERVATION_TTL_SECONDS,
@@ -47,6 +48,28 @@ export async function reserveProductAction(
   }
 
   const { productId, slug } = parsed.data;
+
+  // Защита от массового выкупа ботами (Inventory DoS): максимум 15 запросов за 5 минут с одного IP
+  let clientIp = "127.0.0.1";
+  try {
+    const reqHeaders = await headers();
+    clientIp =
+      reqHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      reqHeaders.get("x-real-ip") ||
+      "127.0.0.1";
+  } catch {
+    // В тестах
+  }
+
+  const rateCheck = checkRateLimit(`reserve:${clientIp}`, 15, 5 * 60 * 1000);
+  if (!rateCheck.allowed) {
+    return {
+      success: false,
+      code: "RATE_LIMITED",
+      error: "Слишком много попыток бронирования подряд. Пожалуйста, подождите несколько минут перед следующей попыткой.",
+    };
+  }
+
   const cookieStore = await cookies();
   const cookieName = getReservationCookieName(productId);
 

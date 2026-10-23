@@ -71,4 +71,16 @@ describe("Better Auth & Admin Route Protection (Step 4.1)", () => {
       })
     ).rejects.toThrow();
   });
+
+  it("блокирует публичную регистрацию новых пользователей (disableSignUp: true)", async () => {
+    await expect(
+      auth.api.signUpEmail({
+        body: {
+          name: "Злоумышленник",
+          email: "attacker@test.com",
+          password: "Password123!",
+        },
+      })
+    ).rejects.toThrow();
+  });
 });

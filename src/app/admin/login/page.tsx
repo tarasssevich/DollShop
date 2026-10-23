@@ -10,7 +10,13 @@ import { signIn } from "@/lib/auth/client";
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const returnUrl = searchParams.get("returnUrl") || "/admin/kukly";
+  const rawReturnUrl = searchParams.get("returnUrl") || "/admin/kukly";
+  // Защита от Open Redirect (CWE-601): разрешаем только безопасные внутренние маршруты админки
+  const isValidReturnUrl =
+    rawReturnUrl.startsWith("/admin") &&
+    !rawReturnUrl.startsWith("//") &&
+    !rawReturnUrl.includes("\\");
+  const returnUrl = isValidReturnUrl ? rawReturnUrl : "/admin/kukly";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

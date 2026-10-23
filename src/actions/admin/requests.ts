@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, inArray, asc } from "drizzle-orm";
 import { db } from "@/db/client";
 import { customRequests, products, productMedia } from "@/db/schema";
 import { requireAdminAction } from "@/lib/auth/guard";
@@ -39,39 +39,71 @@ export async function getAdminRequestsAction(): Promise<{
       .from(customRequests)
       .orderBy(desc(customRequests.createdAt));
 
-    const result: AdminCustomRequestItem[] = [];
+    if (rawRequests.length === 0) {
+      return { success: true, requests: [] };
+    }
 
-    for (const req of rawRequests) {
+    // Собираем все уникальные id кукол-ориентиров для O(1) batch-выборки
+    const refProductIds = Array.from(
+      new Set(
+        rawRequests
+          .map((r) => r.referenceProductId)
+          .filter((id): id is string => Boolean(id))
+      )
+    );
+
+    const productsById = new Map<
+      string,
+      { id: string; title: string; slug: string }
+    >();
+    const coversByProductId = new Map<string, string>();
+
+    if (refProductIds.length > 0) {
+      const allProducts = await db
+        .select({
+          id: products.id,
+          title: products.title,
+          slug: products.slug,
+        })
+        .from(products)
+        .where(inArray(products.id, refProductIds));
+
+      for (const p of allProducts) {
+        productsById.set(p.id, p);
+      }
+
+      const allMedia = await db
+        .select({
+          productId: productMedia.productId,
+          url: productMedia.url,
+        })
+        .from(productMedia)
+        .where(inArray(productMedia.productId, refProductIds))
+        .orderBy(asc(productMedia.displayOrder));
+
+      for (const m of allMedia) {
+        if (!coversByProductId.has(m.productId)) {
+          coversByProductId.set(m.productId, m.url);
+        }
+      }
+    }
+
+    const result: AdminCustomRequestItem[] = rawRequests.map((req) => {
       let referenceDoll: AdminCustomRequestItem["referenceDoll"] = null;
 
       if (req.referenceProductId) {
-        const [prod] = await db
-          .select({
-            id: products.id,
-            title: products.title,
-            slug: products.slug,
-          })
-          .from(products)
-          .where(eq(products.id, req.referenceProductId));
-
+        const prod = productsById.get(req.referenceProductId);
         if (prod) {
-          const [media] = await db
-            .select({ url: productMedia.url })
-            .from(productMedia)
-            .where(eq(productMedia.productId, prod.id))
-            .orderBy(productMedia.displayOrder)
-            .limit(1);
-
           referenceDoll = {
             id: prod.id,
             title: prod.title,
             slug: prod.slug,
-            coverUrl: media?.url ?? null,
+            coverUrl: coversByProductId.get(prod.id) ?? null,
           };
         }
       }
 
-      result.push({
+      return {
         id: req.id,
         customerName: req.customerName,
         customerPhone: req.customerPhone,
@@ -81,8 +113,8 @@ export async function getAdminRequestsAction(): Promise<{
         status: req.status as "new" | "in_discussion" | "accepted" | "declined",
         createdAt: req.createdAt.toISOString(),
         referenceDoll,
-      });
-    }
+      };
+    });
 
     return { success: true, requests: result };
   } catch (err) {

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { updateSiteSettingsAction, siteSettingsSchema } from "../settings";
 import { client } from "@/db/client";
 import * as guardModule from "@/lib/auth/guard";
@@ -24,6 +24,22 @@ describe("Admin Settings Action (Step 5.7)", () => {
         userId: "a0000000-0000-0000-0000-000000000001",
       },
     });
+  });
+
+  afterEach(async () => {
+    await client`
+      UPDATE site_settings
+      SET legal_seller_name = 'ИП Прокопенко А. В.',
+          contact_email = 'master@dollshop.by',
+          legal_unp = '193758204',
+          legal_trade_registry_num = '584920',
+          legal_address = 'г. Минск, ул. Немига, 5',
+          contact_phone = '+375 (29) 123-45-67',
+          delivery_cost_branch = 3.50,
+          free_delivery_threshold = 120.00,
+          allowed_payment_methods = '["erip_invoice", "bank_transfer", "cod"]'::jsonb
+      WHERE id = 1
+    `;
   });
 
   it("siteSettingsSchema валидирует корректные данные", () => {

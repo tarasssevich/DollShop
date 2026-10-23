@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, inArray, asc } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
 import { db } from "@/db/client";
 import { orders, orderItems, products, productMedia } from "@/db/schema";
@@ -50,33 +50,58 @@ export async function getAdminOrdersAction(): Promise<{
       .from(orders)
       .orderBy(desc(orders.createdAt));
 
-    const result: AdminOrderItem[] = [];
+    if (rawOrders.length === 0) {
+      return { success: true, orders: [] };
+    }
 
-    for (const ord of rawOrders) {
-      const [itemRow] = await db
-        .select({
-          productId: orderItems.productId,
-          priceAtPurchase: orderItems.priceAtPurchase,
-          title: products.title,
-          slug: products.slug,
-        })
-        .from(orderItems)
-        .innerJoin(products, eq(products.id, orderItems.productId))
-        .where(eq(orderItems.orderId, ord.id));
+    // O(1) batch query: выбираем все связанные позиции заказов за 1 запрос
+    const orderIds = rawOrders.map((o) => o.id);
+    const allItems = await db
+      .select({
+        orderId: orderItems.orderId,
+        productId: orderItems.productId,
+        priceAtPurchase: orderItems.priceAtPurchase,
+        title: products.title,
+        slug: products.slug,
+      })
+      .from(orderItems)
+      .innerJoin(products, eq(products.id, orderItems.productId))
+      .where(inArray(orderItems.orderId, orderIds));
 
-      let coverUrl: string | null = null;
-      if (itemRow?.productId) {
-        const [mediaRow] = await db
-          .select({ url: productMedia.url })
-          .from(productMedia)
-          .where(eq(productMedia.productId, itemRow.productId))
-          .orderBy(productMedia.displayOrder)
-          .limit(1);
-
-        coverUrl = mediaRow?.url ?? null;
+    const itemsByOrderId = new Map<string, typeof allItems[0]>();
+    const productIds: string[] = [];
+    for (const item of allItems) {
+      if (!itemsByOrderId.has(item.orderId)) {
+        itemsByOrderId.set(item.orderId, item);
       }
+      productIds.push(item.productId);
+    }
 
-      result.push({
+    // O(1) batch query: выбираем главные обложки кукол за 1 запрос
+    const coversByProductId = new Map<string, string>();
+    if (productIds.length > 0) {
+      const allMedia = await db
+        .select({
+          productId: productMedia.productId,
+          url: productMedia.url,
+        })
+        .from(productMedia)
+        .where(inArray(productMedia.productId, productIds))
+        .orderBy(asc(productMedia.displayOrder));
+
+      for (const m of allMedia) {
+        if (!coversByProductId.has(m.productId)) {
+          coversByProductId.set(m.productId, m.url);
+        }
+      }
+    }
+
+    // Сборка плоского результата в памяти
+    const result: AdminOrderItem[] = rawOrders.map((ord) => {
+      const itemRow = itemsByOrderId.get(ord.id);
+      const coverUrl = itemRow ? coversByProductId.get(itemRow.productId) ?? null : null;
+
+      return {
         id: ord.id,
         orderNumber: ord.orderNumber,
         publicToken: ord.publicToken,
@@ -106,8 +131,8 @@ export async function getAdminOrdersAction(): Promise<{
               coverUrl,
             }
           : null,
-      });
-    }
+      };
+    });
 
     return { success: true, orders: result };
   } catch (err) {

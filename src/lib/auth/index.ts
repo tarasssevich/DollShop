@@ -21,6 +21,7 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
+    disableSignUp: true, // Публичная регистрация закрыта: только предсозданная учетная запись мастера
     requireEmailVerification: false,
     minPasswordLength: 8,
     maxPasswordLength: 128,

@@ -34,12 +34,17 @@ export async function getAdminSession(): Promise<AdminSession | null> {
       return null;
     }
 
+    const userRole = (sessionData.user as { role?: string }).role;
+    if (userRole !== "admin") {
+      return null;
+    }
+
     return {
       user: {
         id: sessionData.user.id,
         name: sessionData.user.name,
         email: sessionData.user.email,
-        role: (sessionData.user as { role?: string }).role || "admin",
+        role: "admin",
       },
       session: {
         id: sessionData.session.id,

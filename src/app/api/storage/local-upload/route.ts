@@ -5,9 +5,18 @@ import { getAdminSession } from "@/lib/auth/guard";
 
 export const dynamic = "force-dynamic";
 
+const ALLOWED_EXTENSIONS = new Set([
+  ".webp",
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".avif",
+  ".mp4",
+]);
+
 export async function PUT(request: NextRequest) {
-  // В продакшене локальный эндпоинт загрузки доступен только авторизованному администратору
-  if (process.env.NODE_ENV === "production") {
+  // Локальный эндпоинт загрузки доступен только авторизованному администратору (в тестах отключается)
+  if (process.env.NODE_ENV !== "test") {
     const session = await getAdminSession();
     if (!session) {
       return NextResponse.json(
@@ -34,6 +43,15 @@ export async function PUT(request: NextRequest) {
   if (!targetPath.startsWith(uploadsDir) || key.includes("..") || path.isAbsolute(key)) {
     return NextResponse.json(
       { error: "Недопустимый путь к файлу" },
+      { status: 400 }
+    );
+  }
+
+  // Строгая проверка разрешенного расширения файла (защита от Stored XSS: .html, .svg, .js и т.д.)
+  const ext = path.extname(key).toLowerCase();
+  if (!ALLOWED_EXTENSIONS.has(ext)) {
+    return NextResponse.json(
+      { error: "Недопустимый тип файла. Разрешены только форматы: WebP, JPEG, PNG, AVIF, MP4." },
       { status: 400 }
     );
   }

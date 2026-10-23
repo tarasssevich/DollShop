@@ -309,6 +309,8 @@ erDiagram
   - `app_user`: runtime-пользователь приложения (`DATABASE_URL`), только DML (`SELECT`, `INSERT`, `UPDATE`, `DELETE`) и `EXECUTE` функций; любые попытки `DROP`, `ALTER`, `TRUNCATE` или создания таблиц блокируются с ошибкой `42501 insufficient_privilege`.
 - У роли `PUBLIC` полностью отозваны права на создание объектов в схеме `public`.
 - Граница авторизации — сервер: публичные запросы фильтруют `status <> 'draft'` в репозитории, каждая admin Server Action вызывает `requireAdmin()`. RLS не нужен, потому что у БД нет публичного API, как у Supabase.
+- Аутентификация мастера: Better Auth с жестким запретом публичной регистрации (`disableSignUp: true`). Роль `admin` назначается исключительно в базе данных (default: `viewer`). Охранный шлюз `requireAdminAction()` валидирует `role === 'admin'`. Защита от Open Redirect на странице входа.
+- Защита форм: Rate-limiting со скользящим окном на заявки и бронирование, honeypot-ловушки, строгая валидация типов файлов при локальной загрузке.
 
 ---
 
