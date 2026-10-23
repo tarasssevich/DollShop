@@ -1,0 +1,130 @@
+# ============================================================
+# DollShop Production Docker Compose Stack (Step 7.2)
+# Полная прод-композиция: Nginx (микрокэш) + Next.js + Postgres + Cron
+# ============================================================
+
+services:
+  # ------------------------------------------------------------
+  # 1. PostgreSQL 18: Реляционная база данных с процедурами брони
+  # ------------------------------------------------------------
+  db:
+    image: postgres:18-alpine
+    container_name: dollshop_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-dollshop}
+      POSTGRES_USER: ${POSTGRES_USER:-dollshop_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-dollshop_prod_secret_password}
+      TZ: Europe/Minsk
+    volumes:
+      - dollshop_pgdata:/var/lib/postgresql/data
+    networks:
+      - dollshop_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-dollshop_user} -d ${POSTGRES_DB:-dollshop}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ------------------------------------------------------------
+  # 2. Next.js Standalone: Сервер приложения
+  # ------------------------------------------------------------
+  web:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: dollshop_web
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-dollshop_user}:${DB_PASSWORD:-dollshop_prod_secret_password}@db:5432/${POSTGRES_DB:-dollshop}
+      DATABASE_MAX_CONNECTIONS: 20
+      NODE_ENV: production
+      NEXT_PUBLIC_APP_URL: ${APP_URL:-http://localhost}
+      CRON_SECRET: ${CRON_SECRET:-dev_cron_secret_dollshop_local}
+      REVALIDATE_SECRET: ${REVALIDATE_SECRET:-dev_revalidate_secret_dollshop_local}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-dev_better_auth_secret_dollshop_local}
+      BETTER_AUTH_URL: ${APP_URL:-http://localhost}
+      STORAGE_DRIVER: ${STORAGE_DRIVER:-local}
+      S3_ENDPOINT: ${S3_ENDPOINT:-}
+      S3_REGION: ${S3_REGION:-auto}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-}
+      S3_BUCKET_MEDIA: ${S3_BUCKET_MEDIA:-dollshop-media}
+      S3_PUBLIC_URL: ${S3_PUBLIC_URL:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_BASE_URL: ${GEMINI_BASE_URL:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-1.5-pro}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+      BEPAID_SHOP_ID: ${BEPAID_SHOP_ID:-}
+      BEPAID_SECRET_KEY: ${BEPAID_SECRET_KEY:-}
+      BEPAID_SANDBOX: ${BEPAID_SANDBOX:-true}
+    volumes:
+      - dollshop_uploads:/app/public/uploads
+    networks:
+      - dollshop_net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  # ------------------------------------------------------------
+  # 3. Cron: Периодическое освобождение броней и бэкапы
+  # ------------------------------------------------------------
+  cron:
+    build:
+      context: ./cron
+      dockerfile: Dockerfile
+    container_name: dollshop_cron
+    restart: unless-stopped
+    depends_on:
+      web:
+        condition: service_healthy
+    environment:
+      WEB_URL: http://web:3000
+      CRON_SECRET: ${CRON_SECRET:-dev_cron_secret_dollshop_local}
+    networks:
+      - dollshop_net
+
+  # ------------------------------------------------------------
+  # 4. Nginx: Reverse-proxy с микрокэшем 5 сек и Gzip
+  # ------------------------------------------------------------
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: dollshop_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      web:
+        condition: service_healthy
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - nginx_cache:/var/cache/nginx
+      - nginx_logs:/var/log/nginx
+    networks:
+      - dollshop_net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+networks:
+  dollshop_net:
+    driver: bridge
+
+volumes:
+  dollshop_pgdata:
+  dollshop_uploads:
+  nginx_cache:
+  nginx_logs:
