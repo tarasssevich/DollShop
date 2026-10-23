@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
   getAdminRequestsAction,
   updateAdminRequestStatusAction,
+  updateAdminRequestPhotosAction,
   getAdminDollByIdAction,
 } from "../requests";
 import { buildCustomOrderNotificationText } from "@/lib/notify/templates";
@@ -190,5 +191,24 @@ describe("Admin Requests Actions (Step 5.6 - Zero-IT UX)", () => {
 
     // Чистим куклу-ответ
     await client`DELETE FROM products WHERE id = ${respDoll!.id}::uuid`;
+  });
+
+  it("updateAdminRequestPhotosAction обновляет список фото-референсов заявки", async () => {
+    const newPhotos = [
+      "/uploads/requests/ref-test-1.jpg",
+      "/uploads/requests/ref-test-2.jpg",
+    ];
+
+    const res = await updateAdminRequestPhotosAction({
+      requestId: testRequestId,
+      photoUrls: newPhotos,
+    });
+
+    expect(res.success).toBe(true);
+
+    const [updated] = await client<Array<{ reference_photo_urls: string[] }>>`
+      SELECT reference_photo_urls FROM custom_requests WHERE id = ${testRequestId}::uuid
+    `;
+    expect(updated?.reference_photo_urls).toEqual(newPhotos);
   });
 });

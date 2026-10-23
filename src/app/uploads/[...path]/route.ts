@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { findUploadedFileLocally } from "@/lib/storage/local-fs";
 
 export const dynamic = "force-dynamic";
 
@@ -15,45 +16,13 @@ const MIME_MAP: Record<string, string> = {
   ".mp4": "video/mp4",
 };
 
-function getCandidateUploadDirs(): string[] {
-  const dirs = new Set<string>();
-
-  // 1. Рабочая директория public/uploads
-  dirs.add(path.resolve(process.cwd(), "public", "uploads"));
-
-  // 2. Если запущено внутри .next/standalone, проверяем корень проекта
-  if (process.cwd().includes(path.join(".next", "standalone"))) {
-    dirs.add(path.resolve(process.cwd(), "..", "..", "public", "uploads"));
-  }
-
-  // 3. Если запущено в корне проекта, проверяем .next/standalone
-  dirs.add(path.resolve(process.cwd(), ".next", "standalone", "public", "uploads"));
-
-  // 4. Абсолютные пути репозитория
-  dirs.add("/home/ofi/DollShop/public/uploads");
-  dirs.add("/home/ofi/DollShop/.next/standalone/public/uploads");
-
-  return Array.from(dirs);
-}
-
-async function findUploadedFile(relativePath: string): Promise<string | null> {
-  const candidateDirs = getCandidateUploadDirs();
-  for (const baseDir of candidateDirs) {
-    const fullPath = path.resolve(baseDir, relativePath);
-    // Защита от path traversal: путь строго обязан начинаться с baseDir
-    if (!fullPath.startsWith(baseDir)) {
-      continue;
-    }
-    try {
-      const stat = await fs.stat(fullPath);
-      if (stat.isFile()) {
-        return fullPath;
-      }
-    } catch {
-      // Файл не найден в текущей кандидатной директории
-    }
-  }
-  return null;
+function jsonError(message: string, status: number): NextResponse {
+  return new NextResponse(JSON.stringify({ error: message }), {
+    status,
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+    },
+  });
 }
 
 export async function GET(
@@ -64,7 +33,7 @@ export async function GET(
   const pathSegments = resolvedParams.path;
 
   if (!pathSegments || pathSegments.length === 0) {
-    return NextResponse.json({ error: "Файл не указан" }, { status: 400 });
+    return jsonError("Файл не указан", 400);
   }
 
   // Проверка на path traversal (../, ..\, нуль-байты)
@@ -76,7 +45,7 @@ export async function GET(
       segment.includes("\\") ||
       segment.includes("\0")
     ) {
-      return NextResponse.json({ error: "Недопустимый путь к файлу" }, { status: 400 });
+      return jsonError("Недопустимый путь к файлу", 400);
     }
   }
 
@@ -85,12 +54,12 @@ export async function GET(
   const contentType = MIME_MAP[ext];
 
   if (!contentType) {
-    return NextResponse.json({ error: "Неподдерживаемый тип файла" }, { status: 400 });
+    return jsonError("Неподдерживаемый тип файла", 400);
   }
 
-  const filePath = await findUploadedFile(relativePath);
+  const filePath = await findUploadedFileLocally(relativePath);
   if (!filePath) {
-    return NextResponse.json({ error: "Файл не найден" }, { status: 404 });
+    return jsonError("Файл не найден", 404);
   }
 
   try {
@@ -150,7 +119,7 @@ export async function HEAD(
     return new NextResponse(null, { status: 400 });
   }
 
-  const filePath = await findUploadedFile(relativePath);
+  const filePath = await findUploadedFileLocally(relativePath);
   if (!filePath) {
     return new NextResponse(null, { status: 404 });
   }

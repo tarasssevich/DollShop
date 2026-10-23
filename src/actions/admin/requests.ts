@@ -246,3 +246,42 @@ export async function updateAdminRequestStatusAction(
     return { success: false, error: "Не удалось сохранить статус" };
   }
 }
+
+const updateRequestPhotosSchema = z.object({
+  requestId: z.string().uuid(),
+  photoUrls: z.array(z.string().min(1)),
+});
+
+/**
+ * Добавление/обновление списка фото-референсов к заявке мастером.
+ */
+export async function updateAdminRequestPhotosAction(
+  input: z.infer<typeof updateRequestPhotosSchema>
+): Promise<{ success: boolean; error?: string }> {
+  await requireAdminAction();
+
+  const parsed = updateRequestPhotosSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, error: "Некорректные параметры" };
+  }
+
+  const { requestId, photoUrls } = parsed.data;
+
+  try {
+    await db
+      .update(customRequests)
+      .set({ referencePhotoUrls: photoUrls, updatedAt: new Date() })
+      .where(eq(customRequests.id, requestId));
+
+    try {
+      revalidatePath("/admin/zayavki", "page");
+    } catch {
+      // Игнорируем вне Next.js
+    }
+
+    return { success: true };
+  } catch (err) {
+    console.error("Ошибка обновления фото заявки:", err);
+    return { success: false, error: "Не удалось сохранить фото-референсы" };
+  }
+}

@@ -145,6 +145,7 @@ export async function createCustomRequestAction(
         contactChannel: data.contactChannel,
         referenceDollName,
         comment: data.wishes,
+        referencePhotoUrls: data.referencePhotoUrls ?? [],
       });
     } catch (tgErr) {
       console.error("Ошибка отправки заявки в Telegram:", tgErr);

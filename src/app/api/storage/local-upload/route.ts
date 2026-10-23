@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import fs from "node:fs/promises";
 import path from "node:path";
 import { getAdminSession } from "@/lib/auth/guard";
+import { saveUploadedFileLocally } from "@/lib/storage/local-fs";
 
 export const dynamic = "force-dynamic";
 
@@ -57,34 +57,9 @@ export async function PUT(request: NextRequest) {
   }
 
   try {
-    const parentDir = path.dirname(targetPath);
-    await fs.mkdir(parentDir, { recursive: true });
-
     const arrayBuffer = await request.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    await fs.writeFile(targetPath, buffer);
-
-    // Зеркалирование файла в альтернативные директории (корень и standalone) для надежности
-    const mirrorDirs = [
-      path.resolve(process.cwd(), "..", "..", "public", "uploads"),
-      path.resolve(process.cwd(), ".next", "standalone", "public", "uploads"),
-      "/home/ofi/DollShop/public/uploads",
-      "/home/ofi/DollShop/.next/standalone/public/uploads",
-    ];
-
-    for (const mirrorDir of mirrorDirs) {
-      if (mirrorDir !== uploadsDir) {
-        try {
-          const mirrorTargetPath = path.resolve(mirrorDir, key);
-          if (mirrorTargetPath.startsWith(mirrorDir)) {
-            await fs.mkdir(path.dirname(mirrorTargetPath), { recursive: true });
-            await fs.writeFile(mirrorTargetPath, buffer);
-          }
-        } catch {
-          // Игнорируем недоступные директории при зеркалировании
-        }
-      }
-    }
+    await saveUploadedFileLocally(key, buffer);
 
     return new NextResponse(null, { status: 200 });
   } catch (err) {

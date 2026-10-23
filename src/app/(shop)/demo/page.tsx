@@ -12,8 +12,8 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-// Фиксированный локальный IP-адрес машины в домашней Wi-Fi сети
-const LAN_URL = "http://192.168.0.201:3001";
+// Локальный IP-адрес машины в домашней Wi-Fi сети
+const LAN_URL = process.env.NEXT_PUBLIC_APP_URL || "http://192.168.1.3:3001";
 
 export default async function DemoPage() {
   // 1. Ищем куклу в наличии для быстрого тестирования

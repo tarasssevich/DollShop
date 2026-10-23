@@ -6,7 +6,12 @@ import {
   buildOrderInlineKeyboard,
   buildCustomRequestInlineKeyboard,
 } from "../templates";
-import { sendTelegramMessage, notifyNewOrder } from "../telegram";
+import {
+  sendTelegramMessage,
+  sendTelegramPhoto,
+  notifyNewOrder,
+  notifyCustomRequest,
+} from "../telegram";
 
 describe("Step 5.3 — Telegram Templates & Notification Client", () => {
   const originalEnv = { ...process.env };
@@ -202,6 +207,57 @@ describe("Step 5.3 — Telegram Templates & Notification Client", () => {
       const res = await sendTelegramMessage({ text: "Сбой сети" });
       expect(res.success).toBe(false);
       expect(res.error).toContain("Network timeout");
+    });
+
+    it("sendTelegramPhoto отправляет файл в Telegram API через multipart/form-data", async () => {
+      process.env.TELEGRAM_BOT_TOKEN = "mock_bot_token";
+      process.env.TELEGRAM_CHAT_ID = "12345678";
+
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ ok: true, result: { message_id: 1001 } }),
+      });
+      globalThis.fetch = mockFetch;
+
+      const dummyBuf = Buffer.from([0xff, 0xd8, 0xff]);
+      const res = await sendTelegramPhoto({
+        buffer: dummyBuf,
+        caption: "Фото-референс",
+        filename: "test.jpg",
+      });
+
+      expect(res.success).toBe(true);
+      expect(res.messageId).toBe(1001);
+      expect(mockFetch).toHaveBeenCalledWith(
+        "https://api.telegram.org/botmock_bot_token/sendPhoto",
+        expect.objectContaining({
+          method: "POST",
+        })
+      );
+    });
+
+    it("notifyCustomRequest отправляет сообщение о новой индивидуальной заявке", async () => {
+      process.env.TELEGRAM_BOT_TOKEN = "mock_bot_token";
+      process.env.TELEGRAM_CHAT_ID = "12345678";
+
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ ok: true, result: { message_id: 1002 } }),
+      });
+      globalThis.fetch = mockFetch;
+
+      const res = await notifyCustomRequest({
+        requestId: "custom-req-1",
+        customerName: "Галя",
+        customerPhone: "+375447802490",
+        contactChannel: "telegram",
+        customerContact: "@galya",
+        comment: "Хочу похожую куколку",
+        referencePhotoUrls: [],
+      });
+
+      expect(res.success).toBe(true);
+      expect(mockFetch).toHaveBeenCalled();
     });
   });
 });

@@ -18,12 +18,20 @@ import {
   Plus,
   Gift,
   X,
+  Download,
+  ImageOff,
+  Trash2,
+  Maximize2,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { formatBelarusPhone } from "@/lib/utils/phone";
 import {
   updateAdminRequestStatusAction,
+  updateAdminRequestPhotosAction,
   getAdminRequestsAction,
   getAdminDollByIdAction,
   type AdminCustomRequestItem,
@@ -49,6 +57,110 @@ export function RequestsClient({ initialRequests }: RequestsClientProps) {
   const [activeDollFormRequestId, setActiveDollFormRequestId] = React.useState<string | null>(null);
   const [editingDoll, setEditingDoll] = React.useState<Doll | null>(null);
   const [loadingDollId, setLoadingDollId] = React.useState<string | null>(null);
+
+  // Lightbox для полноэкранного просмотра фото-референсов
+  const [photoViewerState, setPhotoViewerState] = React.useState<{
+    isOpen: boolean;
+    urls: string[];
+    index: number;
+    title: string;
+    requestId: string;
+  } | null>(null);
+
+  // Набор битых URL изображений (отдающих 404 на сервере)
+  const [brokenUrls, setBrokenUrls] = React.useState<Set<string>>(new Set());
+
+  // Состояние загрузки фото для конкретной заявки
+  const [uploadingRequestId, setUploadingRequestId] = React.useState<string | null>(null);
+
+  const handleUploadPhotoForRequest = async (
+    requestId: string,
+    files: FileList | null
+  ) => {
+    if (!files || files.length === 0) return;
+    setUploadingRequestId(requestId);
+    try {
+      const fd = new FormData();
+      Array.from(files).forEach((f) => fd.append("files", f));
+      const res = await fetch("/api/request-photo", {
+        method: "POST",
+        body: fd,
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        urls?: string[];
+        error?: string;
+      };
+
+      if (!res.ok || !data.urls || data.urls.length === 0) {
+        toast.error(data.error || "Не удалось загрузить фото");
+        return;
+      }
+
+      const req = requests.find((r) => r.id === requestId);
+      if (!req) return;
+
+      const nextUrls = [...req.referencePhotoUrls, ...data.urls];
+      const updateRes = await updateAdminRequestPhotosAction({
+        requestId,
+        photoUrls: nextUrls,
+      });
+
+      if (updateRes.success) {
+        setRequests((prev) =>
+          prev.map((r) =>
+            r.id === requestId ? { ...r, referencePhotoUrls: nextUrls } : r
+          )
+        );
+        toast.success("Фото-референс успешно сохранен!");
+      } else {
+        toast.error(updateRes.error || "Ошибка сохранения фото");
+      }
+    } catch {
+      toast.error("Произошла ошибка при загрузке фото");
+    } finally {
+      setUploadingRequestId(null);
+    }
+  };
+
+  const handleRemovePhotoFromRequest = async (
+    requestId: string,
+    urlToRemove: string
+  ) => {
+    const req = requests.find((r) => r.id === requestId);
+    if (!req) return;
+
+    const nextUrls = req.referencePhotoUrls.filter((u) => u !== urlToRemove);
+    try {
+      const updateRes = await updateAdminRequestPhotosAction({
+        requestId,
+        photoUrls: nextUrls,
+      });
+
+      if (updateRes.success) {
+        setRequests((prev) =>
+          prev.map((r) =>
+            r.id === requestId ? { ...r, referencePhotoUrls: nextUrls } : r
+          )
+        );
+        if (photoViewerState && photoViewerState.requestId === requestId) {
+          if (nextUrls.length === 0) {
+            setPhotoViewerState(null);
+          } else {
+            setPhotoViewerState({
+              ...photoViewerState,
+              urls: nextUrls,
+              index: Math.min(photoViewerState.index, nextUrls.length - 1),
+            });
+          }
+        }
+        toast.success("Фото удалено из заявки");
+      } else {
+        toast.error(updateRes.error || "Ошибка при удалении фото");
+      }
+    } catch {
+      toast.error("Не удалось удалить фото");
+    }
+  };
 
   const filteredRequests = React.useMemo(() => {
     if (filter === "all") return requests;
@@ -373,27 +485,122 @@ export function RequestsClient({ initialRequests }: RequestsClientProps) {
                       </div>
                     )}
 
-                    {req.referencePhotoUrls.length > 0 && (
-                      <div className="space-y-1.5">
-                        <p className="text-[10px] text-muted uppercase tracking-wider">
-                          Фото-референс от заказчика:
+                    {/* БЛОК ФОТО-РЕФЕРЕНСОВ ЗАЯВКИ */}
+                    <div className="space-y-2 pt-1 border-t border-linen-dark/50">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-[10px] text-muted uppercase tracking-wider font-semibold">
+                          Фото-референс от заказчика ({req.referencePhotoUrls.length}):
                         </p>
-                        <div className="flex flex-wrap gap-2">
-                          {req.referencePhotoUrls.map((url) => (
-                            <a
-                              key={url}
-                              href={url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="block h-20 w-20 overflow-hidden rounded-lg border border-linen-dark bg-linen hover:opacity-90 transition"
-                            >
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img src={url} alt="Фото-референс" className="h-full w-full object-cover" />
-                            </a>
-                          ))}
-                        </div>
+                        <label className="cursor-pointer inline-flex items-center gap-1 text-[11px] font-medium text-terracotta hover:underline">
+                          {uploadingRequestId === req.id ? (
+                            <>
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                              <span>Загрузка...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Plus className="h-3 w-3" />
+                              <span>Добавить фото</span>
+                            </>
+                          )}
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            multiple
+                            className="hidden"
+                            disabled={uploadingRequestId === req.id}
+                            onChange={(e) => {
+                              handleUploadPhotoForRequest(req.id, e.target.files);
+                              e.target.value = "";
+                            }}
+                          />
+                        </label>
                       </div>
-                    )}
+
+                      {req.referencePhotoUrls.length > 0 ? (
+                        <div className="flex flex-wrap gap-2.5">
+                          {req.referencePhotoUrls.map((url, idx) => {
+                            const isBroken = brokenUrls.has(url);
+                            return isBroken ? (
+                              <div
+                                key={url}
+                                className="relative flex flex-col items-center justify-center h-24 w-28 rounded-xl border border-dashed border-terracotta/40 bg-linen/50 p-1.5 text-center"
+                              >
+                                <ImageOff className="h-5 w-5 text-terracotta/60 mb-1" />
+                                <span className="text-[9px] text-muted leading-tight line-clamp-1">
+                                  Файл не найден
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemovePhotoFromRequest(req.id, url)}
+                                  className="mt-1 text-[10px] text-terracotta font-medium hover:underline flex items-center gap-0.5"
+                                >
+                                  <Trash2 className="h-2.5 w-2.5" />
+                                  <span>Удалить</span>
+                                </button>
+                              </div>
+                            ) : (
+                              <div
+                                key={url}
+                                className="group relative h-24 w-24 overflow-hidden rounded-xl border border-linen-dark bg-linen shadow-2xs transition hover:shadow-sm"
+                              >
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={url}
+                                  alt={`Референс ${idx + 1}`}
+                                  className="h-full w-full object-cover cursor-pointer transition duration-300 group-hover:scale-105"
+                                  onClick={() =>
+                                    setPhotoViewerState({
+                                      isOpen: true,
+                                      urls: req.referencePhotoUrls,
+                                      index: idx,
+                                      title: `Референс к заявке от ${req.customerName}`,
+                                      requestId: req.id,
+                                    })
+                                  }
+                                  onError={() => {
+                                    setBrokenUrls((prev) => new Set(prev).add(url));
+                                  }}
+                                />
+                                {/* Кнопка полноэкранного просмотра */}
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setPhotoViewerState({
+                                      isOpen: true,
+                                      urls: req.referencePhotoUrls,
+                                      index: idx,
+                                      title: `Референс к заявке от ${req.customerName}`,
+                                      requestId: req.id,
+                                    })
+                                  }
+                                  className="absolute inset-0 bg-espresso/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition text-white"
+                                  title="Открыть просмотр"
+                                >
+                                  <Maximize2 className="h-4 w-4 drop-shadow" />
+                                </button>
+                                {/* Кнопка удаления */}
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRemovePhotoFromRequest(req.id, url);
+                                  }}
+                                  className="absolute top-1 right-1 h-5 w-5 rounded-full bg-espresso/70 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition hover:bg-terracotta"
+                                  title="Удалить фото"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="rounded-xl border border-dashed border-linen-dark p-2.5 text-center bg-linen/20">
+                          <p className="text-[11px] text-muted">Заказчик не прикрепил фото при отправке заявки.</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -745,6 +952,133 @@ export function RequestsClient({ initialRequests }: RequestsClientProps) {
                 setEditingDoll(null);
               }}
             />
+          </div>
+        </div>
+      )}
+
+      {/* МОДАЛЬНЫЙ ПРОСМОТРЩИК (LIGHTBOX) ДЛЯ ФОТО-РЕФЕРЕНСОВ */}
+      {photoViewerState && photoViewerState.isOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-espresso/90 p-4 backdrop-blur-sm animate-fade-in"
+          onClick={() => setPhotoViewerState(null)}
+        >
+          <div
+            className="relative flex flex-col max-h-[95vh] max-w-4xl w-full rounded-2xl bg-white shadow-2xl overflow-hidden border border-linen-dark"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Шапка просмотрщика */}
+            <div className="flex items-center justify-between border-b border-linen-dark px-4 py-3 bg-warm-white">
+              <div>
+                <h3 className="font-serif text-sm sm:text-base font-semibold text-espresso">
+                  {photoViewerState.title}
+                </h3>
+                <p className="text-[11px] text-muted">
+                  Фото {photoViewerState.index + 1} из {photoViewerState.urls.length}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {/* Скачать фото */}
+                <a
+                  href={photoViewerState.urls[photoViewerState.index]}
+                  download
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 rounded-lg border border-linen-dark bg-white px-2.5 py-1.5 text-xs font-medium text-espresso hover:bg-linen transition"
+                  title="Скачать фото"
+                >
+                  <Download className="h-3.5 w-3.5 text-terracotta" />
+                  <span className="hidden sm:inline">Скачать</span>
+                </a>
+                {/* В новой вкладке */}
+                <a
+                  href={photoViewerState.urls[photoViewerState.index]}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 rounded-lg border border-linen-dark bg-white px-2.5 py-1.5 text-xs font-medium text-espresso hover:bg-linen transition"
+                  title="Открыть в новой вкладке"
+                >
+                  <ExternalLink className="h-3.5 w-3.5 text-muted" />
+                  <span className="hidden sm:inline">В новой вкладке</span>
+                </a>
+                {/* Закрыть */}
+                <button
+                  type="button"
+                  onClick={() => setPhotoViewerState(null)}
+                  className="rounded-lg p-1.5 text-muted hover:bg-linen hover:text-espresso transition"
+                  title="Закрыть"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Контейнер изображения */}
+            <div className="relative flex items-center justify-center bg-espresso/5 p-2 sm:p-6 min-h-[300px] max-h-[75vh] overflow-hidden">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={photoViewerState.urls[photoViewerState.index]}
+                alt={photoViewerState.title}
+                className="max-h-[70vh] max-w-full object-contain rounded-lg shadow-sm select-none"
+              />
+
+              {/* Навигация Предыдущее / Следующее (если фото больше одного) */}
+              {photoViewerState.urls.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPhotoViewerState({
+                        ...photoViewerState,
+                        index:
+                          photoViewerState.index > 0
+                            ? photoViewerState.index - 1
+                            : photoViewerState.urls.length - 1,
+                      })
+                    }
+                    className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-2.5 text-espresso shadow hover:bg-white transition"
+                    title="Предыдущее фото"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPhotoViewerState({
+                        ...photoViewerState,
+                        index:
+                          photoViewerState.index < photoViewerState.urls.length - 1
+                            ? photoViewerState.index + 1
+                            : 0,
+                      })
+                    }
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-2.5 text-espresso shadow hover:bg-white transition"
+                    title="Следующее фото"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* Подвал просмотрщика */}
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-linen-dark px-4 py-2.5 bg-warm-white">
+              <button
+                type="button"
+                onClick={() =>
+                  handleRemovePhotoFromRequest(
+                    photoViewerState.requestId,
+                    photoViewerState.urls[photoViewerState.index]!
+                  )
+                }
+                className="inline-flex items-center gap-1.5 text-xs text-terracotta hover:underline font-medium"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                <span>Удалить это фото из заявки</span>
+              </button>
+              <span className="text-xs text-muted">
+                На смартфоне можно зажать фото пальцем, чтобы сохранить в галерею
+              </span>
+            </div>
           </div>
         </div>
       )}

@@ -34,6 +34,7 @@ export interface CustomRequestNotificationParams {
   contactChannel: "telegram" | "viber" | "call";
   referenceDollName?: string | null;
   comment?: string | null;
+  referencePhotoUrls?: string[];
 }
 
 export function formatPaymentMethodName(method: string): string {
@@ -185,7 +186,11 @@ export function formatCustomRequestMessage(
     message += `\n📝 <b>Пожелания к образу:</b>\n<i>«${escapeHtml(params.comment.trim())}»</i>\n`;
   }
 
-  message += `\n📋 <i>Управление заявкой доступно в панели сайта.</i>`;
+  if (params.referencePhotoUrls && params.referencePhotoUrls.length > 0) {
+    message += `\n📸 <b>Фото-референсы:</b> прикреплено ${params.referencePhotoUrls.length} шт. (см. ниже)`;
+  }
+
+  message += `\n\n📋 <i>Управление заявкой доступно в панели сайта.</i>`;
 
   return message;
 }
