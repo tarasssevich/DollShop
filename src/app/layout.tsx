@@ -58,6 +58,15 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "DollShop",
+  },
+  icons: {
+    icon: "/icons/icon.svg",
+    apple: "/icons/apple-touch-icon.png",
+  },
 };
 
 export default function RootLayout({

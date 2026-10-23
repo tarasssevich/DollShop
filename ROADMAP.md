@@ -209,10 +209,10 @@
 - **Файлы:** `src/lib/ai/{gemini,prompts}.ts`, `src/actions/admin/ai.ts`, `src/components/admin/AiStoryButton.tsx`, `src/lib/ai/__tests__/{gemini,prompts}.test.ts`, `src/actions/admin/__tests__/ai.test.ts`.
 - **✅ Готово:** Разработан AI-ассистент генерации душевных историй кукол на базе Gemini 1.5 Pro: сформулирован тёплый литературный системный промпт бренда с фокусом на тактильность (бук, макраме, фатин); класс `GeminiAiProvider` с поддержкой прокси и качественным оффлайн-фоллбеком для разработки; защищенный Server Action `generateDollStoryAction` с лимитом частоты запросов; компонент `AiStoryButton` с кнопками тонкой подстройки стиля («✨ Помочь придумать историю», «🔄 Другой вариант», «✂️ Короче», «🕯️ Теплее»); полная интеграция в форму куклы `ProductForm`; 14 тестов по Step 4.7 (всего 164 теста) ✅, `tsc` и `eslint` ✅.
 
-### Step 4.8 — PWA
+### Step 4.8 — PWA [x]
 - **Что делаем:** `manifest.ts` (`start_url: /admin`, standalone, цвета бренда), иконки (maskable, apple-touch-icon), мета для iOS.
-- **Файлы:** `src/app/manifest.ts`, `public/icons/*`.
-- **✅ Готово, когда:** «На главный экран» → админка открывается как приложение с иконкой бренда.
+- **Файлы:** `src/app/manifest.ts`, `public/icons/*`, `src/app/layout.tsx`, `src/app/__tests__/manifest.test.ts`.
+- **✅ Готово:** Реализована полная PWA-поддержка мобильной админки: типизированный манифест `src/app/manifest.ts` с точкой входа `/admin`, режимом `standalone` и фирменными цветами бренда (`#9A5B42` terracotta, `#FAF8F5` alabaster); сгенерирован полный набор иконок в `public/icons/` (`icon.svg`, `icon-192.png`, `icon-512.png`, `apple-touch-icon.png`); добавлены метатеги для iOS Safari (`appleWebApp.capable: true`, `statusBarStyle`); тест манифеста пройден ✅ (всего 165 тестов зелёные), `tsc` и `eslint` ✅.
 
 ### Step 4.9 — Сценарий «Кукла за 60 секунд» (Zero-IT UX тест)
 - **Что делаем:** UX-прогон и полировка полного флоу добавления куклы нетехническим творцом: форма в один экран, выбор материалов в 2 тапа по чипам, загрузка фото с камеры, выбор обложки кликом по «⭐», генерация душевного описания через Gemini, выбор человеческого статуса («🟢 Ищет дом») и сохранение.
