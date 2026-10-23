@@ -6,6 +6,7 @@ import { Clock, AlertTriangle, XCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { releaseReservationAction, checkReservationStatusAction } from "@/actions/reserve";
+import { notifyCartChanged } from "@/lib/reservation/events";
 
 interface CheckoutReservationBarProps {
   productId: string;
@@ -49,6 +50,7 @@ export function CheckoutReservationBar({
           if (!status.hasReservation) {
             setTimeLeftMs(0);
             toast.info("Бронь на данную куклу была освобождена.");
+            notifyCartChanged();
             clearInterval(interval);
             router.refresh();
           }
@@ -75,6 +77,7 @@ export function CheckoutReservationBar({
           toast.success(`Бронь на «${dollName}» снята`, {
             description: "Кукла снова доступна в каталоге для всех покупателей.",
           });
+          notifyCartChanged();
           router.push(`/kukly/${slug}`);
         } else {
           toast.error(res.error || "Не удалось снять бронь.");

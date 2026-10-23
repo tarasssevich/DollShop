@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { productFormSchema, saveProductAction } from "../products";
+import { saveProductAction } from "../products";
+import { productFormSchema } from "@/lib/schemas/product-form";
 import { slugify } from "@/lib/utils/slugify";
 
 describe("Admin Product Actions & Schema (Step 4.3 - Zero-IT UX)", () => {

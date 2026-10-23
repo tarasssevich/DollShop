@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { createUploadUrlsAction } from "../media";
 import {
-  createUploadUrlsAction,
   ALLOWED_IMAGE_MIME_TYPES,
   MAX_IMAGE_SIZE_BYTES,
-} from "../media";
+} from "@/lib/schemas/admin-media";
 import * as guardModule from "@/lib/auth/guard";
 
 describe("Admin Media Server Actions (Step 4.4)", () => {

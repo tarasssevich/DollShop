@@ -14,7 +14,19 @@ export function ProductGrid({
   dolls,
   emptyMessage = "Куклы в выбранной категории пока отсутствуют",
 }: ProductGridProps) {
-  if (dolls.length === 0) {
+  // Отображаем карточки только тех кукол, у которых есть фотографии
+  const dollsWithPhotos = React.useMemo(
+    () =>
+      dolls.filter(
+        (doll) =>
+          Array.isArray(doll.images) &&
+          doll.images.length > 0 &&
+          Boolean(doll.images[0]?.url)
+      ),
+    [dolls]
+  );
+
+  if (dollsWithPhotos.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-linen-dark bg-white p-12 text-center">
         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-linen text-terracotta mb-4">
@@ -38,7 +50,7 @@ export function ProductGrid({
 
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:gap-8">
-      {dolls.map((doll, index) => (
+      {dollsWithPhotos.map((doll, index) => (
         <ProductCard key={doll.id} doll={doll} priority={index < 2} />
       ))}
     </div>

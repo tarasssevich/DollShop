@@ -1,9 +1,11 @@
 import {
   createUploadUrlsAction,
   saveProductMediaAction,
+} from "@/actions/admin/media";
+import {
   ALLOWED_IMAGE_MIME_TYPES,
   MAX_IMAGE_SIZE_BYTES,
-} from "@/actions/admin/media";
+} from "@/lib/schemas/admin-media";
 import { processDollImage } from "./compress";
 import type { productMedia } from "@/db/schema";
 

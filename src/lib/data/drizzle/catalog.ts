@@ -21,6 +21,7 @@ export interface GetDollsFilter {
   limit?: number;
   offset?: number;
   includeDrafts?: boolean;
+  hasImages?: boolean;
 }
 
 const VALID_SLUG_REGEX = /^[a-z0-9-]+$/;
@@ -97,6 +98,7 @@ export async function getDolls(filter: GetDollsFilter = {}): Promise<Doll[]> {
     limit,
     offset = 0,
     includeDrafts = false,
+    hasImages,
   } = filter;
 
   // Черновики запрашиваются только админкой напрямую без публичного кэша
@@ -115,6 +117,19 @@ export async function getDolls(filter: GetDollsFilter = {}): Promise<Doll[]> {
       const effStatus = getEffectiveDollStatus(doll, now);
       return effStatus === status;
     });
+  }
+
+  // Фильтрация по наличию фотографий:
+  // По умолчанию для публичной витрины (!includeDrafts) отображаются ТОЛЬКО куклы с фото.
+  // Если hasImages явно передан (true / false), применяется переданное значение.
+  const requirePhotos = hasImages !== undefined ? hasImages : !includeDrafts;
+  if (requirePhotos) {
+    list = list.filter(
+      (doll) =>
+        Array.isArray(doll.images) &&
+        doll.images.length > 0 &&
+        Boolean(doll.images[0]?.url)
+    );
   }
 
   if (offset > 0) {

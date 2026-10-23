@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { updateSiteSettingsAction, siteSettingsSchema } from "../settings";
+import { updateSiteSettingsAction } from "../settings";
+import { siteSettingsSchema } from "@/lib/schemas/site-settings";
 import { client } from "@/db/client";
 import * as guardModule from "@/lib/auth/guard";
 

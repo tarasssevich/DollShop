@@ -24,6 +24,13 @@ export function ProductGallery({
   const [activeIndex, setActiveIndex] = React.useState(0);
   const [isZoomed, setIsZoomed] = React.useState(false);
 
+  const touchStartRef = React.useRef<{ x: number; y: number; time: number }>({
+    x: 0,
+    y: 0,
+    time: 0,
+  });
+  const isSwipingRef = React.useRef(false);
+
   const firstImage = images[0];
   if (!firstImage) {
     return (
@@ -43,12 +50,73 @@ export function ProductGallery({
     setActiveIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0));
   };
 
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (images.length <= 1) return;
+    const touch = e.touches[0];
+    if (!touch) return;
+    touchStartRef.current = {
+      x: touch.clientX,
+      y: touch.clientY,
+      time: Date.now(),
+    };
+    isSwipingRef.current = false;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (images.length <= 1) return;
+    const touch = e.touches[0];
+    if (!touch) return;
+    const deltaX = touch.clientX - touchStartRef.current.x;
+    const deltaY = touch.clientY - touchStartRef.current.y;
+
+    // Если движение преимущественно горизонтальное и превышает порог — отмечаем свайп
+    if (Math.abs(deltaX) > 10 && Math.abs(deltaX) > Math.abs(deltaY)) {
+      isSwipingRef.current = true;
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (images.length <= 1) return;
+    const touch = e.changedTouches[0];
+    if (!touch) return;
+
+    const deltaX = touch.clientX - touchStartRef.current.x;
+    const deltaY = touch.clientY - touchStartRef.current.y;
+    const deltaTime = Date.now() - touchStartRef.current.time;
+
+    // Горизонтальный свайп: смещение по X > 35px, быстрее 500мс и больше вертикального смещения
+    if (
+      Math.abs(deltaX) > 35 &&
+      Math.abs(deltaX) > Math.abs(deltaY) &&
+      deltaTime < 500
+    ) {
+      isSwipingRef.current = true;
+      if (deltaX < 0) {
+        handleNext();
+      } else {
+        handlePrev();
+      }
+    }
+  };
+
+  const handleMainImageClick = () => {
+    // Не открывать зум, если пользователь выполнял свайп
+    if (isSwipingRef.current) {
+      isSwipingRef.current = false;
+      return;
+    }
+    setIsZoomed(true);
+  };
+
   return (
     <div className="space-y-3">
-      {/* Main image container */}
+      {/* Main image container with touch swipe support */}
       <div
-        onClick={() => setIsZoomed(true)}
-        className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl border border-linen-dark bg-alabaster shadow-sm group cursor-pointer"
+        onClick={handleMainImageClick}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl border border-linen-dark bg-alabaster shadow-sm group cursor-pointer select-none"
       >
         <Image
           src={activeImage.url}
@@ -83,7 +151,7 @@ export function ProductGallery({
                 handlePrev();
               }}
               aria-label="Предыдущее фото"
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-white/80 backdrop-blur-sm border border-linen-dark text-espresso flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white shadow-sm focus:opacity-100"
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-white/80 backdrop-blur-sm border border-linen-dark text-espresso flex items-center justify-center opacity-80 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:bg-white shadow-sm focus:opacity-100"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
@@ -94,7 +162,7 @@ export function ProductGallery({
                 handleNext();
               }}
               aria-label="Следующее фото"
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-white/80 backdrop-blur-sm border border-linen-dark text-espresso flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white shadow-sm focus:opacity-100"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-white/80 backdrop-blur-sm border border-linen-dark text-espresso flex items-center justify-center opacity-80 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:bg-white shadow-sm focus:opacity-100"
             >
               <ChevronRight className="h-5 w-5" />
             </button>

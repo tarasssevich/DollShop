@@ -209,6 +209,15 @@ export async function releaseReservationAction(
     }
 
     if (!released) {
+      // Бронь могли уже снять (мастер из админки, истечение таймера, другая вкладка) —
+      // если кукла уже свободна, цель достигнута, ошибкой это считать не нужно.
+      const [current] = await db
+        .select({ status: products.status })
+        .from(products)
+        .where(eq(products.id, productId));
+      if (current?.status === "available") {
+        return { success: true };
+      }
       return {
         success: false,
         error:
