@@ -12,6 +12,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { MaterialChips } from "./MaterialChips";
+import { MediaManager, type MediaItem } from "./MediaManager";
 import { saveProductAction, deleteProductAction, type ProductFormInput } from "@/actions/admin/products";
 import type { Doll } from "@/types/domain";
 
@@ -21,8 +22,11 @@ interface ProductFormProps {
 
 export function ProductForm({ initialDoll }: ProductFormProps) {
   const router = useRouter();
-  const isEditing = Boolean(initialDoll?.id);
-  const localStorageKey = `dollshop_draft_form_${initialDoll?.id || "new"}`;
+  const [currentProductId, setCurrentProductId] = useState<string | undefined>(
+    initialDoll?.id
+  );
+  const isEditing = Boolean(currentProductId);
+  const localStorageKey = `dollshop_draft_form_${currentProductId || "new"}`;
 
   // Form states
   const [title, setTitle] = useState(initialDoll?.name || "");
@@ -88,6 +92,43 @@ export function ProductForm({ initialDoll }: ProductFormProps) {
     setHasSavedDraft(false);
   };
 
+  const initialMediaItems: MediaItem[] = (initialDoll?.images || []).map(
+    (img, index) => ({
+      id: img.id,
+      url: img.url,
+      blurDataUrl: img.blurDataUrl,
+      displayOrder: index,
+      alt: img.alt,
+    })
+  );
+
+  const ensureProductId = async (): Promise<string> => {
+    if (currentProductId) return currentProductId;
+
+    const draftTitle = title.trim() || "Новая кукла";
+    const draftPayload: ProductFormInput = {
+      title: draftTitle,
+      story: story.trim() || "Черновик описания",
+      price: parseFloat(price.replace(",", ".")) || 100,
+      heightCm: parseInt(heightCm, 10) || 20,
+      collection: collection.trim() || "Авторская серия",
+      materials: materials.length > 0 ? materials : ["Эко-хлопок макраме"],
+      status: "draft",
+      isFeatured: false,
+    };
+
+    const res = await saveProductAction(draftPayload);
+    if (!res.success) {
+      throw new Error(res.error || "Не удалось создать черновик куклы");
+    }
+
+    setCurrentProductId(res.data.id);
+    if (typeof window !== "undefined") {
+      window.history.replaceState(null, "", `/admin/kukly/${res.data.id}`);
+    }
+    return res.data.id;
+  };
+
   // Сохранение изменений в localStorage при наборе
   useEffect(() => {
     if (typeof window === "undefined" || isEditing) return;
@@ -132,7 +173,7 @@ export function ProductForm({ initialDoll }: ProductFormProps) {
     setIsSubmitting(true);
 
     const payload: ProductFormInput = {
-      id: initialDoll?.id,
+      id: currentProductId || initialDoll?.id,
       title: title.trim(),
       story: story.trim(),
       price: numericPrice,
@@ -297,6 +338,16 @@ export function ProductForm({ initialDoll }: ProductFormProps) {
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Например: Селеста · Фея незабудок"
             className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-linen-dark bg-white text-espresso placeholder:text-muted/60 focus:outline-none focus:ring-2 focus:ring-terracotta/20 focus:border-terracotta transition"
+          />
+        </div>
+
+        {/* Менеджер фотографий куклы («Без боли на телефоне») */}
+        <div className="pt-1 border-t border-linen">
+          <MediaManager
+            productId={currentProductId}
+            onEnsureProductId={ensureProductId}
+            dollTitle={title}
+            initialMedia={initialMediaItems}
           />
         </div>
 

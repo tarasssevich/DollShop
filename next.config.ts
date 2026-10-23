@@ -12,6 +12,31 @@ const nextConfig: NextConfig = {
     "localhost",
     "localhost:3001",
   ],
+  images: {
+    formats: ["image/avif", "image/webp"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**.hoster.by",
+      },
+      {
+        protocol: "https",
+        hostname: "**.dollshop.by",
+      },
+      {
+        protocol: "http",
+        hostname: "localhost",
+      },
+      {
+        protocol: "http",
+        hostname: "127.0.0.1",
+      },
+      {
+        protocol: "http",
+        hostname: "192.168.1.3",
+      },
+    ],
+  },
   async headers() {
     return [
       {
