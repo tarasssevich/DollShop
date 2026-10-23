@@ -25,7 +25,19 @@ export async function generateBlurDataUrl(
 
     if (source instanceof Blob) {
       if (typeof createImageBitmap === "function") {
-        imgBitmap = await createImageBitmap(source);
+        try {
+          imgBitmap = await createImageBitmap(source);
+        } catch {
+          const url = URL.createObjectURL(source);
+          const img = new Image();
+          img.src = url;
+          await new Promise<void>((resolve, reject) => {
+            img.onload = () => resolve();
+            img.onerror = () => reject(new Error("Не удалось загрузить изображение"));
+          });
+          URL.revokeObjectURL(url);
+          imgBitmap = img;
+        }
       } else {
         const url = URL.createObjectURL(source);
         const img = new Image();

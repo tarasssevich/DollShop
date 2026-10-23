@@ -66,9 +66,12 @@ function CustomOrderContent() {
 
   const handlePhotosSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
     const picked = Array.from(e.target.files ?? []);
-    e.target.value = "";
     const valid = picked.filter((f) => {
-      if (!/^image\/(jpeg|png|webp)$/.test(f.type)) {
+      const ext = f.name.split(".").pop()?.toLowerCase() || "";
+      const isImage =
+        /^image\/(jpeg|png|webp)$/i.test(f.type) ||
+        (["jpg", "jpeg", "png", "webp"].includes(ext) && (!f.type || f.type.startsWith("image/")));
+      if (!isImage) {
         toast.error(`«${f.name}»: допустимы только JPEG, PNG или WebP`);
         return false;
       }
@@ -80,8 +83,8 @@ function CustomOrderContent() {
     });
     setPhotos((prev) => {
       const next = [...prev, ...valid];
-      if (next.length > 3) toast.error("Можно прикрепить не более 3 фото");
-      return next.slice(0, 3);
+      if (next.length > 10) toast.error("Можно прикрепить не более 10 фото");
+      return next.slice(0, 10);
     });
   };
 
@@ -349,15 +352,18 @@ function CustomOrderContent() {
 
                   <div className="space-y-2">
                     <Label htmlFor="order-photos">
-                      Фото-референс (необязательно, до 3 шт., JPEG/PNG/WebP до 5 МБ)
+                      Фото-референс (необязательно, до 10 шт., JPEG/PNG/WebP до 5 МБ)
                     </Label>
                     <input
                       ref={fileInputRef}
                       id="order-photos"
                       type="file"
-                      accept="image/jpeg,image/png,image/webp"
+                      accept="image/jpeg,image/png,image/webp,image/*"
                       multiple
                       className="sr-only"
+                      onClick={(e) => {
+                        (e.target as HTMLInputElement).value = "";
+                      }}
                       onChange={handlePhotosSelected}
                     />
                     <div className="flex flex-wrap gap-3">
@@ -378,7 +384,7 @@ function CustomOrderContent() {
                           </button>
                         </div>
                       ))}
-                      {photos.length < 3 && (
+                      {photos.length < 10 && (
                         <button
                           type="button"
                           onClick={() => fileInputRef.current?.click()}

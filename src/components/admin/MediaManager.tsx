@@ -2,6 +2,7 @@
 
 import { useState, useRef, useTransition } from "react";
 import Image from "next/image";
+import { toast } from "sonner";
 import {
   Camera,
   Upload,
@@ -65,8 +66,11 @@ export function MediaManager({
   };
 
   const handleFilesSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
+    const rawFiles = e.target.files;
+    if (!rawFiles || rawFiles.length === 0) return;
+
+    // Сразу считываем файлы в постоянный массив, не полагаясь на очистку input
+    const fileArray = Array.from(rawFiles);
 
     let targetProductId = activeProductId;
     if (!targetProductId && onEnsureProductId) {
@@ -75,80 +79,107 @@ export function MediaManager({
         setActiveProductId(targetProductId);
       } catch (err) {
         console.error("Ошибка инициализации куклы перед загрузкой:", err);
+        toast.error("Не удалось инициализировать куклу перед загрузкой фото");
         return;
       }
     }
 
     if (!targetProductId) {
-      alert("Пожалуйста, укажите название куклы перед загрузкой фото");
+      toast.error("Пожалуйста, укажите название куклы перед загрузкой фото");
       return;
     }
 
-    const fileArray = Array.from(files);
-    e.target.value = ""; // Сбрасываем input для возможности повторного выбора того же файла
-
-    for (const file of fileArray) {
-      const tempId = `temp-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-      const nextOrder = mediaList.length + uploadingQueue.length;
-
-      setUploadingQueue((prev) => [
-        ...prev,
-        {
-          tempId,
-          name: file.name,
-          progress: 10,
-          message: "Подготовка файла...",
-        },
-      ]);
-
-      try {
-        const savedMedia = await uploadDollImage({
-          file,
-          productId: targetProductId,
-          alt: dollTitle ? `Кукла ручной работы «${dollTitle}»` : file.name,
-          displayOrder: nextOrder,
-          onProgress: (ev: UploadProgressEvent) => {
-            setUploadingQueue((prev) =>
-              prev.map((item) =>
-                item.tempId === tempId
-                  ? { ...item, progress: ev.percent, message: ev.message }
-                  : item
-              )
-            );
-          },
-        });
-
-        // Добавляем сохраненное фото в список
-        const newItem: MediaItem = {
-          id: savedMedia.id,
-          url: savedMedia.url,
-          blurDataUrl: savedMedia.blurDataUrl,
-          displayOrder: savedMedia.displayOrder,
-          alt: savedMedia.alt,
-        };
-
-        setMediaList((prev) => {
-          const updated = [...prev, newItem].sort(
-            (a, b) => a.displayOrder - b.displayOrder
-          );
-          onChange?.(updated);
-          return updated;
-        });
-
-        // Убираем из очереди загрузки
-        setUploadingQueue((prev) => prev.filter((item) => item.tempId !== tempId));
-      } catch (err) {
-        const errorText =
-          err instanceof Error ? err.message : "Ошибка при загрузке";
-        setUploadingQueue((prev) =>
-          prev.map((item) =>
-            item.tempId === tempId
-              ? { ...item, error: errorText, message: "Ошибка" }
-              : item
-          )
-        );
-      }
+    // Поддержка одновременного выбора до 10 фотографий
+    const MAX_BATCH_COUNT = 10;
+    const batch = fileArray.slice(0, MAX_BATCH_COUNT);
+    if (fileArray.length > MAX_BATCH_COUNT) {
+      toast.info(
+        `Выбрано ${fileArray.length} файлов. Будут загружены первые ${MAX_BATCH_COUNT}.`
+      );
     }
+
+    // 1. Мгновенно отображаем карточки всех выбранных фото в очереди интерфейса
+    const initialQueueItems: UploadingState[] = batch.map((file, idx) => ({
+      tempId: `temp-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 7)}`,
+      name: file.name,
+      progress: 5,
+      message: idx < 2 ? "Подготовка файла..." : "В очереди...",
+    }));
+
+    setUploadingQueue((prev) => [...prev, ...initialQueueItems]);
+
+    const baseDisplayOrder = mediaList.length;
+
+    // Пул задач с управляемой параллельностью (2 параллельных потока для стабильности памяти на мобильных браузерах)
+    const CONCURRENCY = 2;
+    let currentIndex = 0;
+
+    const processNext = async () => {
+      while (currentIndex < batch.length) {
+        const index = currentIndex++;
+        const file = batch[index];
+        const queueItem = initialQueueItems[index];
+        if (!file || !queueItem) continue;
+
+        const { tempId } = queueItem;
+        const currentOrder = baseDisplayOrder + index;
+
+        try {
+          const savedMedia = await uploadDollImage({
+            file,
+            productId: targetProductId,
+            alt: dollTitle ? `Кукла ручной работы «${dollTitle}»` : file.name,
+            displayOrder: currentOrder,
+            onProgress: (ev: UploadProgressEvent) => {
+              setUploadingQueue((prev) =>
+                prev.map((item) =>
+                  item.tempId === tempId
+                    ? { ...item, progress: ev.percent, message: ev.message }
+                    : item
+                )
+              );
+            },
+          });
+
+          // Добавляем сохраненное фото в список
+          const newItem: MediaItem = {
+            id: savedMedia.id,
+            url: savedMedia.url,
+            blurDataUrl: savedMedia.blurDataUrl,
+            displayOrder: savedMedia.displayOrder,
+            alt: savedMedia.alt,
+          };
+
+          setMediaList((prev) => {
+            const updated = [...prev, newItem].sort(
+              (a, b) => a.displayOrder - b.displayOrder
+            );
+            onChange?.(updated);
+            return updated;
+          });
+
+          // Убираем из очереди загрузки
+          setUploadingQueue((prev) => prev.filter((item) => item.tempId !== tempId));
+        } catch (err) {
+          const errorText =
+            err instanceof Error ? err.message : "Ошибка при загрузке";
+          toast.error(`Ошибка при загрузке «${file.name}»: ${errorText}`);
+          setUploadingQueue((prev) =>
+            prev.map((item) =>
+              item.tempId === tempId
+                ? { ...item, error: errorText, message: "Ошибка" }
+                : item
+            )
+          );
+        }
+      }
+    };
+
+    const workers = Array.from(
+      { length: Math.min(CONCURRENCY, batch.length) },
+      () => processNext()
+    );
+    await Promise.all(workers);
   };
 
   // Назначение обложки (ставит фото первым с displayOrder = 0)
@@ -280,9 +311,12 @@ export function MediaManager({
       <input
         type="file"
         ref={fileInputRef}
+        onClick={(e) => {
+          (e.target as HTMLInputElement).value = "";
+        }}
         onChange={handleFilesSelected}
         multiple
-        accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+        accept="image/jpeg,image/png,image/webp,image/*"
         className="hidden"
       />
 
@@ -431,7 +465,7 @@ export function MediaManager({
           </div>
           <span className="text-xs font-medium">Добавить фото</span>
           <span className="text-[10px] text-stone-400 mt-0.5">
-            Камера или галерея
+            До 10 фото за раз
           </span>
         </button>
       </div>
@@ -440,7 +474,7 @@ export function MediaManager({
       <div className="text-[11px] text-stone-400 flex items-center gap-1.5">
         <Upload className="w-3.5 h-3.5 flex-shrink-0" />
         <span>
-          Фотографии автоматически сжимаются в быстрый формат WebP без потери качества
+          Можно загружать до 10 фото сразу. Фотографии автоматически сжимаются в формат WebP без потери качества
         </span>
       </div>
     </div>

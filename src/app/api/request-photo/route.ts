@@ -7,7 +7,7 @@ import { checkRateLimit } from "@/lib/security/rate-limit";
 export const dynamic = "force-dynamic";
 
 const REQUEST_PHOTO_PREFIX = "/uploads/requests/";
-const MAX_FILES = 3;
+const MAX_FILES = 10;
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 /** Определяет тип изображения по сигнатуре файла (а не по заявленному клиентом MIME). */
@@ -20,7 +20,7 @@ function detectImageExt(buf: Buffer): string | null {
 }
 
 /**
- * Публичная загрузка фото-референсов для заявки «Хочу похожую» (до 3 файлов, до 5 МБ, JPEG/PNG/WebP).
+ * Публичная загрузка фото-референсов для заявки «Хочу похожую» (до 10 файлов, до 5 МБ, JPEG/PNG/WebP).
  */
 export async function POST(request: NextRequest) {
   const ip =

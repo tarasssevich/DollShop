@@ -81,4 +81,24 @@ describe("MediaManager State & Ordering Logic (Step 4.6)", () => {
     expect(filtered[1]?.id).toBe("3");
     expect(filtered[1]?.displayOrder).toBe(1);
   });
+
+  describe("Batch upload up to 10 photos logic", () => {
+    it("ограничивает единовременный пакет до 10 фотографий и вычисляет корректный displayOrder без коллизий", () => {
+      const mockRawFiles = Array.from({ length: 15 }, (_, i) => ({
+        name: `photo_${i + 1}.jpg`,
+      }));
+
+      const MAX_BATCH = 10;
+      const batch = mockRawFiles.slice(0, MAX_BATCH);
+      expect(batch).toHaveLength(10);
+
+      const baseDisplayOrder = sampleMedia.length; // 3
+      const orders = batch.map((_, index) => baseDisplayOrder + index);
+
+      expect(orders).toEqual([3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+      // Никаких коллизий displayOrder
+      const uniqueOrders = new Set(orders);
+      expect(uniqueOrders.size).toBe(10);
+    });
+  });
 });

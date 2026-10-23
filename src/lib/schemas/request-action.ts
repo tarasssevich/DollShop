@@ -42,7 +42,7 @@ export const customRequestSchema = z.object({
           "Некорректная ссылка на фото"
         )
     )
-    .max(3, "Можно прикрепить не более 3 фото")
+    .max(10, "Можно прикрепить не более 10 фото")
     .optional(),
 
   honeypot: z.string().optional(),

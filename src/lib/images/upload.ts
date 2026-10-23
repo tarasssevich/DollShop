@@ -97,6 +97,32 @@ export async function uploadWithRetry(
 }
 
 /**
+ * Определяет MIME-тип файла, используя заявленный браузером тип или расширение файла.
+ * На мобильных устройствах (iOS/Android) при выборе из галереи file.type иногда приходит пустым.
+ */
+export function resolveImageMimeType(file: { name: string; type?: string }): string {
+  if (file.type && file.type.startsWith("image/")) {
+    return file.type.toLowerCase();
+  }
+  const ext = file.name.split(".").pop()?.toLowerCase() || "";
+  switch (ext) {
+    case "jpg":
+    case "jpeg":
+      return "image/jpeg";
+    case "png":
+      return "image/png";
+    case "webp":
+      return "image/webp";
+    case "heic":
+      return "image/heic";
+    case "heif":
+      return "image/heif";
+    default:
+      return file.type?.toLowerCase() || "";
+  }
+}
+
+/**
  * Главный координатор загрузки фотографии куклы:
  * 1. Валидация файла на клиенте
  * 2. Сжатие в 3 WebP (2000, 1280, 640px) + micro-blur
@@ -128,7 +154,7 @@ export async function uploadDollImage(
     );
   }
 
-  const mime = file.type as (typeof ALLOWED_IMAGE_MIME_TYPES)[number];
+  const mime = resolveImageMimeType(file) as (typeof ALLOWED_IMAGE_MIME_TYPES)[number];
   if (!ALLOWED_IMAGE_MIME_TYPES.includes(mime)) {
     throw new Error(
       "Неподдерживаемый формат. Пожалуйста, используйте JPEG, PNG, WebP или HEIC"
