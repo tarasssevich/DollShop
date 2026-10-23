@@ -18,12 +18,35 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { isValidBelarusPhone, normalizeBelarusPhone } from "@/lib/utils/phone";
 
 export default function CustomOrderPage() {
+  return (
+    <React.Suspense
+      fallback={
+        <div className="py-20 text-center text-sm text-muted">
+          Загрузка формы индивидуального заказа...
+        </div>
+      }
+    >
+      <CustomOrderContent />
+    </React.Suspense>
+  );
+}
+
+function CustomOrderContent() {
+  const searchParams = useSearchParams();
+  const fromDoll = searchParams.get("from");
+
   const [name, setName] = React.useState("");
   const [phone, setPhone] = React.useState("");
-  const [wishes, setWishes] = React.useState("");
+  const [wishes, setWishes] = React.useState(() => {
+    if (fromDoll) {
+      return `Здравствуйте! Очень понравилась работа «${fromDoll}» из архива галереи. Хотелось бы обсудить создание похожей куколки-феи по мотивам.`;
+    }
+    return "";
+  });
   const [agreed, setAgreed] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [submitted, setSubmitted] = React.useState(false);
@@ -254,7 +277,7 @@ export default function CustomOrderPage() {
                       value={wishes}
                       onChange={(e) => setWishes(e.target.value)}
                       rows={4}
-                      placeholder="Расскажите о кукле: для кого она создается, желаемый рост (30-40 см), особенности платья или прически..."
+                      placeholder="Расскажите о фее: для кого она создается, повод (подарок, оберег, день рождения), желаемые оттенки наряда и цветочки в ручках..."
                     />
                   </div>
 
