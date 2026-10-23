@@ -293,12 +293,21 @@ function CustomOrderContent() {
                     <span className="text-xs text-muted leading-relaxed">
                       Я подтверждаю согласие с условиями{" "}
                       <Link
-                        href="/legal/terms"
+                        href="/oferta"
+                        target="_blank"
                         className="text-terracotta underline hover:text-terracotta-hover"
                       >
                         публичной оферты
                       </Link>{" "}
-                      и политикой конфиденциальности Республики Беларусь (Закон № 99-З).
+                      и{" "}
+                      <Link
+                        href="/politika-konfidencialnosti"
+                        target="_blank"
+                        className="text-terracotta underline hover:text-terracotta-hover"
+                      >
+                        политики конфиденциальности
+                      </Link>{" "}
+                      (Закон РБ № 99-З).
                     </span>
                   </label>
 

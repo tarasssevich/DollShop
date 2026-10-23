@@ -137,11 +137,19 @@ export function Footer() {
               </li>
               <li className="flex items-start gap-2">
                 <ShieldCheck className="h-4 w-4 shrink-0 text-sage mt-0.5" />
-                <span>Фирменная шкатулка и паспорт подлинности</span>
+                <span>Фирменная подарочная коробка и паспорт</span>
               </li>
               <li className="flex items-start gap-2">
                 <Heart className="h-4 w-4 shrink-0 text-terracotta mt-0.5" />
                 <span>Бронь куклы на 15 минут в корзине</span>
+              </li>
+              <li className="pt-1">
+                <Link
+                  href="/dostavka-i-oplata"
+                  className="inline-flex items-center text-terracotta hover:underline font-medium"
+                >
+                  Все условия доставки и оплаты →
+                </Link>
               </li>
             </ul>
           </div>
@@ -153,7 +161,7 @@ export function Footer() {
             </p>
             <div className="space-y-1.5 text-xs text-muted leading-relaxed">
               <p className="font-medium text-espresso">
-                ИП Прокопенко А. В.
+                ИП Прокопенко Алёна Васильевна
               </p>
               <p>УНП: 193758204</p>
               <p>Зарегистрирован Минским горисполкомом</p>
@@ -177,19 +185,19 @@ export function Footer() {
 
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs">
             <Link
-              href="/legal/terms"
+              href="/oferta"
               className="hover:text-terracotta transition-colors"
             >
               Публичная оферта
             </Link>
             <Link
-              href="/legal/privacy"
+              href="/politika-konfidencialnosti"
               className="hover:text-terracotta transition-colors"
             >
               Политика персональных данных (Закон № 99-З)
             </Link>
             <Link
-              href="/legal/payment"
+              href="/dostavka-i-oplata"
               className="hover:text-terracotta transition-colors"
             >
               Оплата и доставка
