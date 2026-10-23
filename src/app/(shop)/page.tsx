@@ -1,7 +1,7 @@
 import { Hero } from "@/components/shop/Hero";
 import { CatalogTabs } from "@/components/shop/CatalogTabs";
 import { AboutSection } from "@/components/shop/AboutSection";
-import { getDollBySlug, getDolls } from "@/lib/data/catalog";
+import { getDolls } from "@/lib/data/catalog";
 import { Container } from "@/components/layout/Container";
 import { OrganizationJsonLd } from "@/components/seo/JsonLd";
 import Link from "next/link";
@@ -9,13 +9,17 @@ import { Sparkles, ArrowRight, ShieldCheck, Heart, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default async function HomePage() {
-  const [featuredDoll, availableDolls, inProgressDolls, soldDolls] =
-    await Promise.all([
-      getDollBySlug("selesta"),
-      getDolls({ status: "available" }),
-      getDolls({ status: "in_progress" }),
-      getDolls({ status: "sold" }),
-    ]);
+  const [availableDolls, inProgressDolls, soldDolls] = await Promise.all([
+    getDolls({ status: "available" }),
+    getDolls({ status: "in_progress" }),
+    getDolls({ status: "sold" }),
+  ]);
+
+  const featuredDoll =
+    availableDolls.find((d) => d.isFeatured) ||
+    availableDolls[0] ||
+    inProgressDolls[0] ||
+    null;
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://dollshop.by";
 

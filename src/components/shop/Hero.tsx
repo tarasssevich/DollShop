@@ -129,10 +129,20 @@ export function Hero({ featuredDoll }: HeroProps) {
 
                   {/* Status Badges Overlay */}
                   <div className="absolute top-3 left-3 flex flex-wrap gap-2">
-                    <Badge variant="available" className="shadow-xs backdrop-blur-xs">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-600 animate-pulse" />
-                      В наличии
-                    </Badge>
+                    {doll?.status === "available" ? (
+                      <Badge variant="available" className="shadow-xs backdrop-blur-xs">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-600 animate-pulse" />
+                        В наличии
+                      </Badge>
+                    ) : doll?.status === "in_progress" ? (
+                      <Badge variant="in_progress" className="shadow-xs backdrop-blur-xs">
+                        В процессе
+                      </Badge>
+                    ) : (
+                      <Badge variant="ooak" className="shadow-xs bg-white/95 backdrop-blur-xs">
+                        Авторская коллекция
+                      </Badge>
+                    )}
                     <Badge variant="ooak" className="shadow-xs bg-white/95 backdrop-blur-xs">
                       Ручная работа
                     </Badge>
