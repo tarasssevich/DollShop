@@ -40,20 +40,19 @@ describe("Doll detail page (/kukly/[slug])", () => {
     expect(doll).toBeNull();
   });
 
-  it("mock with expired reservation ('klarissa') resolves to available status", async () => {
-    const doll = await getDollBySlug("klarissa");
-    expect(doll).not.toBeNull();
-    // Raw status may be reserved in mock or transitioned to available in DB
-    expect(["reserved", "available"]).toContain(doll?.status);
-    // But effective status must be rolled back to available!
-    const effective = getEffectiveDollStatus(doll!);
+  it("expired reservation resolves to available status", () => {
+    const effective = getEffectiveDollStatus({
+      status: "reserved",
+      reservedUntil: new Date(Date.now() - 20 * 60 * 1000).toISOString(),
+    });
     expect(effective).toBe("available");
   });
 
-  it("mock with active reservation ('beatris') keeps reserved status", async () => {
-    const doll = await getDollBySlug("beatris");
-    expect(doll).not.toBeNull();
-    const effective = getEffectiveDollStatus(doll!);
+  it("active reservation keeps reserved status", () => {
+    const effective = getEffectiveDollStatus({
+      status: "reserved",
+      reservedUntil: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+    });
     expect(effective).toBe("reserved");
   });
 

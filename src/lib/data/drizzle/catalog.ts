@@ -79,7 +79,7 @@ async function fetchRawDollsFromDb(options: {
  * Кэшированная выборка опубликованных кукол с тегом 'products'.
  */
 const getRawDollsCached =
-  process.env.NODE_ENV === "test"
+  process.env.NODE_ENV !== "production"
     ? fetchRawDollsFromDb
     : unstable_cache(fetchRawDollsFromDb, ["products-list"], {
         tags: [CACHE_TAGS.products],
@@ -172,7 +172,7 @@ export async function getDollBySlug(
     return null;
   }
 
-  if (process.env.NODE_ENV === "test" || options.includeDrafts) {
+  if (process.env.NODE_ENV !== "production" || options.includeDrafts) {
     return fetchDollBySlugFromDb(slug, options);
   }
 
