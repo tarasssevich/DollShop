@@ -4,7 +4,7 @@ import { AboutSection } from "@/components/shop/AboutSection";
 import { getDollBySlug, getDolls } from "@/lib/data/catalog";
 import { Container } from "@/components/layout/Container";
 import Link from "next/link";
-import { Sparkles, ArrowRight, ShieldCheck, Heart, Truck } from "lucide-react";
+import { Sparkles, ArrowRight, ShieldCheck, Heart, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default async function HomePage() {
@@ -143,19 +143,19 @@ export default async function HomePage() {
         </Container>
       </section>
 
-      {/* 5. Delivery banner & Styleguide Link */}
+      {/* 5. Fulfillment banner & Styleguide Link */}
       <section className="border-t border-linen-dark bg-linen/30 py-8">
         <Container className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="h-8 w-8 rounded-lg bg-terracotta-subtle flex items-center justify-center text-terracotta">
-              <Truck className="h-4 w-4" />
+              <Mail className="h-4 w-4" />
             </div>
             <div>
               <p className="text-xs font-medium text-espresso">
-                Доставка Европочтой по всей Беларуси
+                Почта по всей Беларуси или самовывоз в Минске
               </p>
               <p className="text-[11px] text-muted">
-                Срок доставки 2–3 дня с трек-номером и бережной упаковкой
+                Посылка с трек-номером и надежной упаковкой либо передача в мастерской
               </p>
             </div>
           </div>

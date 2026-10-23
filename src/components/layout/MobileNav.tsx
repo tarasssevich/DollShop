@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Menu, Send, Phone, Truck } from "lucide-react";
+import { Menu, Send, Phone, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -81,14 +81,14 @@ export function MobileNav() {
 
           <Separator />
 
-          {/* Delivery banner */}
+          {/* Fulfillment banner */}
           <div className="rounded-xl border border-linen-dark bg-linen/60 p-4 space-y-1.5 text-xs text-muted leading-relaxed">
             <p className="flex items-center gap-1.5 font-medium text-espresso">
-              <Truck className="h-3.5 w-3.5 text-terracotta" />
-              Доставка по Беларуси
+              <Mail className="h-3.5 w-3.5 text-terracotta" />
+              Почта или самовывоз
             </p>
             <p>
-              Европочтой до любого отделения за 2–3 дня в авторской защитной шкатулке.
+              Посылка с трек-номером по Беларуси или бесплатный самовывоз в Минске в авторской защитной шкатулке.
             </p>
           </div>
         </div>

@@ -7,7 +7,7 @@ import {
   Sparkles,
   Heart,
   ShieldCheck,
-  Truck,
+  Mail,
   ArrowRight,
   Palette,
   Scissors,
@@ -202,14 +202,14 @@ export default function AboutMasterPage() {
 
             <div className="space-y-3">
               <div className="h-10 w-10 rounded-xl bg-linen text-espresso flex items-center justify-center">
-                <Truck className="h-5 w-5" />
+                <Mail className="h-5 w-5" />
               </div>
               <h3 className="font-serif text-2xl font-light text-espresso">
-                Доставка Европочтой
+                Почта или самовывоз
               </h3>
               <p className="text-xs text-muted leading-relaxed">
-                Быстрая отправка по всей Беларуси (2–3 дня). Отслеживание по
-                трек-номеру и надежная защита упаковки в пути.
+                Почтовые отправления по всей Беларуси (2–4 дня) с трек-номером либо
+                бесплатный самовывоз в Минске по согласованию времени.
               </p>
             </div>
           </div>

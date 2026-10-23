@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import { Container } from "@/components/layout/Container";
 import { ProductGrid } from "@/components/shop/ProductGrid";
 import { getDolls } from "@/lib/data/catalog";
-import { Sparkles, Truck, ShieldCheck, Heart } from "lucide-react";
+import { Sparkles, Mail, ShieldCheck, Heart } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Куклы-феи в наличии (Ручная работа) — DollShop",
   description:
-    "Интерьерные куклы-феи и ангелы ручной работы в наличии. Натуральный хлопок макраме, резное дерево, фатин с ромашками, подарочная коробка и доставка Европочтой по Беларуси.",
+    "Интерьерные куклы-феи и ангелы ручной работы в наличии. Натуральный хлопок макраме, резное дерево, фатин с ромашками, подарочная коробка. Посылка почтой по Беларуси или самовывоз в Минске.",
 };
 
 export default async function DollsCatalogPage() {
@@ -36,8 +36,8 @@ export default async function DollsCatalogPage() {
           {/* Quick service banner */}
           <div className="flex flex-wrap items-center gap-6 pt-2 text-xs text-muted">
             <span className="flex items-center gap-1.5 font-medium text-espresso">
-              <Truck className="h-4 w-4 text-terracotta" />
-              Европочта по всей Беларуси (2–3 дня)
+              <Mail className="h-4 w-4 text-terracotta" />
+              Почта по Беларуси или самовывоз в Минске
             </span>
             <span className="flex items-center gap-1.5 font-medium text-espresso">
               <ShieldCheck className="h-4 w-4 text-sage" />

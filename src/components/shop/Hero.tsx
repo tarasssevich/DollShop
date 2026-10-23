@@ -1,7 +1,7 @@
 import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Sparkles, Truck, ShieldCheck, Heart } from "lucide-react";
+import { ArrowRight, Sparkles, Mail, ShieldCheck, Heart } from "lucide-react";
 import { Container } from "@/components/layout/Container";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -89,8 +89,8 @@ export function Hero({ featuredDoll }: HeroProps) {
                 <span>100% ручная работа</span>
               </div>
               <div className="flex items-center justify-center gap-2 lg:justify-start">
-                <Truck className="h-4 w-4 shrink-0 text-sage" />
-                <span>Европочта по всей Беларуси</span>
+                <Mail className="h-4 w-4 shrink-0 text-sage" />
+                <span>Почта или самовывоз</span>
               </div>
               <div className="flex items-center justify-center gap-2 lg:justify-start">
                 <ShieldCheck className="h-4 w-4 shrink-0 text-terracotta" />

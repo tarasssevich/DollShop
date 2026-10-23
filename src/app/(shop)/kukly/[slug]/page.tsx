@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   ChevronRight,
-  Truck,
+  Mail,
   ShieldCheck,
   HeartHandshake,
   ArrowRight,
@@ -155,8 +155,8 @@ export default async function DollDetailPage({ params }: PageProps) {
               <Tabs defaultValue="delivery" className="w-full">
                 <TabsList className="w-full grid grid-cols-2">
                   <TabsTrigger value="delivery" className="text-xs">
-                    <Truck className="h-3.5 w-3.5 mr-1.5" />
-                    Доставка Европочтой
+                    <Mail className="h-3.5 w-3.5 mr-1.5" />
+                    Почта и самовывоз
                   </TabsTrigger>
                   <TabsTrigger value="care" className="text-xs">
                     <HeartHandshake className="h-3.5 w-3.5 mr-1.5" />
@@ -170,20 +170,20 @@ export default async function DollDetailPage({ params }: PageProps) {
                 >
                   <p className="text-espresso font-medium flex items-center gap-1.5">
                     <ShieldCheck className="h-4 w-4 text-sage" />
-                    Бережная доставка по всей Республике Беларусь
+                    Посылка почтой по Беларуси или самовывоз в Минске
                   </p>
                   <ul className="space-y-1.5 pl-5 list-disc text-muted">
                     <li>
-                      <strong>Европочта:</strong> 2–3 рабочих дня до любого
-                      отделения (фиксированная стоимость ~5 BYN).
+                      <strong>Почта по всей Беларуси:</strong> 2–4 рабочих дня
+                      с трек-номером до любого отделения связи (~3,50–5 BYN).
                     </li>
                     <li>
-                      <strong>Трек-номер:</strong> высылается сразу после отправки
-                      в СМС или Telegram.
+                      <strong>Самовывоз в Минске:</strong> бесплатно из мастерской
+                      по предварительной договоренности.
                     </li>
                     <li>
                       <strong>Надежная упаковка:</strong> фея укладывается в
-                      жесткую крафтовую коробку с защитным наполнителем тишью.
+                      жесткую крафтовую коробку с защитным наполнителем тишью и авторским паспортом.
                     </li>
                   </ul>
                 </TabsContent>

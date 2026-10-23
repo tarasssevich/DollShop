@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   Sparkles,
   Send,
-  Truck,
+  Mail,
   Heart,
   Palette,
   Clock,
@@ -148,7 +148,7 @@ function CustomOrderContent() {
 
           <div className="rounded-2xl border border-linen-dark bg-white p-6 space-y-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-terracotta-subtle text-terracotta">
-              <Truck className="h-5 w-5" />
+              <Mail className="h-5 w-5" />
             </div>
             <p className="font-mono text-xs font-semibold text-muted">ШАГ 04</p>
             <h3 className="font-serif text-xl font-medium text-espresso">
@@ -156,7 +156,7 @@ function CustomOrderContent() {
             </h3>
             <p className="text-xs text-muted leading-relaxed">
               Мини-букетик цветов в ручки, подарочная крафтовая коробочка с лентой
-              и отправка Европочтой за 2–3 дня.
+              и отправка почтой по Беларуси либо самовывоз в Минске.
             </p>
           </div>
         </div>

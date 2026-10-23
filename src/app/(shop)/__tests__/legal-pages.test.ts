@@ -6,9 +6,9 @@ import { LegalInfo } from "@/components/layout/LegalInfo";
 
 describe("Informative & Legal Pages (Step 2.9)", () => {
   it("provides valid SEO metadata for /dostavka-i-oplata", () => {
-    expect(deliveryMeta.title).toContain("Доставка и оплата");
+    expect(deliveryMeta.title).toContain("Почта и самовывоз");
     expect(deliveryMeta.title).toContain("DollShop");
-    expect(deliveryMeta.description).toContain("Европочтой");
+    expect(deliveryMeta.description).toContain("почтой");
   });
 
   it("provides valid SEO metadata for /oferta", () => {

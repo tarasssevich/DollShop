@@ -65,7 +65,7 @@ export function BuyButton({ doll, isStickyMobile = false }: BuyButtonProps) {
     setReserveModalOpen(false);
     toast.success(`Бронь на «${doll.name}» оформлена!`, {
       description:
-        "У вас есть 15 минут для заполнения адреса Европочты. В Фазе 3 откроется страница /oformlenie/" +
+        "У вас есть 15 минут для оформления заказа (почта или самовывоз). В Фазе 5 откроется страница /oformlenie/" +
         doll.slug,
       duration: 6000,
     });
@@ -198,7 +198,7 @@ export function BuyButton({ doll, isStickyMobile = false }: BuyButtonProps) {
               {formatPrice(doll.priceByn)}
             </span>
             <span className="text-xs text-muted">
-              (без учета Европочты ~5 BYN)
+              (почта по тарифам или самовывоз бесплатно)
             </span>
           </div>
         </div>
@@ -313,7 +313,7 @@ export function BuyButton({ doll, isStickyMobile = false }: BuyButtonProps) {
         </div>
         <div className="flex items-center gap-1.5">
           <CheckCircle2 className="h-3.5 w-3.5 text-terracotta shrink-0" />
-          <span>Европочта с трек-номером</span>
+          <span>Почта с трек-номером или самовывоз</span>
         </div>
       </div>
 

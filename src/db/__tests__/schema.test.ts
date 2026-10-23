@@ -180,7 +180,7 @@ describe("Drizzle Schema and PostgreSQL 18 Constraints (Step 3.2)", () => {
         customerPhone: "+375291234567",
         contactChannel: "telegram",
         deliveryCity: "г. Минск",
-        deliveryBranch: "ОПС Европочта № 42",
+        deliveryBranch: "Почтовое отделение № 42",
         totalAmount: "55.00",
         status: "pending",
         paymentMethod: "erip_invoice",

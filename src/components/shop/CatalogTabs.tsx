@@ -61,7 +61,7 @@ export function CatalogTabs({
       <TabsContent value="available" className="space-y-4 focus-visible:outline-none">
         <div className="text-center pb-2">
           <p className="text-xs text-muted">
-            Куклы готовы к моментальной отправке Европочтой по всей Беларуси
+            Куклы готовы к отправке почтой или самовывозу в Минске
           </p>
         </div>
         <ProductGrid

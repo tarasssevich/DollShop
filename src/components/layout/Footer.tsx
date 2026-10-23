@@ -1,6 +1,6 @@
 import * as React from "react";
 import Link from "next/link";
-import { Send, Phone, Truck, ShieldCheck, Heart } from "lucide-react";
+import { Send, Phone, Mail, ShieldCheck, Heart } from "lucide-react";
 import { Container } from "./Container";
 import { Separator } from "@/components/ui/separator";
 
@@ -125,15 +125,15 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* 3. Customer Care & Delivery */}
+          {/* 3. Customer Care & Fulfillment */}
           <div className="space-y-3">
             <p className="font-serif text-lg font-medium text-espresso">
               Покупателям
             </p>
             <ul className="space-y-2.5 text-xs text-muted leading-relaxed">
               <li className="flex items-start gap-2">
-                <Truck className="h-4 w-4 shrink-0 text-terracotta mt-0.5" />
-                <span>Доставка Европочтой по всей Беларуси (2–3 дня)</span>
+                <Mail className="h-4 w-4 shrink-0 text-terracotta mt-0.5" />
+                <span>Отправка почтой по Беларуси или самовывоз в Минске</span>
               </li>
               <li className="flex items-start gap-2">
                 <ShieldCheck className="h-4 w-4 shrink-0 text-sage mt-0.5" />
@@ -148,7 +148,7 @@ export function Footer() {
                   href="/dostavka-i-oplata"
                   className="inline-flex items-center text-terracotta hover:underline font-medium"
                 >
-                  Все условия доставки и оплаты →
+                  Все условия получения и оплаты →
                 </Link>
               </li>
             </ul>
@@ -200,7 +200,7 @@ export function Footer() {
               href="/dostavka-i-oplata"
               className="hover:text-terracotta transition-colors"
             >
-              Оплата и доставка
+              Почта, самовывоз и оплата
             </Link>
           </div>
         </div>

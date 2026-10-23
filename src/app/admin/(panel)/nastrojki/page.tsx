@@ -1,5 +1,5 @@
 import { getSiteSettings } from "@/lib/data/catalog";
-import { SlidersHorizontal, ShieldCheck, Truck, Phone, Mail } from "lucide-react";
+import { SlidersHorizontal, ShieldCheck, Phone, Mail, Package } from "lucide-react";
 
 export const metadata = {
   title: "Настройки магазина · Панель мастера",
@@ -15,7 +15,7 @@ export default async function AdminSettingsPage() {
           Реквизиты и настройки
         </h1>
         <p className="text-xs text-muted">
-          Юридические данные ИП, условия доставки и режим работы магазина
+          Юридические данные ИП, условия отправки почтой, самовывоз и режим работы магазина
         </p>
       </div>
 
@@ -46,23 +46,23 @@ export default async function AdminSettingsPage() {
           </div>
         </div>
 
-        {/* Доставка */}
+        {/* Почта и самовывоз */}
         <div className="bg-white rounded-2xl border border-linen-dark p-5 sm:p-6 space-y-3">
           <div className="flex items-center gap-2 text-sage">
-            <Truck className="w-5 h-5" />
-            <h2 className="font-serif text-base text-espresso">Условия доставки Европочтой</h2>
+            <Package className="w-5 h-5" />
+            <h2 className="font-serif text-base text-espresso">Почта и самовывоз</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
             <div>
-              <span className="text-muted block">До отделения:</span>
+              <span className="text-muted block">Отправление почтой:</span>
               <span className="font-medium text-espresso">{settings.deliveryCostBranch} BYN</span>
             </div>
             <div>
-              <span className="text-muted block">Курьером до двери:</span>
-              <span className="font-medium text-espresso">{settings.deliveryCostCourier} BYN</span>
+              <span className="text-muted block">Самовывоз (Минск):</span>
+              <span className="font-medium text-espresso">Бесплатно</span>
             </div>
             <div>
-              <span className="text-muted block">Бесплатная доставка от:</span>
+              <span className="text-muted block">Бесплатная пересылка почтой от:</span>
               <span className="font-medium text-espresso">{settings.freeDeliveryThreshold} BYN</span>
             </div>
           </div>

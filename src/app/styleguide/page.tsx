@@ -10,7 +10,8 @@ import {
   Clock,
   ArrowRight,
   ShieldCheck,
-  Truck,
+  Mail,
+  MapPin,
   CheckCircle2,
   AlertCircle,
   Eye,
@@ -56,7 +57,7 @@ import {
 
 export default function StyleguidePage() {
   const [agreementChecked, setAgreementChecked] = React.useState(false);
-  const [deliveryMethod, setDeliveryMethod] = React.useState("europost");
+  const [receivingMethod, setReceivingMethod] = React.useState("postal");
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [sheetOpen, setSheetOpen] = React.useState(false);
   const [isLiked, setIsLiked] = React.useState(false);
@@ -367,8 +368,8 @@ export default function StyleguidePage() {
                       Гарантия подлинности и безопасности
                     </p>
                     <p>
-                      Доставка по всей Беларуси через Европочту с трек-номером и
-                      проверкой комплектности при получении.
+                      Посылка по всей Беларуси с трек-номером либо
+                      бесплатный самовывоз в Минске.
                     </p>
                   </div>
                 </div>
@@ -387,7 +388,7 @@ export default function StyleguidePage() {
                       onClick={() => {
                         setSheetOpen(false);
                         toast.info("Переход к чекауту...", {
-                          description: "Заполнение адреса Европочты и данных получателя.",
+                          description: "Выбор способа получения (почта или самовывоз) и данных получателя.",
                         });
                       }}
                     >
@@ -458,7 +459,7 @@ export default function StyleguidePage() {
               6. Элементы форм (Input, Textarea, Checkbox, Radio)
             </h2>
             <p className="text-sm text-muted">
-              Формы заказа, адреса Европочты и индивидуальных пожеланий.
+              Формы заказа, данных для почты или самовывоза и индивидуальных пожеланий.
             </p>
           </div>
 
@@ -496,41 +497,41 @@ export default function StyleguidePage() {
 
             <Separator />
 
-            {/* Delivery Radio Group */}
+            {/* Receiving Radio Group */}
             <div className="space-y-3">
-              <Label>Способ доставки по Беларуси</Label>
+              <Label>Способ получения заказа</Label>
               <RadioGroup
-                value={deliveryMethod}
-                onValueChange={setDeliveryMethod}
+                value={receivingMethod}
+                onValueChange={setReceivingMethod}
               >
                 <label
-                  htmlFor="europost"
+                  htmlFor="postal"
                   className="flex items-start gap-3 p-3.5 rounded-xl border border-linen-dark hover:bg-linen/40 cursor-pointer transition-colors"
                 >
-                  <RadioGroupItem value="europost" id="europost" className="mt-1" />
+                  <RadioGroupItem value="postal" id="postal" className="mt-1" />
                   <div className="flex-1">
                     <p className="font-medium text-sm text-espresso flex items-center gap-1.5">
-                      <Truck className="h-4 w-4 text-terracotta" />
-                      Европочта (до отделения) · 5 BYN
+                      <Mail className="h-4 w-4 text-terracotta" />
+                      Почта по всей Беларуси · ~3,50–5 BYN
                     </p>
                     <p className="text-xs text-muted mt-0.5">
-                      Срок доставки 2–3 дня. СМС-уведомление при поступлении в ОПС.
+                      Срок пересылки 2–4 дня. Посылка с трек-номером и СМС-уведомлением в ОПС.
                     </p>
                   </div>
                 </label>
 
                 <label
-                  htmlFor="courier"
+                  htmlFor="pickup"
                   className="flex items-start gap-3 p-3.5 rounded-xl border border-linen-dark hover:bg-linen/40 cursor-pointer transition-colors"
                 >
-                  <RadioGroupItem value="courier" id="courier" className="mt-1" />
+                  <RadioGroupItem value="pickup" id="pickup" className="mt-1" />
                   <div className="flex-1">
                     <p className="font-medium text-sm text-espresso flex items-center gap-1.5">
-                      <Truck className="h-4 w-4 text-sage" />
-                      Курьерская доставка до двери (Минск) · 10 BYN
+                      <MapPin className="h-4 w-4 text-sage" />
+                      Самовывоз в Минске · Бесплатно
                     </p>
                     <p className="text-xs text-muted mt-0.5">
-                      Вручение лично в руки в согласованное удобное время.
+                      Вручение лично в руки в мастерской в согласованное удобное время.
                     </p>
                   </div>
                 </label>
@@ -643,7 +644,7 @@ export default function StyleguidePage() {
                 <TabsList className="w-full grid grid-cols-3">
                   <TabsTrigger value="story">История</TabsTrigger>
                   <TabsTrigger value="materials">Материалы</TabsTrigger>
-                  <TabsTrigger value="delivery">Доставка</TabsTrigger>
+                  <TabsTrigger value="receiving">Почта и самовывоз</TabsTrigger>
                 </TabsList>
 
                 <TabsContent
@@ -682,12 +683,12 @@ export default function StyleguidePage() {
                 </TabsContent>
 
                 <TabsContent
-                  value="delivery"
+                  value="receiving"
                   className="rounded-xl border border-linen-dark bg-white p-5 text-sm space-y-3 leading-relaxed"
                 >
                   <p className="font-medium text-espresso flex items-center gap-1.5">
-                    <Truck className="h-4 w-4 text-terracotta" />
-                    Бережная подарочная упаковка
+                    <Mail className="h-4 w-4 text-terracotta" />
+                    Посылка почтой или самовывоз в Минске
                   </p>
                   <p className="text-muted text-xs">
                     Фея бережно укладывается в крафтовую коробочку с воздушной бумагой

@@ -22,7 +22,7 @@ export function Header({ cartItemCount = 0 }: HeaderProps) {
           <div className="flex items-center gap-4 text-[11px]">
             <span>Минск, Беларусь</span>
             <span className="text-linen-dark">·</span>
-            <span>Доставка Европочтой</span>
+            <span>Почта или самовывоз</span>
             <span className="text-linen-dark">·</span>
             <a
               href="tel:+375291234567"

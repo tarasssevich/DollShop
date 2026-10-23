@@ -84,7 +84,7 @@ export function ReservationCountdown({
         <div>
           <p className="font-medium">Кукла временно забронирована</p>
           <p className="text-[11px] text-amber-800/90">
-            Покупатель заполняет данные доставки
+            Покупатель оформляет заказ: почта или самовывоз
           </p>
         </div>
       </div>

@@ -52,14 +52,14 @@ export interface Doll {
   updatedAt: string;
 }
 
-export type DeliveryMethod = "europost" | "courier";
+export type FulfillmentMethod = "postal" | "pickup";
 
 export type OrderStatus =
   | "pending"
   | "reserved"
   | "paid"
   | "shipped"
-  | "delivered"
+  | "completed"
   | "cancelled";
 
 export interface OrderCustomer {
@@ -69,11 +69,10 @@ export interface OrderCustomer {
   comment?: string;
 }
 
-export interface OrderDelivery {
-  method: DeliveryMethod;
-  city: string;
-  europostOfficeId?: string;
-  courierAddress?: string;
+export interface OrderReceiving {
+  method: FulfillmentMethod;
+  city?: string;
+  postalAddress?: string;
   costByn: number;
 }
 
@@ -82,7 +81,7 @@ export interface Order {
   dollId: string;
   status: OrderStatus;
   customer: OrderCustomer;
-  delivery: OrderDelivery;
+  receiving: OrderReceiving;
   subtotalByn: number;
   totalByn: number;
   reservedUntil?: string;

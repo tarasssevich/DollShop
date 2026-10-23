@@ -169,7 +169,7 @@ export const reservations = pgTable(
 );
 
 /**
- * Заказы покупателей под доставку Европочтой.
+ * Заказы покупателей: отправка почтой по Беларуси или самовывоз в Минске.
  */
 export const orders = pgTable(
   "orders",

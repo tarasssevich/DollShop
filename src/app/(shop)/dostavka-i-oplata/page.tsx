@@ -1,22 +1,23 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
-  Truck,
+  Mail,
   CreditCard,
   Package,
   ShieldCheck,
   Clock,
   ArrowRight,
   HelpCircle,
+  MapPin,
 } from "lucide-react";
 import { Container } from "@/components/layout/Container";
 import { Button } from "@/components/ui/button";
 import { LegalInfo } from "@/components/layout/LegalInfo";
 
 export const metadata: Metadata = {
-  title: "Доставка и оплата | DollShop (Беларусь)",
+  title: "Почта и самовывоз, оплата | DollShop (Беларусь)",
   description:
-    "Условия доставки Европочтой по всей Беларуси, надежная подарочная упаковка и способы оплаты (наложенный платеж, онлайн в BYN).",
+    "Условия отправки посылок почтой по всей Беларуси, бесплатный самовывоз в Минске, надежная подарочная упаковка и способы оплаты (наложенный платеж, ЕРИП, онлайн в BYN).",
 };
 
 export default function DeliveryAndPaymentPage() {
@@ -26,65 +27,66 @@ export default function DeliveryAndPaymentPage() {
         {/* Page Header */}
         <div className="space-y-4">
           <div className="inline-flex items-center gap-1.5 rounded-full border border-linen-dark bg-linen px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-muted">
-            <Truck className="h-3.5 w-3.5 text-terracotta" />
+            <Mail className="h-3.5 w-3.5 text-terracotta" />
             <span>Информация для покупателей</span>
           </div>
 
           <h1 className="font-serif text-4xl sm:text-5xl font-light tracking-tight text-espresso">
-            Доставка и оплата
+            Почта, самовывоз и оплата
           </h1>
 
           <p className="text-base text-muted leading-relaxed">
-            Мы бережно отправляем авторских интерьерных фей во все города и
-            населенные пункты Республики Беларусь через сервис «Европочта».
+            Мы бережно отправляем авторских интерьерных фей почтой по всей Республике
+            Беларусь, а также передаем работы лично при самовывозе в Минске.
           </p>
         </div>
 
-        {/* 1. Delivery Section */}
+        {/* 1. Fulfillment Methods Section */}
         <section className="space-y-6">
           <div className="border-b border-linen-dark pb-3">
             <h2 className="font-serif text-2xl sm:text-3xl font-light text-espresso flex items-center gap-2.5">
-              <Truck className="h-6 w-6 text-terracotta" />
-              <span>1. Доставка по Беларуси</span>
+              <Mail className="h-6 w-6 text-terracotta" />
+              <span>1. Способы получения заказа</span>
             </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Europost Office */}
+            {/* Postal Dispatch */}
             <div className="rounded-2xl border border-linen-dark bg-white p-6 space-y-3 shadow-xs">
               <div className="flex items-center justify-between">
                 <span className="inline-flex items-center gap-1 rounded-md bg-terracotta-subtle px-2.5 py-0.5 text-xs font-semibold text-terracotta">
-                  Популярный выбор
+                  По всей Беларуси
                 </span>
-                <span className="font-semibold text-espresso text-base">~5 BYN</span>
+                <span className="font-semibold text-espresso text-base">~3,50–5 BYN</span>
               </div>
               <h3 className="font-serif text-xl font-medium text-espresso">
-                До отделения Европочты (ОПС)
+                Отправление почтой
               </h3>
               <ul className="space-y-1.5 text-xs text-muted leading-relaxed list-disc pl-4">
-                <li>Срок доставки: <strong>2–3 рабочих дня</strong> с момента отправки.</li>
-                <li>Более 500 отделений по всей Беларуси (Минск, областные и районные центры).</li>
-                <li>СМС-уведомление и Viber-сообщение о прибытии посылки.</li>
-                <li>Срок бесплатного хранения в отделении: 7 календарных дней.</li>
+                <li>Срок пересылки: <strong>2–4 рабочих дня</strong> с момента отправки.</li>
+                <li>Посылки отправляются в любое отделение почтовой связи по всей Беларуси.</li>
+                <li>СМС-уведомление о поступлении посылки в ваше отделение.</li>
+                <li>Отслеживание по индивидуальному трек-номеру на каждом этапе пути.</li>
               </ul>
             </div>
 
-            {/* Courier Delivery */}
+            {/* Self-pickup */}
             <div className="rounded-2xl border border-linen-dark bg-white p-6 space-y-3 shadow-xs">
               <div className="flex items-center justify-between">
                 <span className="inline-flex items-center gap-1 rounded-md bg-sage-subtle px-2.5 py-0.5 text-xs font-semibold text-sage-dark">
-                  До двери
+                  г. Минск
                 </span>
-                <span className="font-semibold text-espresso text-base">~10 BYN</span>
+                <span className="font-semibold text-espresso text-base">Бесплатно</span>
               </div>
-              <h3 className="font-serif text-xl font-medium text-espresso">
-                Курьерская доставка Европочтой
+              <h3 className="font-serif text-xl font-medium text-espresso flex items-center gap-1.5">
+                <MapPin className="h-5 w-5 text-sage" />
+                <span>Самовывоз в Минске</span>
               </h3>
               <ul className="space-y-1.5 text-xs text-muted leading-relaxed list-disc pl-4">
-                <li>Доставка курьером лично в руки по указанному адресу.</li>
-                <li>Предварительный звонок курьера для согласования времени.</li>
-                <li>Срок доставки: 2–4 рабочих дня.</li>
-                <li>Возможность оплаты курьеру при вручении картой или наличными.</li>
+                <li>Бесплатно из мастерской в Минске по предварительной договоренности.</li>
+                <li>Дата и удобное время передачи согласуются с мастером лично (Telegram/звонок).</li>
+                <li>Возможность рассмотреть куклу вживую при передаче.</li>
+                <li>Бережная упаковка в крафтовую коробку и подарочный пакет.</li>
               </ul>
             </div>
           </div>
@@ -93,10 +95,9 @@ export default function DeliveryAndPaymentPage() {
           <div className="rounded-xl bg-linen/60 border border-linen-dark p-4 flex items-start gap-3 text-xs text-muted leading-relaxed">
             <Clock className="h-4 w-4 text-terracotta shrink-0 mt-0.5" />
             <div>
-              <strong className="text-espresso">Трек-номер посылки:</strong> Высылается
-              покупателю сразу после оформления отправления в СМС-сообщении или
-              Telegram. Вы всегда можете отследить статус на официальном сайте
-              Европочты (evropochta.by).
+              <strong className="text-espresso">Трек-номер почтового отправления:</strong> Высылается
+              покупателю сразу после оформления посылки в СМС-сообщении или
+              Telegram. Вы всегда можете отследить статус отправления онлайн.
             </div>
           </div>
         </section>
@@ -139,11 +140,11 @@ export default function DeliveryAndPaymentPage() {
 
               <div className="space-y-1.5 p-3 rounded-xl bg-alabaster border border-linen">
                 <span className="text-xs font-semibold text-espresso block">
-                  3. Транспортная броня
+                  3. Защитная броня
                 </span>
                 <p className="text-xs text-muted">
                   Внешний гофрокороб с воздушно-пузырьковой пленкой исключает
-                  любые повреждения при транспортировке.
+                  любые повреждения при пересылке почтой.
                 </p>
               </div>
             </div>
@@ -170,25 +171,24 @@ export default function DeliveryAndPaymentPage() {
               <div className="rounded-2xl border border-linen-dark bg-white p-5 space-y-2">
                 <h4 className="font-serif text-lg font-medium text-espresso flex items-center gap-2">
                   <ShieldCheck className="h-4 w-4 text-emerald-600" />
-                  <span>Оплата при получении (Наложенный платёж)</span>
+                  <span>Оплата при получении (Наложенный платёж / самовывоз)</span>
                 </h4>
                 <p className="text-xs text-muted leading-relaxed">
-                  Оплата производится непосредственно в отделении Европочты или
-                  курьеру при вручении заказа. Доступна оплата наличными деньгами
-                  или банковскими картами любых белорусских банков (БЕЛКАРТ, Visa,
-                  Mastercard, Мир).
+                  Оплата производится в отделении почтовой связи при получении посылки
+                  или при самовывозе в Минске. Доступна оплата наличными деньгами
+                  или банковскими картами (БЕЛКАРТ, Visa, Mastercard, Мир).
                 </p>
               </div>
 
               <div className="rounded-2xl border border-linen-dark bg-white p-5 space-y-2">
                 <h4 className="font-serif text-lg font-medium text-espresso flex items-center gap-2">
                   <CreditCard className="h-4 w-4 text-terracotta" />
-                  <span>Онлайн-оплата на сайте</span>
+                  <span>ЕРИП и онлайн-оплата</span>
                 </h4>
                 <p className="text-xs text-muted leading-relaxed">
-                  Безопасная оплата банковской картой онлайн через защищенный платежный
-                  шлюз белорусского банка-эквайера. Данные карты защищены по стандарту
-                  PCI DSS. Электронный чек отправляется на указанный e-mail.
+                  Оплата через систему «Расчет» (ЕРИП) по номеру счета или банковской картой
+                  онлайн через защищенный платежный шлюз белорусского банка. Электронный чек
+                  высылается на указанный e-mail.
                 </p>
               </div>
             </div>
@@ -202,8 +202,8 @@ export default function DeliveryAndPaymentPage() {
             <span>Возврат и гарантия целостности</span>
           </h3>
           <p className="text-xs text-muted leading-relaxed">
-            Пожалуйста, проверяйте целостность внешней упаковки и комплектность работы
-            при получении в отделении Европочты. В соответствии со ст. 28 Закона
+            Пожалуйста, проверяйте целостность упаковки и комплектность работы
+            при получении в отделении почты или при самовывозе. В соответствии со ст. 28 Закона
             Республики Беларусь «О защите прав потребителей» вы имеете право на
             возврат или обмен товара ненадлежащего качества. Авторские изделия
             надлежащего качества, изготовленные по индивидуальному заказу (с

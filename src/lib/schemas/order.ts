@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { normalizeBelarusPhone, isValidBelarusPhone } from "@/lib/utils/phone";
 
-export const deliveryMethodSchema = z.enum(["europost", "courier"]);
+export const fulfillmentMethodSchema = z.enum(["postal", "pickup"]);
 
 export const orderCustomerSchema = z.object({
   name: z
@@ -26,27 +26,28 @@ export const orderCustomerSchema = z.object({
   comment: z.string().trim().max(500, "Комментарий до 500 символов").optional(),
 });
 
-export const orderDeliverySchema = z
+export const orderReceivingSchema = z
   .object({
-    method: deliveryMethodSchema,
-    city: z.string().trim().min(2, "Укажите населенный пункт"),
-    europostOfficeId: z.string().trim().optional(),
-    courierAddress: z.string().trim().optional(),
+    method: fulfillmentMethodSchema,
+    city: z.string().trim().optional(),
+    postalAddress: z.string().trim().optional(),
     costByn: z.number().int().nonnegative(),
   })
   .refine(
     (data) => {
-      if (data.method === "europost") {
-        return Boolean(data.europostOfficeId && data.europostOfficeId.length > 0);
-      }
-      if (data.method === "courier") {
-        return Boolean(data.courierAddress && data.courierAddress.length > 5);
+      if (data.method === "postal") {
+        return Boolean(
+          data.city &&
+            data.city.length >= 2 &&
+            data.postalAddress &&
+            data.postalAddress.length > 0
+        );
       }
       return true;
     },
     {
       message:
-        "Заполните адресные данные для выбранного способа доставки",
+        "Для отправки почтой укажите населенный пункт и адрес почтового отделения / индекс",
       path: ["method"],
     }
   );
@@ -54,7 +55,7 @@ export const orderDeliverySchema = z
 export const createOrderSchema = z.object({
   dollId: z.string().min(1, "Идентификатор куклы обязателен"),
   customer: orderCustomerSchema,
-  delivery: orderDeliverySchema,
+  receiving: orderReceivingSchema,
   termsAccepted: z.literal(true, {
     message:
       "Необходимо согласиться с условиями публичной оферты и политики конфиденциальности РБ",

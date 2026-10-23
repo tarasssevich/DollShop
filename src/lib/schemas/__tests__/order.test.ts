@@ -23,17 +23,17 @@ describe("order schemas & validation", () => {
     expect(() => orderCustomerSchema.parse(invalidData)).toThrow();
   });
 
-  it("validates full order input for Europost", () => {
+  it("validates full order input for postal dispatch", () => {
     const orderInput = {
       dollId: "doll-001",
       customer: {
         name: "Елена Смирнова",
         phone: "+375 44 765 43 21",
       },
-      delivery: {
-        method: "europost",
+      receiving: {
+        method: "postal",
         city: "Гомель",
-        europostOfficeId: "ОПС № 45",
+        postalAddress: "Отделение связи № 45, 246045",
         costByn: 5,
       },
       termsAccepted: true,
@@ -41,7 +41,46 @@ describe("order schemas & validation", () => {
 
     const parsed = createOrderSchema.parse(orderInput);
     expect(parsed.customer.phone).toBe("+375447654321");
-    expect(parsed.delivery.method).toBe("europost");
+    expect(parsed.receiving.method).toBe("postal");
+    expect(parsed.receiving.city).toBe("Гомель");
+  });
+
+  it("validates full order input for self-pickup in Minsk", () => {
+    const orderInput = {
+      dollId: "doll-001",
+      customer: {
+        name: "Александра Минская",
+        phone: "+375 29 111 22 33",
+      },
+      receiving: {
+        method: "pickup",
+        costByn: 0,
+      },
+      termsAccepted: true,
+    };
+
+    const parsed = createOrderSchema.parse(orderInput);
+    expect(parsed.customer.phone).toBe("+375291112233");
+    expect(parsed.receiving.method).toBe("pickup");
+    expect(parsed.receiving.costByn).toBe(0);
+  });
+
+  it("fails order validation if postal address is missing for postal method", () => {
+    const orderInput = {
+      dollId: "doll-001",
+      customer: {
+        name: "Елена Смирнова",
+        phone: "+375 44 765 43 21",
+      },
+      receiving: {
+        method: "postal",
+        city: "Гомель",
+        costByn: 5,
+      },
+      termsAccepted: true,
+    };
+
+    expect(() => createOrderSchema.parse(orderInput)).toThrow();
   });
 
   it("fails order validation if terms are not accepted", () => {
@@ -51,11 +90,9 @@ describe("order schemas & validation", () => {
         name: "Елена Смирнова",
         phone: "+375 44 765 43 21",
       },
-      delivery: {
-        method: "europost",
-        city: "Гомель",
-        europostOfficeId: "ОПС № 45",
-        costByn: 5,
+      receiving: {
+        method: "pickup",
+        costByn: 0,
       },
       termsAccepted: false,
     };
