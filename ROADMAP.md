@@ -83,10 +83,10 @@
 - **Файлы:** `src/components/shop/AboutSection.tsx`, `src/app/(shop)/o-mastere/page.tsx`, `public/mock/dolls/fairy-blue-1.jpg`, `src/app/(shop)/page.tsx`.
 - **✅ Готово:** Блок `AboutSection` интегрирован на главной странице, страница `/o-mastere` свёрстана в арт-стиле Cormorant + Manrope, адаптивна под мобильные экраны и десктоп; навигация работает; `next build` компилирует `/o-mastere` статически (○ Static). `npm run typecheck` ✅, `npm run lint` ✅, `npm run build` ✅, `npm test` ✅.
 
-### Step 2.5 — Страница куклы `/kukly/[slug]`
-- **Что делаем:** галерея со студийными фотографиями (полный рост и макро-детали личика/цветов), история, карточка характеристик (размер, материалы: хлопок, фатин, бук; комплектация), цена 45–65 BYN. `BuyButton` по статусу: «Купить» / «Забронирована до HH:MM» (клиентский остров сверяет `reserved_until` с текущим временем) / «В частной коллекции» + «Хочу похожую на заказ» / «Заказать похожую». `generateStaticParams`, `notFound()`, `generateMetadata`.
-- **Файлы:** `src/app/(shop)/kukly/[slug]/page.tsx`, `src/components/shop/{ProductGallery,SpecsCard,ProductStory,BuyButton,ReservationCountdown}.tsx`.
-- **✅ Готово, когда:** CTA корректен для каждого статуса; мок с истёкшей бронью показывает «Купить»; черновик → 404.
+### Step 2.5 — Страница куклы `/kukly/[slug]` [x]
+- **Что делаем:** галерея со студийными фотографиями (полный рост и макро-детали личика/цветов), история, карточка характеристик (размер, материалы: хлопок, фатин, бук; комплектация), цена 45–65 BYN. `BuyButton` по статусу: «Купить» / «Забронирована до HH:MM» (клиентский остров сверяет `reserved_until` с текущим временем) / «В частной коллекции» + «Хочу похожую на заказ» / «Заказать похожую». Мобильный липкий бар под палец (`isStickyMobile`), табы доставки Европочтой и ухода, блок рекомендаций других фей мастера. `generateStaticParams`, `notFound()`, `generateMetadata`.
+- **Файлы:** `src/app/(shop)/kukly/[slug]/page.tsx`, `src/components/shop/{ProductGallery,SpecsCard,ProductStory,BuyButton,ReservationCountdown}.tsx`, `src/app/(shop)/kukly/[slug]/__tests__/page.test.ts`.
+- **✅ Готово:** 18 статических маршрутов предгенерированы (`next build` SSG); CTA корректен для каждого статуса; истёкшая бронь («Кларисса») автоматически открыта для покупки; активная бронь («Беатрис») отображает таймер отсчёта; черновик («Черновик мастера») возвращает 404; мобильный бар закреплен снизу экрана для удобства на смартфонах. `npm run typecheck` ✅, `npm run lint` ✅, `npm run build` ✅, `npm test` ✅ (36 тестов).
 
 ### Step 2.6 — Полноэкранный зум
 - **Что делаем:** лайтбокс: pinch-zoom, двойной тап, свайпы, клавиатура, счётчик, плавный переход из галереи.

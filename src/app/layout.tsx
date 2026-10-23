@@ -3,8 +3,9 @@ import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "DollShop — Авторские куклы ручной работы (OOAK)",
-  description: "Цифровой арт-бутик и галерея авторских коллекционных кукол ручной работы.",
+  metadataBase: new URL("https://dollshop.by"),
+  title: "DollShop — Авторские куклы-феи ручной работы (OOAK)",
+  description: "Цифровой арт-бутик и мастерская авторских интерьерных фей и ангелов ручной работы.",
 };
 
 export default function RootLayout({
