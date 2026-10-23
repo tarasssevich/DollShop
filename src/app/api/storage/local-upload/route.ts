@@ -64,6 +64,28 @@ export async function PUT(request: NextRequest) {
     const buffer = Buffer.from(arrayBuffer);
     await fs.writeFile(targetPath, buffer);
 
+    // Зеркалирование файла в альтернативные директории (корень и standalone) для надежности
+    const mirrorDirs = [
+      path.resolve(process.cwd(), "..", "..", "public", "uploads"),
+      path.resolve(process.cwd(), ".next", "standalone", "public", "uploads"),
+      "/home/ofi/DollShop/public/uploads",
+      "/home/ofi/DollShop/.next/standalone/public/uploads",
+    ];
+
+    for (const mirrorDir of mirrorDirs) {
+      if (mirrorDir !== uploadsDir) {
+        try {
+          const mirrorTargetPath = path.resolve(mirrorDir, key);
+          if (mirrorTargetPath.startsWith(mirrorDir)) {
+            await fs.mkdir(path.dirname(mirrorTargetPath), { recursive: true });
+            await fs.writeFile(mirrorTargetPath, buffer);
+          }
+        } catch {
+          // Игнорируем недоступные директории при зеркалировании
+        }
+      }
+    }
+
     return new NextResponse(null, { status: 200 });
   } catch (err) {
     console.error("Local upload error:", err);

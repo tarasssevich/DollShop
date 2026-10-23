@@ -47,11 +47,21 @@ export class LocalStorageAdapter implements StorageAdapter {
 
   async deleteObject(key: string): Promise<void> {
     const cleanKey = key.replace(/^\/+/, "");
-    const filePath = path.join(this.uploadsDir, cleanKey);
-    try {
-      await fs.unlink(filePath);
-    } catch {
-      // Игнорируем, если файл уже не существует
+    const candidateDirs = [
+      this.uploadsDir,
+      path.resolve(process.cwd(), "..", "..", "public", "uploads"),
+      path.resolve(process.cwd(), ".next", "standalone", "public", "uploads"),
+      "/home/ofi/DollShop/public/uploads",
+      "/home/ofi/DollShop/.next/standalone/public/uploads",
+    ];
+
+    for (const dir of candidateDirs) {
+      try {
+        const filePath = path.join(/*turbopackIgnore: true*/ dir, cleanKey);
+        await fs.unlink(filePath);
+      } catch {
+        // Игнорируем, если файл уже не существует
+      }
     }
   }
 
