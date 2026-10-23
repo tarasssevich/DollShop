@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { MaterialChips } from "./MaterialChips";
 import { MediaManager, type MediaItem } from "./MediaManager";
+import { AiStoryButton } from "./AiStoryButton";
 import { saveProductAction, deleteProductAction, type ProductFormInput } from "@/actions/admin/products";
 import type { Doll } from "@/types/domain";
 
@@ -424,8 +425,8 @@ export function ProductForm({ initialDoll }: ProductFormProps) {
         <MaterialChips selected={materials} onChange={setMaterials} />
 
         {/* 5. Литературная история / Описание */}
-        <div>
-          <div className="flex items-center justify-between mb-1.5">
+        <div className="space-y-2.5">
+          <div className="flex items-center justify-between">
             <label
               htmlFor="story"
               className="block text-xs font-semibold uppercase tracking-wider text-muted"
@@ -437,9 +438,19 @@ export function ProductForm({ initialDoll }: ProductFormProps) {
               Душевное описание для покупателя
             </span>
           </div>
+
+          <AiStoryButton
+            title={title}
+            materials={materials}
+            heightCm={parseInt(heightCm, 10) || 20}
+            collection={collection}
+            currentStory={story}
+            onStoryGenerated={(newStory) => setStory(newStory)}
+          />
+
           <textarea
             id="story"
-            rows={4}
+            rows={5}
             required
             value={story}
             onChange={(e) => setStory(e.target.value)}

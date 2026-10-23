@@ -204,10 +204,10 @@
 - **Файлы:** `src/components/admin/MediaManager.tsx`, `src/lib/images/loader.ts`, `next.config.ts`, `src/components/admin/ProductForm.tsx`, `src/lib/images/__tests__/loader.test.ts`, `src/components/admin/__tests__/MediaManager.test.ts`.
 - **✅ Готово:** Разработан компонент `MediaManager` для мобильного управления фото кукол: мультивыбор файлов с камеры/галереи, параллельное сжатие в WebP с прогресс-индикацией; отказ от проблемного мобильного DnD в пользу тактильных кнопок («⭐ Главная», стрелки «◀ / ▶», «🗑️ Удалить»); кастомный загрузчик Next.js Image `dollImageLoader` с адаптивным выбором оптимального WebP (640, 1280 или 2000px); автозаполнение атрибута `alt`; интеграция в форму куклы `ProductForm` с автоинициализацией черновика куклы; 8 тестов по Step 4.6 (всего 150 тестов) ✅, `tsc` и `eslint` ✅.
 
-### Step 4.7 — AI-ассистент «✨ Сгенерировать историю» (Google Gemini Pro)
+### Step 4.7 — AI-ассистент «✨ Сгенерировать историю» (Google Gemini Pro) [x]
 - **Что делаем:** подключение модели **Gemini 1.5 Pro** с API-ключом мастера от подписки Google AI Pro ($10/мес бесплатных кредитов), маршрутизация через легковесный Cloudflare Worker proxy для прозрачного обхода гео-блокировки белорусских IP, системный промпт с тёплым голосом бренда, стриминг текста прямо в форму истории куклы, кнопки «Ещё вариант / Короче / Теплее», rate-limit.
-- **Файлы:** `src/lib/ai/{gemini,prompts}.ts`, `src/actions/admin/ai.ts`, `src/components/admin/AiStoryButton.tsx`.
-- **✅ Готово, когда:** из заметок «20 см, мятный хлопок, фатин с ромашками, незабудки, весенняя» за ~3–5 секунд появляется связный художественный текст на русском; кредиты расходуются с подписки Google AI Pro ($0 доплат).
+- **Файлы:** `src/lib/ai/{gemini,prompts}.ts`, `src/actions/admin/ai.ts`, `src/components/admin/AiStoryButton.tsx`, `src/lib/ai/__tests__/{gemini,prompts}.test.ts`, `src/actions/admin/__tests__/ai.test.ts`.
+- **✅ Готово:** Разработан AI-ассистент генерации душевных историй кукол на базе Gemini 1.5 Pro: сформулирован тёплый литературный системный промпт бренда с фокусом на тактильность (бук, макраме, фатин); класс `GeminiAiProvider` с поддержкой прокси и качественным оффлайн-фоллбеком для разработки; защищенный Server Action `generateDollStoryAction` с лимитом частоты запросов; компонент `AiStoryButton` с кнопками тонкой подстройки стиля («✨ Помочь придумать историю», «🔄 Другой вариант», «✂️ Короче», «🕯️ Теплее»); полная интеграция в форму куклы `ProductForm`; 14 тестов по Step 4.7 (всего 164 теста) ✅, `tsc` и `eslint` ✅.
 
 ### Step 4.8 — PWA
 - **Что делаем:** `manifest.ts` (`start_url: /admin`, standalone, цвета бренда), иконки (maskable, apple-touch-icon), мета для iOS.

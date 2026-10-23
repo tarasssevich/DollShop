@@ -80,6 +80,9 @@ export const envSchema = z.object({
     .optional()
     .transform((val) => (val !== undefined ? val === "true" || val === "1" : undefined)),
   STORAGE_DRIVER: z.enum(["s3", "local"]).optional(),
+  GEMINI_API_KEY: z.string().optional(),
+  GEMINI_BASE_URL: z.string().url().optional(),
+  GEMINI_MODEL: z.string().optional().default("gemini-1.5-pro"),
 });
 
 export type Env = z.infer<typeof envSchema>;
