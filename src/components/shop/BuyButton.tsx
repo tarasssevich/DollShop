@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ShoppingBag,
   Clock,
@@ -11,6 +12,7 @@ import {
   ArrowRight,
   ShieldCheck,
   CheckCircle2,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,6 +31,7 @@ import { formatPrice } from "@/lib/utils/format";
 import { getEffectiveDollStatus } from "@/lib/data/status";
 import type { Doll } from "@/types/domain";
 import { ReservationCountdown } from "./ReservationCountdown";
+import { reserveProductAction } from "@/actions/reserve";
 
 interface BuyButtonProps {
   doll: Pick<
@@ -39,6 +42,9 @@ interface BuyButtonProps {
 }
 
 export function BuyButton({ doll, isStickyMobile = false }: BuyButtonProps) {
+  const router = useRouter();
+  const [isReserving, startTransition] = React.useTransition();
+
   // Client state to reflect real-time status changes (e.g. expiration)
   const [effectiveStatus, setEffectiveStatus] = React.useState(() =>
     getEffectiveDollStatus({
@@ -62,12 +68,45 @@ export function BuyButton({ doll, isStickyMobile = false }: BuyButtonProps) {
   };
 
   const handleConfirmReservation = () => {
-    setReserveModalOpen(false);
-    toast.success(`Бронь на «${doll.name}» оформлена!`, {
-      description:
-        "У вас есть 15 минут для оформления заказа (почта или самовывоз). В Фазе 5 откроется страница /oformlenie/" +
-        doll.slug,
-      duration: 6000,
+    startTransition(async () => {
+      try {
+        const res = await reserveProductAction({
+          productId: doll.id,
+          slug: doll.slug,
+        });
+
+        if (res.success) {
+          setReserveModalOpen(false);
+          toast.success(`Бронь на «${doll.name}» оформлена!`, {
+            description: "У вас есть 15 минут для оформления заказа.",
+          });
+          router.push(res.redirectUrl);
+        } else {
+          setReserveModalOpen(false);
+          if (res.code === "ALREADY_RESERVED") {
+            setEffectiveStatus("reserved");
+            toast.error("Кукла только что забронирована другим покупателем", {
+              description:
+                "Вы можете оставить контакты — если бронь снимется через 15 минут, мы сразу вам сообщим.",
+              duration: 7000,
+            });
+            setNotifyModalOpen(true);
+          } else if (res.code === "SOLD") {
+            setEffectiveStatus("sold");
+            toast.error("Кукла уже продана", {
+              description:
+                "Вы можете заказать похожую куклу по индивидуальным пожеланиям.",
+            });
+          } else {
+            toast.error(
+              res.error || "Не удалось забронировать куклу. Попробуйте еще раз."
+            );
+          }
+        }
+      } catch {
+        setReserveModalOpen(false);
+        toast.error("Произошла непредвиденная ошибка при бронировании.");
+      }
     });
   };
 
@@ -170,6 +209,7 @@ export function BuyButton({ doll, isStickyMobile = false }: BuyButtonProps) {
           onOpenChange={setReserveModalOpen}
           dollName={doll.name}
           priceByn={doll.priceByn}
+          isLoading={isReserving}
           onConfirm={handleConfirmReservation}
         />
         <NotifyDialog
@@ -323,6 +363,7 @@ export function BuyButton({ doll, isStickyMobile = false }: BuyButtonProps) {
         onOpenChange={setReserveModalOpen}
         dollName={doll.name}
         priceByn={doll.priceByn}
+        isLoading={isReserving}
         onConfirm={handleConfirmReservation}
       />
       <NotifyDialog
@@ -343,12 +384,14 @@ function ReservationDialog({
   onOpenChange,
   dollName,
   priceByn,
+  isLoading,
   onConfirm,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   dollName: string;
   priceByn: number;
+  isLoading: boolean;
   onConfirm: () => void;
 }) {
   return (
@@ -388,11 +431,27 @@ function ReservationDialog({
 
         <DialogFooter className="flex-col sm:flex-row gap-2">
           <DialogClose asChild>
-            <Button variant="outline">Отмена</Button>
+            <Button variant="outline" disabled={isLoading}>
+              Отмена
+            </Button>
           </DialogClose>
-          <Button variant="default" onClick={onConfirm}>
-            Перейти к оформлению
-            <ArrowRight className="h-4 w-4 ml-1.5" />
+          <Button
+            variant="default"
+            disabled={isLoading}
+            onClick={onConfirm}
+            className="min-w-[190px]"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Бронируем...
+              </>
+            ) : (
+              <>
+                Перейти к оформлению
+                <ArrowRight className="h-4 w-4 ml-1.5" />
+              </>
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
