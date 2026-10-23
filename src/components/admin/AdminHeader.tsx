@@ -1,8 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Sparkles, LogOut, ExternalLink } from "lucide-react";
+import { LogOut, ExternalLink } from "lucide-react";
 import { signOut } from "@/lib/auth/client";
 
 interface AdminHeaderProps {
@@ -26,10 +27,16 @@ export function AdminHeader({ userName = "Мастер", userEmail = "master@dol
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-linen-dark px-4 py-3 sm:px-6">
       <div className="max-w-5xl mx-auto flex items-center justify-between gap-3">
-        {/* Бренд */}
+        {/* Бренд с логотипом */}
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-terracotta/10 text-terracotta flex items-center justify-center shrink-0">
-            <Sparkles className="w-4 h-4" />
+          <div className="relative w-9 h-9 rounded-full overflow-hidden border border-linen-dark/80 bg-white shrink-0 shadow-2xs">
+            <Image
+              src="/images/logo-128.webp"
+              alt="DollShop"
+              fill
+              sizes="36px"
+              className="object-cover"
+            />
           </div>
           <div>
             <span className="font-serif text-base font-light text-espresso leading-none block">

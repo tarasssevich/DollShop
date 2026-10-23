@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, Suspense } from "react";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Sparkles, Eye, EyeOff, Loader2, ArrowLeft, ShieldAlert } from "lucide-react";
+import { Eye, EyeOff, Loader2, ArrowLeft, ShieldAlert } from "lucide-react";
 import { signIn } from "@/lib/auth/client";
 
 function LoginForm() {
@@ -141,16 +142,25 @@ export default function AdminLoginPage() {
     <div className="min-h-screen bg-alabaster flex flex-col justify-center items-center px-4 py-8 sm:py-12">
       <div className="w-full max-w-sm space-y-6">
         {/* Бренд и заголовок */}
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-terracotta/10 text-terracotta mb-1">
-            <Sparkles className="w-6 h-6" />
+        <div className="text-center space-y-3">
+          <div className="relative inline-block w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border border-linen-dark bg-white shadow-sm p-1">
+            <Image
+              src="/images/logo-128.webp"
+              alt="Логотип DollShop — Ателье авторских кукол"
+              fill
+              sizes="96px"
+              className="object-cover rounded-full"
+              priority
+            />
           </div>
-          <h1 className="font-serif text-2xl sm:text-3xl text-espresso font-light">
-            Кабинет мастера
-          </h1>
-          <p className="text-xs text-muted">
-            Управление куклами, заказами и настройками магазина
-          </p>
+          <div>
+            <h1 className="font-serif text-2xl sm:text-3xl text-espresso font-light">
+              Кабинет мастера
+            </h1>
+            <p className="text-xs text-muted mt-1">
+              DollShop · Управление коллекциями, заказами и витриной
+            </p>
+          </div>
         </div>
 
         {/* Карточка формы */}

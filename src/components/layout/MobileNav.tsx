@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Menu, Send, Phone, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -50,12 +51,25 @@ export function MobileNav() {
       >
         <div className="space-y-6">
           <SheetHeader className="text-left">
-            <SheetTitle className="font-serif text-3xl font-light text-espresso tracking-tight">
-              DollShop
-            </SheetTitle>
-            <SheetDescription className="text-xs text-muted">
-              Цифровой арт-бутик и галерея авторских кукол ручной работы
-            </SheetDescription>
+            <div className="flex items-center gap-3">
+              <div className="relative h-12 w-12 shrink-0 rounded-full overflow-hidden border border-linen-dark/80 bg-white shadow-2xs">
+                <Image
+                  src="/images/logo-128.webp"
+                  alt="Логотип DollShop — Ателье авторских кукол"
+                  fill
+                  sizes="48px"
+                  className="object-cover"
+                />
+              </div>
+              <div className="flex flex-col">
+                <SheetTitle className="font-serif text-2xl font-light text-espresso tracking-tight">
+                  DollShop
+                </SheetTitle>
+                <SheetDescription className="text-xs text-muted">
+                  Ателье авторских кукол
+                </SheetDescription>
+              </div>
+            </div>
           </SheetHeader>
 
           <Separator />

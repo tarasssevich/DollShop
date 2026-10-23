@@ -64,7 +64,11 @@ export const metadata: Metadata = {
     title: "DollShop",
   },
   icons: {
-    icon: "/icons/icon.svg",
+    icon: [
+      { url: "/favicon.ico", sizes: "48x48" },
+      { url: "/favicon.png", sizes: "32x32", type: "image/png" },
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
     apple: "/icons/apple-touch-icon.png",
   },
 };

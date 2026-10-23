@@ -1,4 +1,5 @@
 import * as React from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Send, Phone, Mail, ShieldCheck, Heart } from "lucide-react";
 import { Container } from "./Container";
@@ -30,13 +31,24 @@ export function Footer() {
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
           {/* 1. Brand manifesto */}
           <div className="space-y-4">
-            <Link href="/" className="inline-block leading-none">
-              <span className="font-serif text-3xl font-light tracking-tight text-espresso">
-                DollShop
-              </span>
-              <p className="font-serif italic text-xs text-muted mt-1">
-                мастерская авторских текстильных фей и ангелов
-              </p>
+            <Link href="/" className="group flex items-center gap-3 leading-none">
+              <div className="relative h-12 w-12 shrink-0 rounded-full overflow-hidden border border-linen-dark/80 bg-white shadow-2xs transition-transform duration-300 group-hover:scale-105">
+                <Image
+                  src="/images/logo-128.webp"
+                  alt="Логотип DollShop — Ателье авторских кукол"
+                  fill
+                  sizes="48px"
+                  className="object-cover"
+                />
+              </div>
+              <div>
+                <span className="font-serif text-3xl font-light tracking-tight text-espresso transition-colors group-hover:text-terracotta block">
+                  DollShop
+                </span>
+                <p className="font-serif italic text-xs text-muted mt-0.5">
+                  ателье авторских кукол ручной работы
+                </p>
+              </div>
             </Link>
 
             <p className="text-xs text-muted leading-relaxed">

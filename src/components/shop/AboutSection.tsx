@@ -26,6 +26,17 @@ export function AboutSection() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-espresso/30 via-transparent to-transparent pointer-events-none" />
 
+                  {/* Floating atelier seal badge */}
+                  <div className="absolute top-3 right-3 h-14 w-14 rounded-full overflow-hidden border-2 border-white/90 bg-white/95 shadow-md backdrop-blur-md p-0.5 z-10 transition-transform duration-300 group-hover:scale-105">
+                    <Image
+                      src="/images/logo-128.webp"
+                      alt="Эмблема ателье авторских кукол"
+                      fill
+                      sizes="56px"
+                      className="object-cover rounded-full"
+                    />
+                  </div>
+
                   <div className="absolute bottom-3 left-3 right-3 rounded-xl border border-white/50 bg-white/95 p-3 shadow-sm backdrop-blur-md">
                     <p className="font-serif italic text-sm text-espresso">
                       «Тепло натуральных нитей и дерева создает атмосферу сказки

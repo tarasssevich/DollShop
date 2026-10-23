@@ -1,4 +1,5 @@
 import * as React from "react";
+import Image from "next/image";
 import { Building2, Phone, Mail, Clock, MapPin, Scale } from "lucide-react";
 
 interface LegalInfoProps {
@@ -15,12 +16,22 @@ export function LegalInfo({
 }: LegalInfoProps) {
   if (variant === "compact") {
     return (
-      <div className={`space-y-1 text-xs text-muted ${className}`}>
-        <p className="font-medium text-espresso">
-          ИП Прокопенко Алёна Васильевна
-        </p>
-        <p>УНП: 193758204 · Минск, Беларусь</p>
-        <p>Торговый реестр РБ: № 584920 от 12.03.2024</p>
+      <div className={`flex items-center gap-2.5 text-xs text-muted ${className}`}>
+        <div className="relative h-9 w-9 shrink-0 rounded-full overflow-hidden border border-linen-dark/80 bg-white shadow-2xs">
+          <Image
+            src="/images/logo-128.webp"
+            alt="DollShop"
+            fill
+            sizes="36px"
+            className="object-cover"
+          />
+        </div>
+        <div className="space-y-0.5">
+          <p className="font-medium text-espresso">
+            ИП Прокопенко Алёна Васильевна
+          </p>
+          <p>УНП: 193758204 · Торговый реестр РБ № 584920</p>
+        </div>
       </div>
     );
   }
@@ -29,11 +40,25 @@ export function LegalInfo({
     <div
       className={`rounded-2xl border border-linen-dark bg-white p-6 sm:p-7 space-y-4 text-xs text-muted leading-relaxed ${className}`}
     >
-      <div className="flex items-center gap-2 border-b border-linen-dark pb-3">
-        <Building2 className="h-4 w-4 text-terracotta" />
-        <h4 className="font-serif text-base font-medium text-espresso">
-          Официальные реквизиты продавца (Республика Беларусь)
-        </h4>
+      <div className="flex items-center justify-between border-b border-linen-dark pb-3.5">
+        <div className="flex items-center gap-3">
+          <div className="relative h-11 w-11 shrink-0 rounded-full overflow-hidden border border-linen-dark/80 bg-white shadow-2xs">
+            <Image
+              src="/images/logo-128.webp"
+              alt="Официальная печать мастерской DollShop"
+              fill
+              sizes="44px"
+              className="object-cover"
+            />
+          </div>
+          <div>
+            <h4 className="font-serif text-base font-medium text-espresso">
+              Официальные реквизиты продавца (Республика Беларусь)
+            </h4>
+            <p className="text-[11px] text-muted">Ателье авторских кукол · УНП 193758204</p>
+          </div>
+        </div>
+        <Building2 className="h-4 w-4 text-terracotta hidden sm:block shrink-0" />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-6">

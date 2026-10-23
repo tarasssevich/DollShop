@@ -26,6 +26,20 @@ export default function AboutMasterPage() {
     <div className="py-10 sm:py-16 space-y-16 sm:space-y-24">
       {/* 1. Page Header */}
       <Container className="space-y-6 max-w-4xl text-center">
+        {/* Atelier Official Seal */}
+        <div className="flex justify-center">
+          <div className="relative h-28 w-28 sm:h-36 sm:w-36 rounded-full overflow-hidden border-2 border-linen-dark/80 bg-white shadow-md p-1 transition-transform duration-500 hover:scale-105">
+            <Image
+              src="/images/logo-512.webp"
+              alt="Официальная эмблема ателье авторских кукол"
+              fill
+              sizes="(max-width: 640px) 112px, 144px"
+              className="object-cover rounded-full"
+              priority
+            />
+          </div>
+        </div>
+
         <div className="inline-flex items-center gap-1.5 rounded-full border border-terracotta/20 bg-terracotta-subtle px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-terracotta">
           <Sparkles className="h-3.5 w-3.5" />
           <span>Мастерская интерьерных фей · Минск</span>

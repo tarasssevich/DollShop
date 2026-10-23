@@ -1,4 +1,5 @@
 import * as React from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { ShoppingBag, Sparkles } from "lucide-react";
 import { Container } from "./Container";
@@ -37,17 +38,29 @@ export function Header({ cartItemCount = 0 }: HeaderProps) {
       {/* Main navigation bar */}
       <div className="py-3.5 sm:py-4">
         <Container className="flex items-center justify-between gap-4">
-          {/* Brand Logo */}
+          {/* Brand Logo with Emblem */}
           <Link
             href="/"
-            className="group flex flex-col items-start leading-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracotta rounded-sm"
+            className="group flex items-center gap-2.5 sm:gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracotta rounded-lg"
           >
-            <span className="font-serif text-2xl sm:text-3xl font-light tracking-tight text-espresso transition-colors group-hover:text-terracotta">
-              DollShop
-            </span>
-            <span className="font-serif italic text-[11px] text-muted tracking-wider mt-0.5">
-              авторские куклы ручной работы
-            </span>
+            <div className="relative h-10 w-10 sm:h-11 sm:w-11 shrink-0 rounded-full overflow-hidden border border-linen-dark/80 bg-white shadow-2xs transition-transform duration-300 group-hover:scale-105">
+              <Image
+                src="/images/logo-128.webp"
+                alt="Логотип DollShop — Ателье авторских кукол"
+                fill
+                sizes="44px"
+                className="object-cover"
+                priority
+              />
+            </div>
+            <div className="flex flex-col items-start leading-none">
+              <span className="font-serif text-2xl sm:text-3xl font-light tracking-tight text-espresso transition-colors group-hover:text-terracotta">
+                DollShop
+              </span>
+              <span className="text-[10px] uppercase tracking-widest text-muted font-sans font-medium mt-0.5">
+                Ателье авторских кукол
+              </span>
+            </div>
           </Link>
 
           {/* Desktop Navigation Links */}
