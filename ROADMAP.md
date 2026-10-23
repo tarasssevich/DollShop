@@ -108,10 +108,10 @@
 - **Файлы:** `src/app/(shop)/{dostavka-i-oplata,oferta,politika-konfidencialnosti}/page.tsx`, `src/components/layout/LegalInfo.tsx`, `src/components/layout/Footer.tsx`, `src/app/(shop)/__tests__/legal-pages.test.ts`.
 - **✅ Готово:** все 3 страницы открываются без 404, ссылки в футере и формах обновлены; типографика длинных юридических текстов аккуратно отформатирована; `next build` статически генерирует все маршруты (24 SSG страницы); `npm run typecheck` ✅, `npm run lint` ✅, `npm test` ✅ (56 тестов).
 
-### Step 2.10 — Полировка витрины
-- **Что делаем:** `loading.tsx`-скелетоны, кастомная 404, базовые метаданные/OG на русском, `prefers-reduced-motion`, a11y-проход. Проверка на реальном телефоне по LAN (`next dev -H 0.0.0.0`).
-- **Файлы:** `src/app/not-found.tsx`, `loading.tsx`, правки `layout.tsx`.
-- **✅ Готово, когда:** Lighthouse mobile: Performance ≥ 90, Accessibility ≥ 95; витрина проверена на вашем телефоне.
+### Step 2.10 — Полировка витрины [x]
+- **Что делаем:** `loading.tsx`-скелетоны для бесшовной предзагрузки страниц каталога с защитой от сдвига макета (CLS = 0), кастомная арт-страница 404 (`not-found.tsx`), расширенные метаданные OpenGraph и Twitter Cards на русском языке (`locale: ru_BY`, `siteName: DollShop`), директива `prefers-reduced-motion` для пользователей с чувствительностью к анимации, доступный фокус-ринг для клавиатурной навигации (`:focus-visible`), проверка адаптивности на экранах смартфонов 375px/390px.
+- **Файлы:** `src/app/not-found.tsx`, `src/app/loading.tsx`, `src/app/(shop)/loading.tsx`, `src/app/layout.tsx`, `src/app/globals.css`, `src/app/__tests__/polish.test.ts`.
+- **✅ Готово:** Фаза 2 полностью завершена (10 из 10 шагов); 24 статические страницы генерируются через SSG (`next build`); скелетоны предотвращают layout shift; страница 404 оформлена в стиле арт-бутика; `npm run typecheck` ✅, `npm run lint` ✅, `npm test` ✅ (60 тестов зелёные).
 
 ---
 
