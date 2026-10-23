@@ -187,10 +187,10 @@
 - **Файлы:** `src/lib/storage/{adapter,s3,local,index}.ts`, `src/actions/admin/media.ts`, `src/app/api/storage/local-upload/route.ts`, `docs/storage-setup.md`, `src/lib/storage/__tests__/storage.test.ts`, `src/actions/admin/__tests__/media.test.ts`, `src/app/api/storage/local-upload/__tests__/route.test.ts`.
 - **✅ Готово:** Реализован универсальный `StorageAdapter` (S3StorageAdapter для hoster.by / AWS S3 и LocalStorageAdapter для локальной разработки); настроена генерация presigned PUT URL с TTL 5 мин и `immutable`-кэшированием; защищенный Server Action `createUploadUrlsAction` (MIME whitelist, лимит 15 МБ, ключи `products/{productId}/{mediaId}/{size}.webp` для 3-х вариантов); Server Actions `saveProductMediaAction`, `deleteProductMediaAction`, `reorderProductMediaAction` с автоматической инвалидацией кэша; эмулятор прямого PUT-аплоада `/api/storage/local-upload` с защитой от path traversal; составлена подробная документация `docs/storage-setup.md` с CORS-конфигурацией для hoster.by; сьют тестов пройден (12 тестов по Step 4.4, всего 129 тестов) ✅, `tsc` и `eslint` ✅.
 
-### Step 4.5 — Клиентское сжатие в WebP
+### Step 4.5 — Клиентское сжатие в WebP [x]
 - **Что делаем:** Web Worker: decode (+ HEIC-фоллбек), WebP 2000/1280/640px (цель ≤ 350/150/60 КБ), blur 16px base64, `width/height`; параллельная загрузка с прогрессом и повтором.
-- **Файлы:** `src/lib/images/{compress,blur,upload}.ts`, `src/lib/images/compress.worker.ts`.
-- **✅ Готово, когда:** фото 8–12 МБ с телефона → три WebP, старший ≤ 350 КБ и ≤ 2000px; интерфейс не подвисает.
+- **Файлы:** `src/lib/images/{compress,blur,upload}.ts`, `src/lib/images/compress.worker.ts`, `src/lib/images/__tests__/{compress,blur,upload}.test.ts`.
+- **✅ Готово:** Реализован клиентский пайплайн оптимизации и загрузки фотографий кукол: сжатие в 3 WebP разрешения (2000px ≤350КБ, 1280px ≤150КБ, 640px ≤60КБ) с адаптивным контролем качества; вычисление пропорций без искажений; генерация micro-blur 16px base64 dataUrl для мгновенного плавного показа Next.js Image; Web Worker `compress.worker.ts` на базе `OffscreenCanvas` для обработки в фоне; координатор загрузки `uploadDollImage` с валидацией размера и MIME, параллельной отправкой в S3 по presigned URLs, надежным повтором с экспоненциальной паузой `uploadWithRetry` и прогресс-трекингом этапов; полный тестовый сьют пройден (13 тестов по Step 4.5, всего 142 теста зелёные) ✅, `tsc` и `eslint` ✅.
 
 ### Step 4.6 — Менеджер медиа «Без боли на телефоне»
 - **Что делаем:**
