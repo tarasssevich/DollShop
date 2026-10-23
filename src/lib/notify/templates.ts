@@ -1,8 +1,9 @@
 import { formatPrice } from "@/lib/utils/format";
 import { formatBelarusPhone } from "@/lib/utils/phone";
 
-export function escapeHtml(str: string): string {
-  return str
+export function escapeHtml(str: string | null | undefined): string {
+  if (str === null || str === undefined) return "";
+  return String(str)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
@@ -114,6 +115,11 @@ export function formatNewOrderMessage(params: NewOrderNotificationParams): strin
  * Интерактивные Inline-кнопки для Telegram сообщения о заказе (Step 5.3).
  */
 export function buildOrderInlineKeyboard(orderId: string, appUrl: string) {
+  // Telegram Bot API требует валидный публичный URL для кнопок (отклоняет localhost)
+  const validUrl = appUrl.includes("localhost")
+    ? "https://dollshop.by"
+    : appUrl;
+
   return {
     inline_keyboard: [
       [
@@ -129,7 +135,7 @@ export function buildOrderInlineKeyboard(orderId: string, appUrl: string) {
       [
         {
           text: "🔗 Открыть заказ в админке",
-          url: `${appUrl}/admin/zakazy`,
+          url: `${validUrl}/admin/zakazy`,
         },
       ],
     ],

@@ -16,6 +16,7 @@ import { SpecsCard } from "@/components/shop/SpecsCard";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { getDollBySlug, getDolls } from "@/lib/data/catalog";
+import { ProductJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 
 interface PageProps {
   params: Promise<{
@@ -51,26 +52,26 @@ export async function generateMetadata({
     };
   }
 
-  const coverImage = doll.images.find((img) => img.isCover) || doll.images[0];
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://dollshop.by";
 
   return {
-    title: `${doll.name} · Кукла ручной работы | DollShop`,
+    title: `${doll.name} (${doll.priceByn} BYN) · Кукла ручной работы | DollShop`,
     description: doll.description,
+    alternates: {
+      canonical: `${baseUrl}/kukly/${doll.slug}`,
+    },
     openGraph: {
-      title: `${doll.name} · Авторская интерьерная фея ручной работы`,
+      title: `${doll.name} · Авторская интерьерная фея ручной работы (${doll.priceByn} BYN)`,
       description: doll.description,
       type: "website",
       locale: "ru_BY",
-      images: coverImage
-        ? [
-            {
-              url: coverImage.url,
-              width: coverImage.width,
-              height: coverImage.height,
-              alt: doll.name,
-            },
-          ]
-        : [],
+      url: `${baseUrl}/kukly/${doll.slug}`,
+      siteName: "DollShop",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${doll.name} · Кукла ручной работы (${doll.priceByn} BYN)`,
+      description: doll.description,
     },
   };
 }
@@ -82,6 +83,13 @@ export default async function DollDetailPage({ params }: PageProps) {
   if (!doll) {
     notFound();
   }
+
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://dollshop.by";
+  const breadcrumbs = [
+    { name: "Главная", url: `${baseUrl}/` },
+    { name: "Куклы в наличии", url: `${baseUrl}/kukly` },
+    { name: doll.name, url: `${baseUrl}/kukly/${doll.slug}` },
+  ];
 
   // Related dolls recommendation
   const allDolls = await getDolls();
@@ -97,6 +105,10 @@ export default async function DollDetailPage({ params }: PageProps) {
 
   return (
     <div className="bg-alabaster pb-24 sm:pb-16 pt-4 sm:pt-6">
+      {/* Schema.org SEO Structured Data */}
+      <ProductJsonLd doll={doll} baseUrl={baseUrl} />
+      <BreadcrumbJsonLd items={breadcrumbs} />
+
       <Container className="space-y-6 sm:space-y-8">
         {/* Breadcrumbs */}
         <nav

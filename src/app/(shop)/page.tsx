@@ -3,6 +3,7 @@ import { CatalogTabs } from "@/components/shop/CatalogTabs";
 import { AboutSection } from "@/components/shop/AboutSection";
 import { getDollBySlug, getDolls } from "@/lib/data/catalog";
 import { Container } from "@/components/layout/Container";
+import { OrganizationJsonLd } from "@/components/seo/JsonLd";
 import Link from "next/link";
 import { Sparkles, ArrowRight, ShieldCheck, Heart, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,8 +17,13 @@ export default async function HomePage() {
       getDolls({ status: "sold" }),
     ]);
 
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://dollshop.by";
+
   return (
     <div className="flex flex-col min-h-full">
+      {/* Schema.org LocalBusiness SEO Data */}
+      <OrganizationJsonLd baseUrl={baseUrl} />
+
       {/* 1. Atmospheric Hero Section (Step 2.1) */}
       <Hero featuredDoll={featuredDoll} />
 

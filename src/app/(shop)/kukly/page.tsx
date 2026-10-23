@@ -2,19 +2,30 @@ import type { Metadata } from "next";
 import { Container } from "@/components/layout/Container";
 import { ProductGrid } from "@/components/shop/ProductGrid";
 import { getDolls } from "@/lib/data/catalog";
+import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import { Sparkles, Mail, ShieldCheck, Heart } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Куклы-феи в наличии (Ручная работа) — DollShop",
   description:
     "Интерьерные куклы-феи и ангелы ручной работы в наличии. Натуральный хлопок макраме, резное дерево, фатин с ромашками, подарочная коробка. Посылка почтой по Беларуси или самовывоз в Минске.",
+  alternates: {
+    canonical: "/kukly",
+  },
 };
 
 export default async function DollsCatalogPage() {
   const dolls = await getDolls({ status: "available" });
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://dollshop.by";
 
   return (
     <div className="py-10 sm:py-16">
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Главная", url: `${baseUrl}/` },
+          { name: "Куклы в наличии", url: `${baseUrl}/kukly` },
+        ]}
+      />
       <Container className="space-y-10 sm:space-y-12">
         {/* Page Header */}
         <div className="max-w-3xl space-y-4">

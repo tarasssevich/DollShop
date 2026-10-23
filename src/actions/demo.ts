@@ -6,6 +6,14 @@ import { db, client } from "@/db/client";
 import { products, reservations } from "@/db/schema";
 import { CACHE_TAGS } from "@/lib/cache/tags";
 
+function safeRevalidateTag(tag: string) {
+  try {
+    revalidateTag(tag, { expire: 0 });
+  } catch {
+    // Вне контекста веб-запроса (например, в cli-тестах) revalidateTag может бросать исключение
+  }
+}
+
 /**
  * Серверный хелпер для интерактивного Тест-центра (/demo).
  * Гарантирует наличие хотя бы одной доступной куклы для тестирования чекаута.
@@ -27,7 +35,7 @@ export async function ensureAvailableTestDollAction(): Promise<{
     if (available) {
       // Очищаем зависшие брони, если были
       await db.delete(reservations).where(eq(reservations.productId, available.id));
-      revalidateTag(CACHE_TAGS.products, { expire: 0 });
+      safeRevalidateTag(CACHE_TAGS.products);
       return {
         success: true,
         slug: available.slug,
@@ -48,8 +56,8 @@ export async function ensureAvailableTestDollAction(): Promise<{
         .set({ status: "available" })
         .where(eq(products.id, anyDoll.id));
 
-      revalidateTag(CACHE_TAGS.products, { expire: 0 });
-      revalidateTag(CACHE_TAGS.product(anyDoll.slug), { expire: 0 });
+      safeRevalidateTag(CACHE_TAGS.products);
+      safeRevalidateTag(CACHE_TAGS.product(anyDoll.slug));
       return {
         success: true,
         slug: anyDoll.slug,
@@ -75,7 +83,7 @@ export async function ensureAvailableTestDollAction(): Promise<{
       RETURNING id, slug, title;
     `;
 
-    revalidateTag(CACHE_TAGS.products, { expire: 0 });
+    safeRevalidateTag(CACHE_TAGS.products);
     return {
       success: true,
       slug: newDoll!.slug,

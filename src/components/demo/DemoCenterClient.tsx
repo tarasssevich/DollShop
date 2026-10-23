@@ -461,14 +461,14 @@ export function DemoCenterClient({
               </Link>
               <span className="text-muted">·</span>
               <Link
-                href="/admin/orders"
+                href="/admin/zakazy"
                 className="text-xs text-muted hover:text-espresso underline"
               >
                 Заказы
               </Link>
               <span className="text-muted">·</span>
               <Link
-                href="/admin/dolls/new"
+                href="/admin/kukly/new"
                 className="text-xs text-muted hover:text-espresso underline"
               >
                 Создать куклу (ИИ)
