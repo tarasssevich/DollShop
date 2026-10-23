@@ -12,6 +12,7 @@
 | Параметр | Значение |
 |---|---|
 | Продавец | ИП, Республика Беларусь |
+| Продукт | **Авторские интерьерные куклы-феи и ангелы ручной работы** (натуральные хлопковые нити макраме, дерево — точёные бусины-личики и резные крылья, фатин с цветочной вышивкой, кружево, микро-букеты) |
 | Язык | Только русский (без i18n), `<html lang="ru">` |
 | Валюта | BYN (отображение: `350 BYN`, без копеек, если цена целая) |
 | Доставка | Только по Беларуси, **Европочта** (до отделения; курьер — опционально) |
@@ -298,8 +299,7 @@ erDiagram
 
 ### 6.2 `specs` (jsonb, Zod)
 ```ts
-{ height_cm: number; materials: string[]; joints?: string; hair?: string; eyes?: string;
-  clothing?: string; year?: number; extra?: { label: string; value: string }[] }
+{ height_cm: number; materials: string[]; wing_type?: string; hair_color?: string; dress_color?: string; bouquet?: string; year?: number; extra?: { label: string; value: string }[] }
 ```
 
 ### 6.3 Доступ к БД

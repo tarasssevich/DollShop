@@ -87,11 +87,11 @@ export default function CustomOrderPage() {
             </div>
             <p className="font-mono text-xs font-semibold text-muted">ШАГ 01</p>
             <h3 className="font-serif text-xl font-medium text-espresso">
-              Образ и эскиз
+              Цвета и образ
             </h3>
             <p className="text-xs text-muted leading-relaxed">
-              Обсуждаем рост (25–45 см), пластику, шарниры, цвет глаз и настроение
-              будущего шедевра.
+              Выбираем оттенок платья (мятный, лавандовый, пудровый), цвет волос
+              и повод (подарок, оберег, детская комната).
             </p>
           </div>
 
@@ -101,11 +101,11 @@ export default function CustomOrderPage() {
             </div>
             <p className="font-mono text-xs font-semibold text-muted">ШАГ 02</p>
             <h3 className="font-serif text-xl font-medium text-espresso">
-              Фарфор и обжиг
+              Дерево и роспись
             </h3>
             <p className="text-xs text-muted leading-relaxed">
-              Отливка из бисквитного фарфора, надглазурная роспись и высокотемпературный
-              обжиг при 1250°C.
+              Подбор точеной деревянной бусины с милой росписью личика и резных
+              ажурных крылышек бабочки.
             </p>
           </div>
 
@@ -115,11 +115,11 @@ export default function CustomOrderPage() {
             </div>
             <p className="font-mono text-xs font-semibold text-muted">ШАГ 03</p>
             <h3 className="font-serif text-xl font-medium text-espresso">
-              Наряд и локоны
+              Хлопок и фатин
             </h3>
             <p className="text-xs text-muted leading-relaxed">
-              Пошив наряда из шелка ручного крашения, антикварного кружева и паричок
-              из шелковистого мохера.
+              Плетение локонов из мягкой хлопковой пряжи, сборка корсажа и
+              воздушной юбочки с ромашками.
             </p>
           </div>
 
@@ -129,11 +129,11 @@ export default function CustomOrderPage() {
             </div>
             <p className="font-mono text-xs font-semibold text-muted">ШАГ 04</p>
             <h3 className="font-serif text-xl font-medium text-espresso">
-              Шкатулка и доставка
+              Букетик и упаковка
             </h3>
             <p className="text-xs text-muted leading-relaxed">
-              Паспорт мастера, деревянная шкатулка с мягким ложементом и отправка
-              Европочтой в любой город Беларуси.
+              Мини-букетик цветов в ручки, подарочная крафтовая коробочка с лентой
+              и отправка Европочтой за 2–3 дня.
             </p>
           </div>
         </div>
@@ -152,9 +152,9 @@ export default function CustomOrderPage() {
                   <Clock className="h-4 w-4 text-terracotta shrink-0 mt-0.5" />
                   <div>
                     <span className="font-medium text-espresso block">
-                      Срок создания:
+                      Срок изготовления:
                     </span>
-                    <span>3–4 недели от согласования образа до отправки.</span>
+                    <span>3–5 дней от выбора образа до отправки.</span>
                   </div>
                 </div>
 
@@ -162,9 +162,9 @@ export default function CustomOrderPage() {
                   <Heart className="h-4 w-4 text-sage shrink-0 mt-0.5" />
                   <div>
                     <span className="font-medium text-espresso block">
-                      Стоимость работы:
+                      Стоимость куколки:
                     </span>
-                    <span>от 450 BYN (зависит от сложности наряда и шарниров).</span>
+                    <span>от 45 до 65 BYN (включая подарочную упаковку).</span>
                   </div>
                 </div>
 

@@ -17,7 +17,7 @@ export function Hero({ featuredDoll }: HeroProps) {
   const coverImage = doll?.images[0];
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-alabaster via-linen/40 to-alabaster py-8 sm:py-16 lg:py-24">
+    <section className="relative overflow-hidden bg-gradient-to-b from-alabaster via-linen/40 to-alabaster py-8 sm:py-16 lg:py-20">
       {/* Decorative ambient background glows */}
       <div
         className="pointer-events-none absolute -top-24 left-1/2 -z-10 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-terracotta/5 blur-3xl"
@@ -36,28 +36,27 @@ export function Hero({ featuredDoll }: HeroProps) {
             <div className="flex justify-center lg:justify-start">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-terracotta/20 bg-terracotta-subtle px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-terracotta shadow-xs">
                 <Sparkles className="h-3.5 w-3.5 text-terracotta" />
-                <span>Галерея авторских кукол · Минск</span>
+                <span>Мастерская интерьерных фей и ангелов · Минск</span>
               </span>
             </div>
 
             {/* Main Headline (Cormorant Garamond) */}
-            <h1 className="font-serif text-3xl font-light tracking-tight text-espresso sm:text-5xl lg:text-6xl xl:text-[64px] xl:leading-[1.12]">
-              Художественные коллекционные куклы{" "}
-              <span className="italic text-terracotta">в единственном</span>{" "}
-              экземпляре
+            <h1 className="font-serif text-3xl font-light tracking-tight text-espresso sm:text-5xl lg:text-6xl xl:text-[62px] xl:leading-[1.14]">
+              Авторские куклы-феи и ангелы{" "}
+              <span className="italic text-terracotta">ручной работы</span>
             </h1>
 
             {/* Story manifesto quote */}
             <blockquote className="border-l-0 pl-0 font-serif italic text-lg leading-relaxed text-espresso-soft sm:border-l-2 sm:border-terracotta/60 sm:pl-4 sm:text-xl lg:text-2xl">
-              «В каждой кукле нет фабричной симметрии — лишь живое дыхание
-              ручного искусства, бисквитный фарфор и антикварный шёлк.»
+              «Мягкие хлопковые нити, тепло натурального дерева, нежный фатин с
+              ромашками и частичка сказки в каждом стежке.»
             </blockquote>
 
             {/* Short subtitle description */}
             <p className="mx-auto max-w-xl text-sm leading-relaxed text-muted sm:text-base lg:mx-0">
-              Каждое создание рождается вручную в минской мастерской: 14 подвижных
-              шарниров, надглазурная роспись, авторская шкатулка и персональный
-              паспорт подлинности.
+              Интерьерные подвесные куклы и душевные обереги для дома. Каждая фея
+              создается вручную: хлопковая пряжа макраме, резные деревянные крылья,
+              микро-букетики цветов и подарочная крафтовая упаковка.
             </p>
 
             {/* Mobile-first CTA Buttons */}
@@ -67,7 +66,7 @@ export function Hero({ featuredDoll }: HeroProps) {
                   size="lg"
                   className="w-full rounded-full px-8 shadow-md hover:shadow-lg active:scale-[0.98] sm:w-auto"
                 >
-                  <span>Смотреть работы в наличии</span>
+                  <span>Выбрать фею в наличии</span>
                   <ArrowRight className="h-4 w-4 ml-1" />
                 </Button>
               </Link>
@@ -87,15 +86,15 @@ export function Hero({ featuredDoll }: HeroProps) {
             <div className="grid grid-cols-1 gap-3 pt-4 border-t border-linen-dark/80 text-xs text-muted sm:grid-cols-3 sm:gap-4">
               <div className="flex items-center justify-center gap-2 lg:justify-start">
                 <Heart className="h-4 w-4 shrink-0 text-terracotta" />
-                <span>Только 1 из 1 (OOAK)</span>
+                <span>100% ручная работа</span>
               </div>
               <div className="flex items-center justify-center gap-2 lg:justify-start">
                 <Truck className="h-4 w-4 shrink-0 text-sage" />
-                <span>Европочта по всей РБ</span>
+                <span>Европочта по всей Беларуси</span>
               </div>
               <div className="flex items-center justify-center gap-2 lg:justify-start">
                 <ShieldCheck className="h-4 w-4 shrink-0 text-terracotta" />
-                <span>Резерв 15 минут в корзине</span>
+                <span>Подарочная упаковка</span>
               </div>
             </div>
           </div>
@@ -113,7 +112,7 @@ export function Hero({ featuredDoll }: HeroProps) {
                   {coverImage ? (
                     <Image
                       src={coverImage.url}
-                      alt={coverImage.alt || (doll?.name ?? "Авторская кукла")}
+                      alt={coverImage.alt || (doll?.name ?? "Авторская кукла-фея")}
                       fill
                       priority
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 480px"
@@ -126,7 +125,7 @@ export function Hero({ featuredDoll }: HeroProps) {
                   )}
 
                   {/* Gradient overlay at bottom of photo for text contrast */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-espresso/40 via-transparent to-black/10 pointer-events-none" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-espresso/45 via-transparent to-black/10 pointer-events-none" />
 
                   {/* Status Badges Overlay */}
                   <div className="absolute top-3 left-3 flex flex-wrap gap-2">
@@ -135,7 +134,7 @@ export function Hero({ featuredDoll }: HeroProps) {
                       В наличии
                     </Badge>
                     <Badge variant="ooak" className="shadow-xs bg-white/95 backdrop-blur-xs">
-                      OOAK
+                      Ручная работа
                     </Badge>
                   </div>
 
@@ -155,7 +154,7 @@ export function Hero({ featuredDoll }: HeroProps) {
                             «{doll.name}»
                           </p>
                           <p className="text-xs text-muted">
-                            {doll.heightCm} см · {doll.materials[0] ?? "Фарфор"}
+                            {doll.heightCm} см · Хлопок, дерево, фатин
                           </p>
                         </div>
 

@@ -8,9 +8,10 @@ export const dollStatusSchema = z.enum([
 ]);
 
 export const dollCategorySchema = z.enum([
-  "porcelain",
-  "sculpture",
-  "miniature",
+  "fairies",
+  "angels",
+  "miniatures",
+  "seasonal",
 ]);
 
 export const dollImageSchema = z.object({
@@ -24,10 +25,11 @@ export const dollImageSchema = z.object({
 });
 
 export const dollDetailsSchema = z.object({
-  jointsCount: z.number().int().positive().optional(),
+  wingMaterial: z.string().min(1),
   hairMaterial: z.string().min(1),
-  eyesMaterial: z.string().min(1),
-  outfitDetails: z.string().min(1),
+  dressMaterial: z.string().min(1),
+  bouquetDetails: z.string().min(1),
+  hangingLoopIncluded: z.boolean(),
   boxIncluded: z.boolean(),
   certificateIncluded: z.boolean(),
 });

@@ -5,7 +5,6 @@ import { Container } from "@/components/layout/Container";
 import { Button } from "@/components/ui/button";
 import {
   Sparkles,
-  Flame,
   Heart,
   ShieldCheck,
   Truck,
@@ -13,12 +12,13 @@ import {
   Palette,
   Scissors,
   CheckCircle2,
+  Trees,
 } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "О мастере и технике создания кукол — DollShop",
   description:
-    "История минской мастерской авторской фарфоровой куклы. Технологии лепки, высокотемпературный обжиг 1250°C, натуральный шёлк, мохер и принципы OOAK.",
+    "История мастерской интерьерных фей и ангелов ручной работы в Минске. Натуральный хлопок макраме, резное дерево, фатин с ромашками и мини-букетики.",
 };
 
 export default function AboutMasterPage() {
@@ -28,22 +28,21 @@ export default function AboutMasterPage() {
       <Container className="space-y-6 max-w-4xl text-center">
         <div className="inline-flex items-center gap-1.5 rounded-full border border-terracotta/20 bg-terracotta-subtle px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-terracotta">
           <Sparkles className="h-3.5 w-3.5" />
-          <span>Мастерская авторской куклы · Минск</span>
+          <span>Мастерская интерьерных фей · Минск</span>
         </div>
 
         <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-light tracking-tight text-espresso leading-tight">
-          «Каждая кукла рождается с собственным именем и душой»
+          «В каждой фее — тепло натуральных нитей, дерева и капелька сказки»
         </h1>
 
         <blockquote className="font-serif italic text-xl sm:text-2xl text-terracotta max-w-2xl mx-auto leading-relaxed">
-          «Фарфор — удивительный материал. Он холодный и хрупкий в начале пути,
-          но пройдя через пламя печи и тепло рук мастера, обретает дыхание вечности.»
+          «Когда в руках соединяются мягкий хлопок, ароматное дерево и нежнейший
+          фатин с ромашками — рождается маленькое чудо, согревающее дом.»
         </blockquote>
 
         <p className="text-base text-muted max-w-2xl mx-auto leading-relaxed">
-          Добро пожаловать в творческую лабораторию. Здесь соединяются
-          академическая скульптура, старинные портновские техники и искренняя
-          любовь к деталям.
+          Добро пожаловать в мир текстильных кукол-фей, ангелов и добрых
+          интерьерных оберегов ручной работы из Минска.
         </p>
       </Container>
 
@@ -53,8 +52,8 @@ export default function AboutMasterPage() {
           <div className="lg:col-span-6 relative aspect-[4/5] overflow-hidden rounded-3xl border border-linen-dark bg-white p-3 shadow-lg">
             <div className="relative h-full w-full overflow-hidden rounded-2xl bg-linen">
               <Image
-                src="/mock/artist/master-workshop.svg"
-                alt="Мастерская за работой над фарфоровой куклой"
+                src="/mock/dolls/fairy-blue-1.jpg"
+                alt="Кукла-фея ручной работы на натуральном льне"
                 fill
                 priority
                 sizes="(max-width: 1024px) 100vw, 540px"
@@ -65,34 +64,34 @@ export default function AboutMasterPage() {
 
           <div className="lg:col-span-6 space-y-6 text-sm sm:text-base text-muted leading-relaxed">
             <h2 className="font-serif text-3xl sm:text-4xl font-light text-espresso">
-              Путь мастера: от академической глины к кукольному искусству
+              Путь мастера: от первых нитей макраме к любимым сказочным феям
             </h2>
             <p>
-              Меня зовут Алёна Прокопенко. Мой творческий путь начался более 8
-              лет назад. Пройдя классическую школу академического рисунка и
-              скульптуры, я однажды прикоснулась к искусству авторской шарнирной
-              куклы — и поняла, что нашла свое истинное призвание.
+              Меня зовут Алёна. Все началось с желания создать для своего дома
+              особенный, теплый декор — не пластиковый и бездушный, а живой,
+              дышащий природой и уютом.
             </p>
             <p>
-              Кукла — это синтетическое искусство, где скульптор одновременно
-              выступает анатомом, ювелиром, визажистом, обувщиком и историком
-              костюма. Здесь нет места конвейеру: создание одного шедевра
-              занимает от 3 до 5 недель непрерывного кропотливого труда.
+              Так родилась первая кукла-фея: с крылышками бабочки из светлого
+              дерева, мягкими локонами из хлопковой пряжи и пышной юбочкой из
+              фатина с вышитыми ромашками. С тех пор эти феи разлетелись по сотням
+              домов Беларуси и других стран, принося в комнаты радость, тепло и
+              умиротворение.
             </p>
             <p>
-              Сегодня мои работы живут в частных коллекциях в Беларуси, России,
-              Германии, Франции и других странах. Но сердце мастерской неизменно
-              бьется в тихом уголке старого Минска.
+              Их дарят дочкам и мамам, вешают над колыбелью новорожденного как
+              ангела-хранителя, украшают ими зеркала, рабочие места и новогодние
+              елочки.
             </p>
 
             <div className="pt-2 flex items-center gap-6 text-espresso text-xs font-medium">
               <span className="flex items-center gap-1.5">
                 <CheckCircle2 className="h-4 w-4 text-sage" />
-                Член союза ремесленников
+                100% экологичные материалы
               </span>
               <span className="flex items-center gap-1.5">
                 <CheckCircle2 className="h-4 w-4 text-terracotta" />
-                100% ручной труд
+                Ручная сборка каждой детали
               </span>
             </div>
           </div>
@@ -104,70 +103,67 @@ export default function AboutMasterPage() {
         <Container className="space-y-12">
           <div className="text-center max-w-2xl mx-auto space-y-3">
             <span className="text-xs uppercase tracking-widest text-terracotta font-semibold">
-              Материалы и технологии
+              Материалы и компоненты
             </span>
             <h2 className="font-serif text-3xl sm:text-4xl font-light text-espresso">
-              Благородные компоненты долговечности
+              Только натуральные и тактильные текстуры
             </h2>
             <p className="text-sm text-muted">
-              Для создания кукол используются только натуральные премиальные
-              материалы музейного уровня.
+              Каждая кукла создана из приятных на ощупь, безопасных материалов,
+              к которым хочется прикасаться снова и снова.
             </p>
           </div>
 
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-2xl border border-linen-dark bg-white p-6 space-y-3 shadow-xs">
               <div className="h-10 w-10 rounded-xl bg-terracotta-subtle text-terracotta flex items-center justify-center">
-                <Flame className="h-5 w-5" />
+                <Trees className="h-5 w-5" />
               </div>
               <h3 className="font-serif text-xl font-medium text-espresso">
-                Бисквитный фарфор
+                Натуральное дерево
               </h3>
               <p className="text-xs text-muted leading-relaxed">
-                Французская фарфоровая масса Flashe. Обжигается при температуре
-                1250°C. Поверхность бархатистая на ощупь, имитирующая нежную
-                человеческую кожу.
+                Гладкая березовая бусина с ручной росписью личика и резные
+                ажурные крылышки бабочки с филигранной лазерной гравировкой.
               </p>
             </div>
 
             <div className="rounded-2xl border border-linen-dark bg-white p-6 space-y-3 shadow-xs">
               <div className="h-10 w-10 rounded-xl bg-sage-subtle text-sage flex items-center justify-center">
-                <Palette className="h-5 w-5" />
+                <Scissors className="h-5 w-5" />
               </div>
               <h3 className="font-serif text-xl font-medium text-espresso">
-                Надглазурная роспись
+                Хлопковая пряжа макраме
               </h3>
               <p className="text-xs text-muted leading-relaxed">
-                Пигменты впекаются в фарфор при температуре 780°C. Роспись не
-                стирается, не выцветает от солнечного света и сохраняет свежесть
-                десятилетиями.
+                Шелковистые локоны и витой корсаж из 100% натурального хлопка. Нити
+                не электризуются и красиво струятся по плечам куколки.
               </p>
             </div>
 
             <div className="rounded-2xl border border-linen-dark bg-white p-6 space-y-3 shadow-xs">
               <div className="h-10 w-10 rounded-xl bg-linen text-espresso flex items-center justify-center">
-                <Scissors className="h-5 w-5" />
+                <Sparkles className="h-5 w-5" />
               </div>
               <h3 className="font-serif text-xl font-medium text-espresso">
-                Шелк и кружево
+                Ромашковый фатин
               </h3>
               <p className="text-xs text-muted leading-relaxed">
-                Наряды шьются из натурального шелка ручного крашения корой дуба и
-                ягодами, антикварного кружева XIX века и батиста с ручной
-                вышивкой бисером.
+                Воздушная многослойная юбочка из полупрозрачной вуали, украшенная
+                вышитыми белыми ромашками с золотыми сердцевинками.
               </p>
             </div>
 
             <div className="rounded-2xl border border-linen-dark bg-white p-6 space-y-3 shadow-xs">
               <div className="h-10 w-10 rounded-xl bg-terracotta-subtle text-terracotta flex items-center justify-center">
-                <Heart className="h-5 w-5" />
+                <Palette className="h-5 w-5" />
               </div>
               <h3 className="font-serif text-xl font-medium text-espresso">
-                14 шарниров и замша
+                Цветочный букетик
               </h3>
               <p className="text-xs text-muted leading-relaxed">
-                Шарнирные соединения проклеены тончайшей натуральной замшей для
-                мягкого скольжения и надежной фиксации грациозных живых поз.
+                В ручках каждой феи заботливо закреплен миниатюрный букет
+                лазурных незабудок, крымской лаванды или крошечных розочек.
               </p>
             </div>
           </div>
@@ -183,26 +179,24 @@ export default function AboutMasterPage() {
                 <ShieldCheck className="h-5 w-5" />
               </div>
               <h3 className="font-serif text-2xl font-light text-espresso">
-                Паспорт подлинности
+                Паспорт изделия
               </h3>
               <p className="text-xs text-muted leading-relaxed">
-                К каждому произведению прилагается сертификат с уникальным
-                номером, названием коллекции, датой рождения куклы и личной
-                подписью автора.
+                Красивая бирка-паспорт с именем феи, датой создания, рекомендациями
+                по уходу и теплыми пожеланиями мастера.
               </p>
             </div>
 
             <div className="space-y-3">
               <div className="h-10 w-10 rounded-xl bg-sage-subtle text-sage flex items-center justify-center">
-                <Sparkles className="h-5 w-5" />
+                <Heart className="h-5 w-5" />
               </div>
               <h3 className="font-serif text-2xl font-light text-espresso">
-                Авторская шкатулка
+                Подарочная упаковка
               </h3>
               <p className="text-xs text-muted leading-relaxed">
-                Кукла упаковывается в деревянный коллекционный бокс с мягким
-                бархатным ложементом и шелковыми лентами, надежно защищающими
-                фарфор в пути.
+                Каждая кукла бережно укладывается в крафтовую подарочную коробочку
+                с бумажным наполнителем и атласной лентой. Готовый подарок!
               </p>
             </div>
 
@@ -211,12 +205,11 @@ export default function AboutMasterPage() {
                 <Truck className="h-5 w-5" />
               </div>
               <h3 className="font-serif text-2xl font-light text-espresso">
-                Европочта по Беларуси
+                Доставка Европочтой
               </h3>
               <p className="text-xs text-muted leading-relaxed">
-                Бережная экспресс-доставка до любого отделения Европочты за 2–3
-                дня с трек-номером и возможностью проверки целостности при
-                получении.
+                Быстрая отправка по всей Беларуси (2–3 дня). Отслеживание по
+                трек-номеру и надежная защита упаковки в пути.
               </p>
             </div>
           </div>
@@ -226,11 +219,11 @@ export default function AboutMasterPage() {
       {/* 5. Bottom Navigation CTAs */}
       <Container className="text-center space-y-6">
         <h2 className="font-serif text-3xl sm:text-4xl font-light text-espresso">
-          Готовы познакомиться с куклами ближе?
+          Хотите поселить фею в своем доме?
         </h2>
         <p className="text-sm text-muted max-w-md mx-auto">
-          Посмотрите работы в наличии или закажите создание куклы с вашим
-          характером.
+          Выберите готовую куколку из наличия или закажите любимое цветовое
+          сочетание.
         </p>
 
         <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
@@ -247,7 +240,7 @@ export default function AboutMasterPage() {
               size="lg"
               className="rounded-full border-linen-dark bg-white hover:bg-linen px-8"
             >
-              Заказать куклу у мастера
+              Заказать фею в своих цветах
             </Button>
           </Link>
         </div>

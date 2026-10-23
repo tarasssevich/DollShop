@@ -20,8 +20,8 @@ describe("catalog repository layer", () => {
   it("finds a published doll by slug ('selesta')", async () => {
     const doll = await getDollBySlug("selesta");
     expect(doll).not.toBeNull();
-    expect(doll?.name).toBe("Селеста");
-    expect(doll?.priceByn).toBe(420);
+    expect(doll?.name).toBe("Селеста · Фея незабудок");
+    expect(doll?.priceByn).toBe(55);
   });
 
   it("returns null when searching for draft slug without permission", async () => {

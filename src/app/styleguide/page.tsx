@@ -285,9 +285,9 @@ export default function StyleguidePage() {
                   <div className="inline-flex items-center gap-1.5 text-xs text-amber-800 font-medium bg-amber-50 rounded-full px-2.5 py-0.5 border border-amber-200/80 w-fit mb-1">
                     <Clock className="h-3 w-3" /> 15 минут на оформление
                   </div>
-                  <DialogTitle>Забронировать куклу «Селеста»</DialogTitle>
+                  <DialogTitle>Забронировать фею «Селеста»</DialogTitle>
                   <DialogDescription>
-                    Кукла будет временно закреплена за вами. Если оформление заказа
+                    Фея будет временно закреплена за вами. Если оформление заказа
                     не завершится в течение 15 минут, бронь автоматически снимется
                     в пользу следующего ценителя.
                   </DialogDescription>
@@ -295,17 +295,17 @@ export default function StyleguidePage() {
 
                 <div className="space-y-3 py-2 border-y border-linen-dark/60 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted">Кукла:</span>
-                    <span className="font-medium text-espresso">«Селеста» (OOAK)</span>
+                    <span className="text-muted">Фея:</span>
+                    <span className="font-medium text-espresso">«Селеста · Фея незабудок»</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted">Материалы:</span>
-                    <span className="text-espresso">Бисквитный фарфор, шелк</span>
+                    <span className="text-espresso">Хлопок макраме, фатин, дерево</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-muted">Стоимость:</span>
                     <span className="font-semibold text-lg text-terracotta">
-                      420 BYN
+                      55 BYN
                     </span>
                   </div>
                 </div>
@@ -352,11 +352,11 @@ export default function StyleguidePage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-serif font-medium text-espresso truncate">
-                        Кукла «Селеста»
+                        Фея «Селеста»
                       </p>
-                      <p className="text-xs text-muted">Бисквитный фарфор, 36 см</p>
+                      <p className="text-xs text-muted">Хлопок, фатин с ромашками, 22 см</p>
                       <p className="text-sm font-semibold text-terracotta mt-1">
-                        420 BYN
+                        55 BYN
                       </p>
                     </div>
                   </div>
@@ -601,18 +601,18 @@ export default function StyleguidePage() {
                 <div className="flex items-baseline justify-between">
                   <CardTitle>«Селеста»</CardTitle>
                   <span className="text-xl font-medium text-terracotta font-sans">
-                    420 BYN
+                    55 BYN
                   </span>
                 </div>
                 <CardDescription>
-                  Коллекция «Шепот осеннего леса» · Фарфор, шелк ручного крашения
+                  Коллекция «Цветочные феи» · Хлопок макраме, фатин с ромашками, дерево
                 </CardDescription>
               </CardHeader>
 
               <CardContent>
                 <p className="text-sm text-espresso-soft leading-relaxed line-clamp-2">
-                  Тонкая роспись надглазурными красками с многократным обжигом.
-                  Шарнирные соединения на эластичном жгуте с замшевой проклейкой.
+                  Нежная ручная роспись личика, воздушная юбка с вышитыми ромашками
+                  и букетик незабудок в миниатюрных ладошках.
                 </p>
               </CardContent>
 
@@ -651,11 +651,11 @@ export default function StyleguidePage() {
                   className="rounded-xl border border-linen-dark bg-white p-5 text-sm text-espresso-soft space-y-3 leading-relaxed"
                 >
                   <blockquote className="font-serif italic text-lg text-terracotta border-l-2 border-terracotta pl-3">
-                    «Она родилась в тихий ноябрьский вечер под мерный стук капель по стеклу мастерской...»
+                    «Селеста хранит в ладошках букетик незабудок как символ искренности и вечной весны...»
                   </blockquote>
                   <p>
-                    Селеста одета в многослойное платье из антикварного кружева и
-                    натурального шёлка, окрашенного корой дуба и ягодами бузины.
+                    Фея одета в воздушное платье из мятного хлопка макраме и невесомого
+                    фатина с вышитыми ромашками. На спинке — резные ажурные крылышки.
                   </p>
                 </TabsContent>
 
@@ -664,20 +664,20 @@ export default function StyleguidePage() {
                   className="rounded-xl border border-linen-dark bg-white p-5 text-sm space-y-2 leading-relaxed"
                 >
                   <div className="flex justify-between py-1 border-b border-linen">
-                    <span className="text-muted">Материал основы:</span>
-                    <span className="font-medium">Бисквитный фарфор Flashe</span>
+                    <span className="text-muted">Личико:</span>
+                    <span className="font-medium">Бусина из светлого бука с ручной росписью</span>
                   </div>
                   <div className="flex justify-between py-1 border-b border-linen">
-                    <span className="text-muted">Роспись:</span>
-                    <span className="font-medium">Надглазурная, пастель</span>
+                    <span className="text-muted">Платье:</span>
+                    <span className="font-medium">100% эко-хлопок макраме и фатин с ромашками</span>
                   </div>
                   <div className="flex justify-between py-1 border-b border-linen">
                     <span className="text-muted">Волосы:</span>
-                    <span className="font-medium">Натуральный мохер (тибетская козочка)</span>
+                    <span className="font-medium">Шелковистая хлопковая пряжа экрю</span>
                   </div>
                   <div className="flex justify-between py-1">
-                    <span className="text-muted">Шарниры:</span>
-                    <span className="font-medium">14 точек артикуляции, замша</span>
+                    <span className="text-muted">Крылышки:</span>
+                    <span className="font-medium">Натуральный шпон с ажурной перфорацией</span>
                   </div>
                 </TabsContent>
 
@@ -687,12 +687,11 @@ export default function StyleguidePage() {
                 >
                   <p className="font-medium text-espresso flex items-center gap-1.5">
                     <Truck className="h-4 w-4 text-terracotta" />
-                    Бережная упаковка в авторскую шкатулку
+                    Бережная подарочная упаковка
                   </p>
                   <p className="text-muted text-xs">
-                    Кукла надежно фиксируется в жесткой деревянной шкатулке с
-                    мягким бархатным ложементом. Сертификат подлинности с личной
-                    подписью мастера и серийным номером прилагается.
+                    Фея бережно укладывается в крафтовую коробочку с воздушной бумагой
+                    тишью, атласной лентой и авторской открыткой с теплыми пожеланиями.
                   </p>
                 </TabsContent>
               </Tabs>

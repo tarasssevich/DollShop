@@ -5,9 +5,10 @@ export type DollStatus =
   | "in_progress";
 
 export type DollCategory =
-  | "porcelain"
-  | "sculpture"
-  | "miniature";
+  | "fairies"
+  | "angels"
+  | "miniatures"
+  | "seasonal";
 
 export interface DollImage {
   id: string;
@@ -20,10 +21,11 @@ export interface DollImage {
 }
 
 export interface DollDetails {
-  jointsCount?: number;
+  wingMaterial: string;
   hairMaterial: string;
-  eyesMaterial: string;
-  outfitDetails: string;
+  dressMaterial: string;
+  bouquetDetails: string;
+  hangingLoopIncluded: boolean;
   boxIncluded: boolean;
   certificateIncluded: boolean;
 }

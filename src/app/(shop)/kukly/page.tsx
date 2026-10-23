@@ -5,9 +5,9 @@ import { getDolls } from "@/lib/data/catalog";
 import { Sparkles, Truck, ShieldCheck, Heart } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Куклы в наличии (OOAK) — DollShop",
+  title: "Куклы-феи в наличии (Ручная работа) — DollShop",
   description:
-    "Коллекционные фарфоровые куклы ручной работы в наличии. Единственные экземпляры с паспортом мастера и доставкой Европочтой по Беларуси.",
+    "Интерьерные куклы-феи и ангелы ручной работы в наличии. Натуральный хлопок макраме, резное дерево, фатин с ромашками, подарочная коробка и доставка Европочтой по Беларуси.",
 };
 
 export default async function DollsCatalogPage() {
@@ -24,14 +24,13 @@ export default async function DollsCatalogPage() {
           </div>
 
           <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-light tracking-tight text-espresso">
-            Куклы в наличии (Ищут дом)
+            Куклы-феи в наличии (Ищут дом)
           </h1>
 
           <p className="text-base text-muted leading-relaxed">
-            Все произведения в этом разделе полностью завершены и готовы к
-            переезду в новый дом. Каждая кукла упакована в авторскую деревянную
-            шкатулку с мягким ложементом и имеет индивидуальный паспорт с личной
-            подписью мастера.
+            Все феи и ангелы в этом разделе полностью готовы и ждут переезда
+            в свой новый дом. Каждая кукла бережно укладывается в крафтовую
+            подарочную коробочку с атласной лентой и паспортом изделия.
           </p>
 
           {/* Quick service banner */}

@@ -7,9 +7,9 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "Галерея проданных кукол (Архив) — DollShop",
+  title: "Галерея проданных фей (Архив) — DollShop",
   description:
-    "Галерея авторских кукол ручной работы, находящихся в частных коллекциях. Вдохновение и возможность заказать похожую работу у мастера.",
+    "Галерея авторских интерьерных фей ручной работы, находящихся в частных коллекциях. Вдохновение и возможность заказать похожую куклу у мастера.",
 };
 
 export default async function GalleryArchivePage() {
@@ -22,7 +22,7 @@ export default async function GalleryArchivePage() {
         <div className="max-w-3xl space-y-4">
           <div className="inline-flex items-center gap-1.5 rounded-full border border-linen-dark bg-linen px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-muted">
             <Archive className="h-3.5 w-3.5" />
-            <span>Архив произведений</span>
+            <span>Архив работ</span>
           </div>
 
           <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-light tracking-tight text-espresso">
@@ -30,10 +30,9 @@ export default async function GalleryArchivePage() {
           </h1>
 
           <p className="text-base text-muted leading-relaxed">
-            Шедевры, созданные в мастерской и нашедшие свой дом в частных
-            коллекциях. Каждая кукла существует в единственном экземпляре (OOAK),
-            но вы можете заказать создание новой работы по мотивам любимого
-            образа.
+            Интерьерные феи и ангелы, нашедшие свой дом в частных коллекциях.
+            Каждая кукла неповторима, но вы можете заказать создание новой работы
+            в похожих тонах и образе.
           </p>
         </div>
 

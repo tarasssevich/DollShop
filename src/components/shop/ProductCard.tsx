@@ -122,10 +122,7 @@ export function ProductCard({ doll, priority = false }: ProductCardProps) {
         </h3>
 
         <p className="text-xs text-muted leading-relaxed line-clamp-1">
-          {doll.heightCm} см · {doll.materials[0] ?? "Фарфор"} ·{" "}
-          {doll.details.jointsCount
-            ? `${doll.details.jointsCount} шарниров`
-            : "Статичная"}
+          {doll.heightCm} см · Хлопок, фатин, дерево
         </p>
 
         {/* Price & Action Row */}
