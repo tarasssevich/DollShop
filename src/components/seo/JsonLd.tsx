@@ -122,11 +122,20 @@ export function generateBreadcrumbSchema(items: BreadcrumbItem[]) {
 /**
  * Генерация схемы Schema.org/LocalBusiness для арт-бутика в Беларуси.
  */
-export function generateLocalBusinessSchema(baseUrl: string) {
+export function generateLocalBusinessSchema(
+  baseUrl: string,
+  settings?: {
+    contactPhone?: string;
+    legalSellerName?: string;
+    legalAddress?: string;
+  }
+) {
   return {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
-    name: "DollShop — Авторские куклы ручной работы",
+    name: settings?.legalSellerName
+      ? `DollShop — ${settings.legalSellerName}`
+      : "DollShop — Авторские куклы ручной работы",
     description:
       "Мастерская и цифровой арт-бутик интерьерных кукол-фей ручной работы. Единственный экземпляр (OOAK). Минск, Беларусь.",
     url: baseUrl,
@@ -137,6 +146,7 @@ export function generateLocalBusinessSchema(baseUrl: string) {
     priceRange: "$$",
     address: {
       "@type": "PostalAddress",
+      streetAddress: settings?.legalAddress || undefined,
       addressLocality: "Минск",
       addressRegion: "Минская область",
       addressCountry: "BY",
@@ -144,7 +154,7 @@ export function generateLocalBusinessSchema(baseUrl: string) {
     contactPoint: {
       "@type": "ContactPoint",
       contactType: "customer service",
-      telephone: "+375 29 123-45-67",
+      telephone: settings?.contactPhone || "+375 29 123-45-67",
       availableLanguage: ["Russian"],
     },
   };

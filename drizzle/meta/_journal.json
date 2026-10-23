@@ -12,8 +12,36 @@
     {
       "idx": 1,
       "version": "7",
+      "when": 1792753800000,
+      "tag": "0001_roles",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792756000000,
+      "tag": "0002_functions",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
       "when": 1792761605877,
-      "tag": "0001_moaning_spyke",
+      "tag": "0003_auth",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792777500000,
+      "tag": "0004_request_photos",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792788000000,
+      "tag": "0005_custom_request_doll",
       "breakpoints": true
     }
   ]

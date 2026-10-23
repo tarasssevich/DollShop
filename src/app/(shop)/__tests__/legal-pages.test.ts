@@ -23,7 +23,15 @@ describe("Informative & Legal Pages (Step 2.9)", () => {
     expect(privacyMeta.description).toContain("персональных данных");
   });
 
-  it("exports LegalInfo component correctly", () => {
+  it("exports LegalInfo component correctly and supports dynamic site settings", () => {
     expect(typeof LegalInfo).toBe("function");
+    const el = LegalInfo({
+      settings: {
+        legalSellerName: "ИП Тестовый Т. Т.",
+        legalUnp: "123456789",
+        legalTradeRegistryNum: "999888",
+      },
+    });
+    expect(el).toBeDefined();
   });
 });

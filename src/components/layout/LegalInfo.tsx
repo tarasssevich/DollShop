@@ -1,19 +1,31 @@
 import * as React from "react";
 import Image from "next/image";
 import { Building2, Phone, Mail, Clock, MapPin, Scale } from "lucide-react";
+import type { DomainSiteSettings } from "@/lib/data/drizzle/mappers";
 
-interface LegalInfoProps {
+export interface LegalInfoProps {
   className?: string;
   variant?: "full" | "compact";
+  settings?: Partial<DomainSiteSettings>;
 }
 
 /**
  * Standard legal entity requisites required by Edict No. 60 and Belarus Trade Register.
+ * Automatically dynamically renders values from site_settings (UNP, Seller name, address, etc.).
  */
 export function LegalInfo({
   className = "",
   variant = "full",
+  settings,
 }: LegalInfoProps) {
+  const sellerName = settings?.legalSellerName || "Индивидуальный предприниматель Прокопенко Алёна Васильевна";
+  const shortSellerName = settings?.legalSellerName || "ИП Прокопенко Алёна Васильевна";
+  const unp = settings?.legalUnp || "193758204";
+  const tradeRegistryNum = settings?.legalTradeRegistryNum || "584920";
+  const address = settings?.legalAddress || "220030, Республика Беларусь, г. Минск, ул. Ленина, д. 14";
+  const phone = settings?.contactPhone || "+375 (29) 123-45-67";
+  const email = settings?.contactEmail || "info@dollshop.by";
+
   if (variant === "compact") {
     return (
       <div className={`flex items-center gap-2.5 text-xs text-muted ${className}`}>
@@ -28,9 +40,9 @@ export function LegalInfo({
         </div>
         <div className="space-y-0.5">
           <p className="font-medium text-espresso">
-            ИП Прокопенко Алёна Васильевна
+            {shortSellerName}
           </p>
-          <p>УНП: 193758204 · Торговый реестр РБ № 584920</p>
+          <p>УНП: {unp} · Торговый реестр РБ № {tradeRegistryNum}</p>
         </div>
       </div>
     );
@@ -55,7 +67,7 @@ export function LegalInfo({
             <h4 className="font-serif text-base font-medium text-espresso">
               Официальные реквизиты продавца (Республика Беларусь)
             </h4>
-            <p className="text-[11px] text-muted">Ателье авторских кукол · УНП 193758204</p>
+            <p className="text-[11px] text-muted">Ателье авторских кукол · УНП {unp}</p>
           </div>
         </div>
         <Building2 className="h-4 w-4 text-terracotta hidden sm:block shrink-0" />
@@ -67,9 +79,9 @@ export function LegalInfo({
             Продавец
           </span>
           <p className="font-medium text-espresso">
-            Индивидуальный предприниматель Прокопенко Алёна Васильевна
+            {sellerName}
           </p>
-          <p>УНП: 193758204</p>
+          <p>УНП: {unp}</p>
           <p>
             Свидетельство о гос. регистрации выдано Минским горисполкомом
             15.01.2024 г.
@@ -80,7 +92,7 @@ export function LegalInfo({
           <span className="text-[11px] font-semibold uppercase tracking-wider text-muted block">
             Торговый реестр РБ
           </span>
-          <p>Регистрационный номер: <strong>№ 584920</strong></p>
+          <p>Регистрационный номер: <strong>№ {tradeRegistryNum}</strong></p>
           <p>Дата внесения в Торговый реестр: 12 марта 2024 г.</p>
           <p className="flex items-center gap-1.5 pt-1">
             <Scale className="h-3.5 w-3.5 text-sage shrink-0" />
@@ -94,7 +106,7 @@ export function LegalInfo({
           </span>
           <p className="flex items-start gap-1.5">
             <MapPin className="h-3.5 w-3.5 text-terracotta shrink-0 mt-0.5" />
-            <span>220030, Республика Беларусь, г. Минск, ул. Ленина, д. 14</span>
+            <span>{address}</span>
           </p>
         </div>
 
@@ -104,11 +116,11 @@ export function LegalInfo({
           </span>
           <p className="flex items-center gap-1.5">
             <Phone className="h-3.5 w-3.5 text-sage shrink-0" />
-            <span>+375 (29) 123-45-67</span>
+            <span>{phone}</span>
           </p>
           <p className="flex items-center gap-1.5">
             <Mail className="h-3.5 w-3.5 text-terracotta shrink-0" />
-            <span>info@dollshop.by</span>
+            <span>{email}</span>
           </p>
           <p className="flex items-center gap-1.5">
             <Clock className="h-3.5 w-3.5 text-muted shrink-0" />

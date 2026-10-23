@@ -27,6 +27,8 @@ export interface OrderWithDetails {
   } | null;
 }
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /**
  * Получение данных оформленного заказа по публичному UUID-токену.
  * Безопасно для показа покупателю на странице /zakaz/[token].
@@ -34,6 +36,10 @@ export interface OrderWithDetails {
 export async function getOrderByPublicToken(
   publicToken: string
 ): Promise<OrderWithDetails | null> {
+  if (!publicToken || !UUID_REGEX.test(publicToken)) {
+    return null;
+  }
+
   const [order] = await db
     .select()
     .from(orders)

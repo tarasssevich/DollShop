@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Send, Phone, Mail, ShieldCheck, Heart } from "lucide-react";
 import { Container } from "./Container";
 import { Separator } from "@/components/ui/separator";
+import { getSiteSettings } from "@/lib/data/drizzle/catalog";
 
 function InstagramIcon({ className }: { className?: string }) {
   return (
@@ -23,7 +24,10 @@ function InstagramIcon({ className }: { className?: string }) {
   );
 }
 
-export function Footer() {
+export async function Footer() {
+  const settings = await getSiteSettings();
+  const phoneClean = (settings.contactPhone || "+375 29 123-45-67").replace(/[^0-9+]/g, "");
+
   return (
     <footer className="border-t border-linen-dark bg-linen/50 text-espresso text-sm">
       {/* Upper footer grid */}
@@ -59,7 +63,7 @@ export function Footer() {
             {/* Social links */}
             <div className="flex items-center gap-3 pt-2">
               <a
-                href="https://t.me/dollshop_by"
+                href={settings.telegramChannel || "https://t.me/dollshop_by"}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex h-9 w-9 items-center justify-center rounded-full border border-linen-dark bg-white text-espresso transition-colors hover:border-terracotta hover:bg-terracotta hover:text-white"
@@ -69,7 +73,7 @@ export function Footer() {
               </a>
 
               <a
-                href="https://instagram.com/dollshop_by"
+                href={settings.instagramProfile || "https://instagram.com/dollshop_by"}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex h-9 w-9 items-center justify-center rounded-full border border-linen-dark bg-white text-espresso transition-colors hover:border-terracotta hover:bg-terracotta hover:text-white"
@@ -79,7 +83,7 @@ export function Footer() {
               </a>
 
               <a
-                href="tel:+375291234567"
+                href={`tel:${phoneClean}`}
                 className="flex h-9 w-9 items-center justify-center rounded-full border border-linen-dark bg-white text-espresso transition-colors hover:border-sage hover:bg-sage hover:text-white"
                 aria-label="Позвонить мастеру"
               >
@@ -181,14 +185,14 @@ export function Footer() {
             </p>
             <div className="space-y-1.5 text-xs text-muted leading-relaxed">
               <p className="font-medium text-espresso">
-                ИП Прокопенко Алёна Васильевна
+                {settings.legalSellerName || "ИП Прокопенко Алёна Васильевна"}
               </p>
-              <p>УНП: 193758204</p>
+              <p>УНП: {settings.legalUnp || "193758204"}</p>
               <p>Зарегистрирован Минским горисполкомом</p>
               <p>
-                Внесен в Торговый реестр Республики Беларусь: № 584920 от 12.03.2024
+                Внесен в Торговый реестр Республики Беларусь: № {settings.legalTradeRegistryNum || "584920"}
               </p>
-              <p>Адрес: 220030, г. Минск, ул. Ленина, д. 14</p>
+              <p>Адрес: {settings.legalAddress || "220030, г. Минск, ул. Ленина, д. 14"}</p>
               <p>Время работы магазина: круглосуточно</p>
               <p>Обработка заказов: Пн–Сб 10:00–20:00</p>
             </div>

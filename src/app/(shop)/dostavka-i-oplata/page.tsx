@@ -13,6 +13,7 @@ import {
 import { Container } from "@/components/layout/Container";
 import { Button } from "@/components/ui/button";
 import { LegalInfo } from "@/components/layout/LegalInfo";
+import { getSiteSettings } from "@/lib/data/drizzle/catalog";
 
 export const metadata: Metadata = {
   title: "Почта и самовывоз, оплата | DollShop (Беларусь)",
@@ -20,7 +21,9 @@ export const metadata: Metadata = {
     "Условия отправки посылок почтой по всей Беларуси, бесплатный самовывоз в Минске, надежная подарочная упаковка и способы оплаты (наложенный платеж, ЕРИП, онлайн в BYN).",
 };
 
-export default function DeliveryAndPaymentPage() {
+export default async function DeliveryAndPaymentPage() {
+  const settings = await getSiteSettings();
+
   return (
     <div className="py-10 sm:py-16 bg-alabaster">
       <Container className="max-w-4xl space-y-12">
@@ -57,7 +60,9 @@ export default function DeliveryAndPaymentPage() {
                 <span className="inline-flex items-center gap-1 rounded-md bg-terracotta-subtle px-2.5 py-0.5 text-xs font-semibold text-terracotta">
                   По всей Беларуси
                 </span>
-                <span className="font-semibold text-espresso text-base">~3,50–5 BYN</span>
+                <span className="font-semibold text-espresso text-base">
+                  {settings.deliveryCostBranch} BYN (бесплатно от {settings.freeDeliveryThreshold} BYN)
+                </span>
               </div>
               <h3 className="font-serif text-xl font-medium text-espresso">
                 Отправление почтой
@@ -212,7 +217,7 @@ export default function DeliveryAndPaymentPage() {
         </section>
 
         {/* 5. Requisites */}
-        <LegalInfo />
+        <LegalInfo settings={settings} />
 
         {/* Bottom CTA */}
         <div className="text-center pt-4">
