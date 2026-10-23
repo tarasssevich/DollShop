@@ -162,8 +162,14 @@ export async function uploadDollImage(
   }
 
   // 2. Сжатие
-  report("compressing", 15, "Оптимизация и сжатие в WebP...");
+  report("compressing", 15, "Оптимизация и сжатие...");
   const processed = await processDollImage(file);
+
+  const isJpeg =
+    processed.variants["2000"].blob.type === "image/jpeg" ||
+    processed.format === "jpeg";
+  const contentType = isJpeg ? "image/jpeg" : "image/webp";
+  const ext = isJpeg ? "jpg" : "webp";
 
   // 3. Запрос presigned URLs
   report("requesting_urls", 40, "Получение ссылок для загрузки...");
@@ -171,8 +177,8 @@ export async function uploadDollImage(
     productId,
     files: [
       {
-        filename: file.name,
-        contentType: "image/webp",
+        filename: file.name.replace(/\.[^/.]+$/, `.${ext}`),
+        contentType,
         size: processed.variants["2000"].size,
       },
     ],
@@ -200,7 +206,10 @@ export async function uploadDollImage(
       return uploadWithRetry(
         variantMeta.uploadUrl,
         compressedVariant.blob,
-        variantMeta.headers,
+        {
+          "Content-Type": contentType,
+          ...variantMeta.headers,
+        },
         maxRetries
       );
     }

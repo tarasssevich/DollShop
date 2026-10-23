@@ -12,8 +12,8 @@ export interface DollImageLoaderOptions {
 
 export function dollImageLoader({ src, width }: DollImageLoaderOptions): string {
   // Проверяем, является ли изображение структурированным медиа-файлом DollShop:
-  // products/{productId}/{mediaId}/{size}.webp
-  const variantRegex = /\/(2000|1280|640)\.webp(\?.*)?$/;
+  // products/{productId}/{mediaId}/{size}.(webp|jpg|jpeg)
+  const variantRegex = /\/(2000|1280|640)\.(webp|jpg|jpeg)(\?.*)?$/;
 
   if (variantRegex.test(src)) {
     let targetSize = "2000";
@@ -23,7 +23,7 @@ export function dollImageLoader({ src, width }: DollImageLoaderOptions): string 
       targetSize = "1280";
     }
 
-    return src.replace(variantRegex, `/${targetSize}.webp$2`);
+    return src.replace(variantRegex, `/${targetSize}.$2$3`);
   }
 
   // Для локальных файлов моков или других источников возвращаем URL без изменений

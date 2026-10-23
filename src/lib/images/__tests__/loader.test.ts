@@ -14,6 +14,12 @@ describe("Doll Image Loader (Step 4.6)", () => {
 
     const localRes = dollImageLoader({ src: localUploadUrl, width: 640 });
     expect(localRes).toBe("/uploads/products/p1/m1/640.webp");
+
+    const localJpgRes = dollImageLoader({
+      src: "/uploads/products/p1/m1/2000.jpg",
+      width: 640,
+    });
+    expect(localJpgRes).toBe("/uploads/products/p1/m1/640.jpg");
   });
 
   it("выбирает 1280.webp для планшетов и стандартных десктопов (width <= 1280)", () => {

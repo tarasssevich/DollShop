@@ -62,6 +62,7 @@ export interface DollImageProcessingResult {
   originalWidth: number;
   originalHeight: number;
   blurDataUrl: string;
+  format?: "webp" | "jpeg";
   variants: {
     "2000": CompressedVariant;
     "1280": CompressedVariant;
@@ -70,26 +71,55 @@ export interface DollImageProcessingResult {
 }
 
 /**
- * Сжимает изображение в формат WebP заданного максимального размера с адаптивным контролем качества.
+ * Проверяет, поддерживает ли браузер экспорт canvas в формат WebP с качеством.
+ * На iOS Safari canvas.toBlob('image/webp') либо отсутствует, либо возвращает несжатый image/png.
+ */
+function isCanvasWebpSupported(): boolean {
+  if (typeof document === "undefined") return true;
+  try {
+    const testCanvas = document.createElement("canvas");
+    testCanvas.width = 1;
+    testCanvas.height = 1;
+    const uri = testCanvas.toDataURL("image/webp");
+    return uri.startsWith("data:image/webp");
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Сжимает изображение в формат WebP или JPEG (для iOS Safari) заданного максимального размера
+ * с адаптивным контролем качества.
  */
 export async function compressCanvasToWebpBlob(
   canvas: HTMLCanvasElement | OffscreenCanvas,
   quality: number,
   targetMaxBytes?: number
 ): Promise<Blob> {
+  const preferWebp = isCanvasWebpSupported();
+  let requestedType = preferWebp ? "image/webp" : "image/jpeg";
   let currentQuality = quality;
 
   // OffscreenCanvas путь
   if ("convertToBlob" in canvas && typeof canvas.convertToBlob === "function") {
     let blob = await canvas.convertToBlob({
-      type: "image/webp",
+      type: requestedType,
       quality: currentQuality,
     });
 
-    if (targetMaxBytes && blob.size > targetMaxBytes && currentQuality > 0.5) {
-      currentQuality = Math.max(0.5, currentQuality - 0.1);
+    // Если запросили webp, но браузер вернул PNG (Safari fallback) — переключаемся на JPEG
+    if (blob.type === "image/png" && requestedType === "image/webp") {
+      requestedType = "image/jpeg";
       blob = await canvas.convertToBlob({
-        type: "image/webp",
+        type: requestedType,
+        quality: currentQuality,
+      });
+    }
+
+    while (targetMaxBytes && blob.size > targetMaxBytes && currentQuality > 0.45) {
+      currentQuality = Math.max(0.4, currentQuality - 0.08);
+      blob = await canvas.convertToBlob({
+        type: requestedType,
         quality: currentQuality,
       });
     }
@@ -99,22 +129,29 @@ export async function compressCanvasToWebpBlob(
 
   // Обычный HTMLCanvasElement путь
   const htmlCanvas = canvas as HTMLCanvasElement;
-  const toBlobPromise = (q: number) =>
+  const toBlobPromise = (type: string, q: number) =>
     new Promise<Blob>((resolve, reject) => {
       htmlCanvas.toBlob(
         (b) => {
           if (b) resolve(b);
           else reject(new Error("Не удалось экспортировать canvas в blob"));
         },
-        "image/webp",
+        type,
         q
       );
     });
 
-  let blob = await toBlobPromise(currentQuality);
-  if (targetMaxBytes && blob.size > targetMaxBytes && currentQuality > 0.5) {
-    currentQuality = Math.max(0.5, currentQuality - 0.1);
-    blob = await toBlobPromise(currentQuality);
+  let blob = await toBlobPromise(requestedType, currentQuality);
+
+  // Если браузер вернул PNG при запросе WebP — принудительно используем JPEG
+  if (blob.type === "image/png" && requestedType === "image/webp") {
+    requestedType = "image/jpeg";
+    blob = await toBlobPromise(requestedType, currentQuality);
+  }
+
+  while (targetMaxBytes && blob.size > targetMaxBytes && currentQuality > 0.45) {
+    currentQuality = Math.max(0.4, currentQuality - 0.08);
+    blob = await toBlobPromise(requestedType, currentQuality);
   }
 
   return blob;
@@ -215,10 +252,14 @@ export async function processDollImage(
     imgBitmap.close();
   }
 
+  const format: "webp" | "jpeg" =
+    variantsMap["2000"]?.blob.type === "image/jpeg" ? "jpeg" : "webp";
+
   return {
     originalWidth: origWidth,
     originalHeight: origHeight,
     blurDataUrl,
+    format,
     variants: {
       "2000": variantsMap["2000"]!,
       "1280": variantsMap["1280"]!,

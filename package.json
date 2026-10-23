@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:load": "node scripts/load-test.js",
+    "test:load": "node scripts/load-test.mjs",
     "test:race": "tsx --conditions=react-server --env-file=.env.local scripts/race-reserve.ts",
     "format": "prettier --write \"src/**/*.{ts,tsx,css,md}\"",
     "db:generate": "drizzle-kit generate",

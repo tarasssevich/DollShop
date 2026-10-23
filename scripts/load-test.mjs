@@ -92,6 +92,23 @@ async function main() {
 
   const initialPgStats = sql ? await getPgStats(sql) : null;
 
+  let sampleSlug = "selesta";
+  if (sql) {
+    try {
+      const [doll] = await sql`
+        SELECT slug FROM products 
+        WHERE status != 'draft' 
+        ORDER BY created_at DESC 
+        LIMIT 1;
+      `;
+      if (doll?.slug) {
+        sampleSlug = doll.slug;
+      }
+    } catch {
+      // Игнорируем ошибку выборки слага
+    }
+  }
+
   const scenarios = [
     {
       title: "1. Главная витрина (ISR кэш)",
@@ -104,8 +121,8 @@ async function main() {
       connections: CONNECTIONS,
     },
     {
-      title: "3. Карточка куклы (/kukly/selesta)",
-      path: "/kukly/selesta",
+      title: `3. Карточка куклы (/kukly/${sampleSlug})`,
+      path: `/kukly/${sampleSlug}`,
       connections: CONNECTIONS,
     },
     {

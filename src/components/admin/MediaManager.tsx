@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useTransition } from "react";
+import { useState, useRef, useTransition, useEffect } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
 import {
@@ -14,6 +14,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { uploadDollImage, type UploadProgressEvent } from "@/lib/images/upload";
+import { dollImageLoader } from "@/lib/images/loader";
 import {
   deleteProductMediaAction,
   reorderProductMediaAction,
@@ -25,11 +26,13 @@ export interface MediaItem {
   blurDataUrl?: string | null;
   displayOrder: number;
   alt?: string | null;
+  previewUrl?: string | null;
 }
 
 interface UploadingState {
   tempId: string;
   name: string;
+  previewUrl?: string;
   progress: number;
   message: string;
   error?: string;
@@ -56,9 +59,54 @@ export function MediaManager({
   const [mediaList, setMediaList] = useState<MediaItem[]>(
     [...initialMedia].sort((a, b) => a.displayOrder - b.displayOrder)
   );
+  const [prevInitialMedia, setPrevInitialMedia] = useState(initialMedia);
+  const [prevInitialProductId, setPrevInitialProductId] = useState(initialProductId);
+
+  // Синхронизация activeProductId и mediaList при обновлении сверху (по официальному паттерну React: Adjusting state during render)
+  if (initialProductId !== prevInitialProductId) {
+    setPrevInitialProductId(initialProductId);
+    if (initialProductId && !activeProductId) {
+      setActiveProductId(initialProductId);
+    }
+  }
+
+  if (initialMedia !== prevInitialMedia) {
+    setPrevInitialMedia(initialMedia);
+    const mergedMap = new Map<string, MediaItem>();
+    for (const item of initialMedia) {
+      mergedMap.set(item.id, item);
+    }
+    for (const item of mediaList) {
+      if (!mergedMap.has(item.id)) {
+        mergedMap.set(item.id, item);
+      } else {
+        const serverItem = mergedMap.get(item.id)!;
+        if (item.previewUrl && !serverItem.previewUrl) {
+          mergedMap.set(item.id, { ...serverItem, previewUrl: item.previewUrl });
+        }
+      }
+    }
+    setMediaList(
+      Array.from(mergedMap.values()).sort((a, b) => a.displayOrder - b.displayOrder)
+    );
+  }
+
   const [uploadingQueue, setUploadingQueue] = useState<UploadingState[]>([]);
   const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const objectUrlsRef = useRef<Set<string>>(new Set());
+
+  // Очистка созданных Object URLs при размонтировании компонента
+  useEffect(() => {
+    const urls = objectUrlsRef.current;
+    return () => {
+      urls.forEach((url) => {
+        try {
+          URL.revokeObjectURL(url);
+        } catch {}
+      });
+    };
+  }, []);
 
   const updateList = (newList: MediaItem[]) => {
     setMediaList(newList);
@@ -98,13 +146,22 @@ export function MediaManager({
       );
     }
 
-    // 1. Мгновенно отображаем карточки всех выбранных фото в очереди интерфейса
-    const initialQueueItems: UploadingState[] = batch.map((file, idx) => ({
-      tempId: `temp-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 7)}`,
-      name: file.name,
-      progress: 5,
-      message: idx < 2 ? "Подготовка файла..." : "В очереди...",
-    }));
+    // 1. Мгновенно генерируем локальные превью (0 ms delay для мастера)
+    const initialQueueItems: UploadingState[] = batch.map((file, idx) => {
+      let previewUrl: string | undefined;
+      try {
+        previewUrl = URL.createObjectURL(file);
+        objectUrlsRef.current.add(previewUrl);
+      } catch {}
+
+      return {
+        tempId: `temp-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 7)}`,
+        name: file.name,
+        previewUrl,
+        progress: 5,
+        message: idx < 2 ? "Подготовка фото..." : "В очереди...",
+      };
+    });
 
     setUploadingQueue((prev) => [...prev, ...initialQueueItems]);
 
@@ -121,7 +178,7 @@ export function MediaManager({
         const queueItem = initialQueueItems[index];
         if (!file || !queueItem) continue;
 
-        const { tempId } = queueItem;
+        const { tempId, previewUrl } = queueItem;
         const currentOrder = baseDisplayOrder + index;
 
         try {
@@ -141,10 +198,11 @@ export function MediaManager({
             },
           });
 
-          // Добавляем сохраненное фото в список
+          // Мгновенно добавляем сохраненное фото в список с сохранением previewUrl
           const newItem: MediaItem = {
             id: savedMedia.id,
             url: savedMedia.url,
+            previewUrl: previewUrl || null,
             blurDataUrl: savedMedia.blurDataUrl,
             displayOrder: savedMedia.displayOrder,
             alt: savedMedia.alt,
@@ -337,13 +395,15 @@ export function MediaManager({
               {/* Превью картинки */}
               <div className="relative aspect-square w-full bg-stone-100 overflow-hidden">
                 <Image
-                  src={item.url}
+                  src={item.previewUrl || item.url}
                   alt={item.alt || dollTitle || "Фото куклы"}
                   fill
+                  unoptimized={Boolean(item.previewUrl)}
+                  loader={!item.previewUrl ? dollImageLoader : undefined}
                   className="object-cover"
                   sizes="(max-width: 640px) 50vw, 33vw"
-                  placeholder={item.blurDataUrl ? "blur" : "empty"}
-                  blurDataURL={item.blurDataUrl || undefined}
+                  placeholder={item.blurDataUrl && !item.previewUrl ? "blur" : "empty"}
+                  blurDataURL={item.blurDataUrl && !item.previewUrl ? item.blurDataUrl : undefined}
                 />
 
                 {/* Бейдж обложки */}
@@ -416,41 +476,51 @@ export function MediaManager({
         {uploadingQueue.map((item) => (
           <div
             key={item.tempId}
-            className="relative flex flex-col justify-center items-center aspect-square rounded-2xl border-2 border-dashed border-[#9A5B42]/40 bg-[#9A5B42]/5 p-4 text-center"
+            className="relative flex flex-col justify-end aspect-square rounded-2xl overflow-hidden border border-[#9A5B42]/30 bg-stone-100 shadow-sm"
           >
-            {item.error ? (
-              <div className="space-y-1">
-                <AlertCircle className="w-6 h-6 text-red-500 mx-auto" />
-                <p className="text-xs font-medium text-red-600">{item.error}</p>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setUploadingQueue((prev) =>
-                      prev.filter((u) => u.tempId !== item.tempId)
-                    )
-                  }
-                  className="text-[11px] text-stone-500 underline mt-1"
-                >
-                  Закрыть
-                </button>
-              </div>
-            ) : (
-              <div className="w-full space-y-2">
-                <Loader2 className="w-7 h-7 text-[#9A5B42] animate-spin mx-auto" />
-                <div className="w-full bg-stone-200 rounded-full h-1.5 overflow-hidden">
-                  <div
-                    className="bg-[#9A5B42] h-full transition-all duration-300"
-                    style={{ width: `${item.progress}%` }}
-                  />
-                </div>
-                <p className="text-[11px] font-medium text-stone-600">
-                  {item.message}
-                </p>
-                <p className="text-[10px] text-stone-400 truncate max-w-[120px] mx-auto">
-                  {item.name}
-                </p>
-              </div>
+            {item.previewUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={item.previewUrl}
+                alt={item.name}
+                className="absolute inset-0 w-full h-full object-cover scale-105 filter blur-[0.5px] brightness-90"
+              />
             )}
+            <div className="absolute inset-0 bg-stone-900/40 backdrop-blur-[1px] flex flex-col justify-center items-center p-3 text-center text-white z-10">
+              {item.error ? (
+                <div className="space-y-1">
+                  <AlertCircle className="w-6 h-6 text-red-400 mx-auto" />
+                  <p className="text-xs font-medium text-red-200">{item.error}</p>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setUploadingQueue((prev) =>
+                        prev.filter((u) => u.tempId !== item.tempId)
+                      )
+                    }
+                    className="text-[11px] text-stone-300 underline mt-1"
+                  >
+                    Закрыть
+                  </button>
+                </div>
+              ) : (
+                <div className="w-full space-y-2">
+                  <Loader2 className="w-7 h-7 text-white animate-spin mx-auto drop-shadow-md" />
+                  <div className="w-full bg-white/30 rounded-full h-1.5 overflow-hidden">
+                    <div
+                      className="bg-white h-full transition-all duration-300"
+                      style={{ width: `${item.progress}%` }}
+                    />
+                  </div>
+                  <p className="text-[11px] font-medium text-white drop-shadow-sm">
+                    {item.message}
+                  </p>
+                  <p className="text-[10px] text-stone-200 truncate max-w-[120px] mx-auto opacity-80">
+                    {item.name}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         ))}
 

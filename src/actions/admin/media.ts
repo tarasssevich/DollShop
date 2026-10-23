@@ -44,27 +44,28 @@ export async function createUploadUrlsAction(
   try {
     const items: MediaUploadItemResult[] = [];
 
-    for (const _file of files) {
+    for (const file of files) {
       const mediaId = crypto.randomUUID();
+      const ext = file.contentType === "image/jpeg" ? "jpg" : "webp";
 
-      const key2000 = `products/${productId}/${mediaId}/2000.webp`;
-      const key1280 = `products/${productId}/${mediaId}/1280.webp`;
-      const key640 = `products/${productId}/${mediaId}/640.webp`;
+      const key2000 = `products/${productId}/${mediaId}/2000.${ext}`;
+      const key1280 = `products/${productId}/${mediaId}/1280.${ext}`;
+      const key640 = `products/${productId}/${mediaId}/640.${ext}`;
 
       const [res2000, res1280, res640] = await Promise.all([
         adapter.createUploadUrl({
           key: key2000,
-          contentType: "image/webp",
+          contentType: file.contentType,
           expiresInSeconds: 300,
         }),
         adapter.createUploadUrl({
           key: key1280,
-          contentType: "image/webp",
+          contentType: file.contentType,
           expiresInSeconds: 300,
         }),
         adapter.createUploadUrl({
           key: key640,
-          contentType: "image/webp",
+          contentType: file.contentType,
           expiresInSeconds: 300,
         }),
       ]);
