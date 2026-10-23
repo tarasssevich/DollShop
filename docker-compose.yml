@@ -1,0 +1,23 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: dollshop-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: dollshop
+      POSTGRES_USER: dollshop_app
+      POSTGRES_PASSWORD: dollshop_dev_password
+      TZ: Europe/Minsk
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dollshop_app -d dollshop"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
