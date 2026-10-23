@@ -5,6 +5,7 @@ import Image from "next/image";
 import { ZoomIn, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/shop/StatusBadge";
+import { Lightbox } from "@/components/shop/Lightbox";
 import type { DollImage, DollStatus } from "@/types/domain";
 
 interface ProductGalleryProps {
@@ -45,7 +46,10 @@ export function ProductGallery({
   return (
     <div className="space-y-3">
       {/* Main image container */}
-      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl border border-linen-dark bg-alabaster shadow-sm group">
+      <div
+        onClick={() => setIsZoomed(true)}
+        className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl border border-linen-dark bg-alabaster shadow-sm group cursor-pointer"
+      >
         <Image
           src={activeImage.url}
           alt={activeImage.alt || `${dollName} — фото ${activeIndex + 1}`}
@@ -74,7 +78,10 @@ export function ProductGallery({
           <>
             <button
               type="button"
-              onClick={handlePrev}
+              onClick={(e) => {
+                e.stopPropagation();
+                handlePrev();
+              }}
               aria-label="Предыдущее фото"
               className="absolute left-2.5 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-white/80 backdrop-blur-sm border border-linen-dark text-espresso flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white shadow-sm focus:opacity-100"
             >
@@ -82,7 +89,10 @@ export function ProductGallery({
             </button>
             <button
               type="button"
-              onClick={handleNext}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleNext();
+              }}
               aria-label="Следующее фото"
               className="absolute right-2.5 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-white/80 backdrop-blur-sm border border-linen-dark text-espresso flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white shadow-sm focus:opacity-100"
             >
@@ -92,9 +102,9 @@ export function ProductGallery({
         )}
 
         {/* Bottom Zoom & counter cues */}
-        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs">
+        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs pointer-events-none">
           {images.length > 1 ? (
-            <span className="rounded-full bg-black/50 text-white/90 backdrop-blur-sm px-2.5 py-1 text-[11px] font-medium">
+            <span className="rounded-full bg-black/50 text-white/90 backdrop-blur-sm px-2.5 py-1 text-[11px] font-medium pointer-events-auto">
               {activeIndex + 1} / {images.length}
             </span>
           ) : (
@@ -103,8 +113,11 @@ export function ProductGallery({
 
           <button
             type="button"
-            onClick={() => setIsZoomed(true)}
-            className="flex items-center gap-1.5 rounded-full bg-white/90 text-espresso px-3 py-1 text-xs shadow-sm border border-linen-dark hover:bg-white transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsZoomed(true);
+            }}
+            className="flex items-center gap-1.5 rounded-full bg-white/90 text-espresso px-3 py-1 text-xs shadow-sm border border-linen-dark hover:bg-white transition-colors pointer-events-auto"
           >
             <ZoomIn className="h-3.5 w-3.5 text-terracotta" />
             <span>Рассмотреть детали</span>
@@ -139,32 +152,15 @@ export function ProductGallery({
         </div>
       )}
 
-      {/* Fullscreen Quick Modal (Preview before Lightbox Step 2.6) */}
+      {/* High-End Studio Lightbox with Touch & Keyboard gestures */}
       {isZoomed && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          onClick={() => setIsZoomed(false)}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 cursor-zoom-out animate-in fade-in duration-200"
-        >
-          <div className="relative max-h-[90vh] max-w-[90vw] aspect-[4/5] w-full">
-            <Image
-              src={activeImage.url}
-              alt={activeImage.alt || dollName}
-              fill
-              className="object-contain"
-              sizes="90vw"
-            />
-          </div>
-          <button
-            type="button"
-            onClick={() => setIsZoomed(false)}
-            className="absolute top-4 right-4 rounded-full bg-white/20 text-white p-2 hover:bg-white/40 transition-colors"
-            aria-label="Закрыть увеличение"
-          >
-            ✕
-          </button>
-        </div>
+        <Lightbox
+          images={images}
+          initialIndex={activeIndex}
+          isOpen={isZoomed}
+          onClose={() => setIsZoomed(false)}
+          dollName={dollName}
+        />
       )}
     </div>
   );
