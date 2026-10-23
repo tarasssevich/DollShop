@@ -8,7 +8,7 @@ import { z } from "zod";
 export const envSchema = z.object({
   DATABASE_URL: z
     .string({
-      error:
+      required_error:
         "Переменная окружения DATABASE_URL обязательна для подключения к PostgreSQL",
     })
     .min(1, "Переменная окружения DATABASE_URL не может быть пустой")
@@ -60,6 +60,20 @@ export const envSchema = z.object({
     .min(16, "REVALIDATE_SECRET должен содержать минимум 16 символов")
     .optional()
     .default("dev_revalidate_secret_dollshop_local"),
+  BETTER_AUTH_SECRET: z
+    .string()
+    .min(16, "BETTER_AUTH_SECRET должен содержать минимум 16 символов")
+    .optional()
+    .default("dev_better_auth_secret_dollshop_local"),
+  BETTER_AUTH_URL: z
+    .string()
+    .optional()
+    .default("http://localhost:3000"),
+  S3_ENDPOINT: z.string().optional(),
+  S3_REGION: z.string().optional().default("auto"),
+  S3_ACCESS_KEY_ID: z.string().optional(),
+  S3_SECRET_ACCESS_KEY: z.string().optional(),
+  S3_BUCKET_MEDIA: z.string().optional().default("dollshop-media"),
 });
 
 export type Env = z.infer<typeof envSchema>;
