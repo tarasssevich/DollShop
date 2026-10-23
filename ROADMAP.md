@@ -18,8 +18,8 @@
 | Фаза | Название | Шаги | Статус |
 |---|---|---|---|
 | 1 | Фундамент, нейминг и дизайн-система | 1.0–1.5 | ✅ Завершена (1.1–1.5 готовы) |
-| 2 | Витрина на моковых данных | 2.1–2.10 | 🔄 В процессе (2.1 ✅, 2.2 ✅, 2.3 ✅, 2.4 ✅) |
-| 3 | PostgreSQL: схема, функции брони, подключение витрины | 3.1–3.7 | ⬜ |
+| 2 | Витрина на моковых данных | 2.1–2.10 | ✅ Завершена (2.1–2.10 готовы) |
+| 3 | PostgreSQL: схема, функции брони, подключение витрины | 3.1–3.7 | ✅ Завершена (3.1–3.7 готовы) |
 | 4 | Мобильная админка и медиа-пайплайн (S3) | 4.1–4.9 | ⬜ |
 | 5 | Бронь, чекаут (Европочта), заявки, Telegram | 5.1–5.8 | ⬜ |
 | 6 | Онлайн-оплата (карты + ЕРИП) | 6.1–6.4 | ⬜ |
@@ -147,10 +147,10 @@
 - **Файлы:** `src/lib/data/drizzle/catalog.ts`, `src/lib/cache/tags.ts`, `src/lib/data/status.ts`, `src/lib/data/catalog.ts`, `src/components/shop/{ProductCard,StatusBadge,BuyButton}.tsx`.
 - **✅ Готово:** витрина, каталог `/kukly`, страница куклы `/kukly/[slug]` и галерея `/galereya` читают данные напрямую из PostgreSQL 18; Next.js ISR кэширует страницы с тегами (`Revalidate: 1h, Expire: 1y`); `server-only` гарантирует отсутствие утечек драйверов в бандлы браузера; `npm run build` ✅ генерирует все 27 страниц, `npm test` ✅ (94 теста зелёные, 17 сьютов), `npm run typecheck` ✅, `npm run lint` ✅.
 
-### Step 3.7 — `/api/revalidate`
+### Step 3.7 — `/api/revalidate` [x]
 - **Что делаем:** Route Handler с `REVALIDATE_SECRET`, Zod-валидация списка тегов.
-- **Файлы:** `src/app/api/revalidate/route.ts`.
-- **✅ Готово, когда:** `curl` с секретом обновляет страницу, без секрета — `401`.
+- **Файлы:** `src/app/api/revalidate/route.ts`, `src/app/api/revalidate/__tests__/route.test.ts`, `src/lib/env.ts`, `.env.example`.
+- **✅ Готово:** Route Handler `src/app/api/revalidate/route.ts` реализован с проверкой секрета `REVALIDATE_SECRET` (через заголовок `Authorization: Bearer <secret>`, заголовок `x-revalidate-secret` или query-параметр `?secret=`), строгой Zod-валидацией массива `tags` и опционального `paths`, вызовом `revalidateTag` и `revalidatePath`; написан полный сьют интеграционных тестов `src/app/api/revalidate/__tests__/route.test.ts` (6 тестов: 401 при неверном/отсутствующем секрете, 400 при пустом payload или некорректных тегах, 200 при валидном запросе с проверкой вызова revalidate); живой `curl` запрос на работающий dev-сервер вернул 200 OK `{"revalidated":true,"tags":["products","product:selesta"],"paths":[],"timestamp":"..."}`; `npm test` ✅ (100 тестов зелёные, 18 сьютов), `npm run typecheck` ✅, `npm run lint` ✅.
 
 ---
 

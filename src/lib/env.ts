@@ -54,6 +54,11 @@ export const envSchema = z.object({
     .min(8, "CRON_SECRET должен содержать минимум 8 символов")
     .optional()
     .default("dev_cron_secret_dollshop_local"),
+  REVALIDATE_SECRET: z
+    .string()
+    .min(8, "REVALIDATE_SECRET должен содержать минимум 8 символов")
+    .optional()
+    .default("dev_revalidate_secret_dollshop_local"),
 });
 
 export type Env = z.infer<typeof envSchema>;
