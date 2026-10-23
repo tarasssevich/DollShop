@@ -161,10 +161,10 @@
 - **Файлы:** `src/lib/auth/*`, `src/app/api/auth/[...all]/route.ts`, `src/proxy.ts`, `src/middleware.ts`, `src/app/admin/login/page.tsx`, `scripts/create-admin.ts`, `src/lib/auth/__tests__/auth.test.ts`.
 - **✅ Готово:** Таблицы `user`, `session`, `account`, `verification` созданы в PostgreSQL 18 миграцией `0003_auth.sql`; настроен серверный Better Auth с Drizzle-адаптером и клиентский SDK; CLI-скрипт `npm run auth:create-admin` инициализирует мастера `master@dollshop.by`; охранный шлюз `adminProxy` и `requireAdminAction/requireAdminPage` защищают маршруты `/admin/*` с сохранением `returnUrl`; страница `/admin/login` оформлена в палитре бренда с понятными русскими ошибками; `npm test` ✅ (108 тестов зелёные, 19 сьютов), `npm run typecheck` ✅, `npm run lint` ✅.
 
-### Step 4.2 — Оболочка админки
+### Step 4.2 — Оболочка админки [x]
 - **Что делаем:** адаптивная мобильная оболочка по концепции **Zero-IT UX** (никакого визуального мусора, лаконичный интерфейс под палец): нижний таб-бар (Заказы · Куклы · Заявки · Настройки), тап-зоны ≥ 44px, safe-area iPhone, список кукол с крупными превью и фильтром-чипами по человеческим статусам («🟢 В наличии», «🏡 В архиве», «✨ На заказ», «📝 Черновики»), плавающая кнопка (FAB) «+ Новая кукла».
-- **Файлы:** `src/app/admin/(panel)/layout.tsx`, `src/app/admin/(panel)/kukly/page.tsx`, `src/components/admin/*`.
-- **✅ Готово, когда:** на телефоне ощущается как нативное приложение; черновики визуально выделены; мастер без IT-опыта ориентируется без подсказок.
+- **Файлы:** `src/app/admin/(panel)/layout.tsx`, `src/app/admin/(panel)/page.tsx`, `src/app/admin/(panel)/kukly/page.tsx`, `src/app/admin/(panel)/{zakazy,zayavki,nastrojki}/page.tsx`, `src/components/admin/{AdminHeader,AdminBottomNav,DollsListClient}.tsx`, `src/components/admin/__tests__/DollsListClient.test.ts`.
+- **✅ Готово:** Оболочка админки полностью реализована под концепцию Zero-IT UX: мобильный таб-бар с безопасными отступами под жесты iOS; список кукол с крупными превью, индикаторами статусов и горизонтальными фильтр-чипами; поиск по названию; плавающая кнопка (FAB) «+ Новая кукла»; `npm test` ✅ (112 тестов зелёные, 20 сьютов), `npm run typecheck` ✅, `npm run lint` ✅.
 
 ### Step 4.3 — Форма куклы «Zero-IT UX» (в один экран)
 - **Что делаем:**
