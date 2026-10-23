@@ -77,15 +77,10 @@ async function fetchRawDollsFromDb(options: {
 }
 
 /**
- * Кэшированная выборка опубликованных кукол с тегом 'products'.
+ * Прямая выборка опубликованных кукол из PostgreSQL.
+ * Обеспечивает мгновенную 100% синхронизацию витрины покупателя и админ-панели мастера.
  */
-const getRawDollsCached =
-  process.env.NODE_ENV !== "production"
-    ? fetchRawDollsFromDb
-    : unstable_cache(fetchRawDollsFromDb, ["products-list"], {
-        tags: [CACHE_TAGS.products],
-        revalidate: 3600,
-      });
+const getRawDollsCached = fetchRawDollsFromDb;
 
 /**
  * Получение списка кукол с фильтрацией по эффективному статусу (на текущий момент времени).
@@ -187,20 +182,7 @@ export async function getDollBySlug(
     return null;
   }
 
-  if (process.env.NODE_ENV !== "production" || options.includeDrafts) {
-    return fetchDollBySlugFromDb(slug, options);
-  }
-
-  const cachedFn = unstable_cache(
-    fetchDollBySlugFromDb,
-    [`product-${slug}`],
-    {
-      tags: [CACHE_TAGS.products, CACHE_TAGS.product(slug)],
-      revalidate: 3600,
-    }
-  );
-
-  return cachedFn(slug, options);
+  return fetchDollBySlugFromDb(slug, options);
 }
 
 /**

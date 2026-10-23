@@ -12,6 +12,8 @@ export const metadata: Metadata = {
     "Арт-портфолио авторских интерьерных фей и ангелов ручной работы, обретающих дом в семьях Беларуси и мира. Вдохновение и возможность заказать похожую куклу у мастера.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function GalleryArchivePage() {
   const soldDolls = await getDolls({ status: "sold" });
 

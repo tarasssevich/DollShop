@@ -14,6 +14,8 @@ export const metadata: Metadata = {
   },
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function DollsCatalogPage() {
   const dolls = await getDolls({ status: "available" });
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://dollshop.by";

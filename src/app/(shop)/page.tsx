@@ -8,6 +8,8 @@ import Link from "next/link";
 import { Sparkles, ArrowRight, ShieldCheck, Heart, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   const [availableDolls, inProgressDolls, soldDolls] = await Promise.all([
     getDolls({ status: "available" }),
