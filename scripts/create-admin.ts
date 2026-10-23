@@ -11,7 +11,7 @@ import { auth } from "@/lib/auth";
 async function main() {
   const args = process.argv.slice(2);
   const email = (args[0] || "master@dollshop.by").toLowerCase().trim();
-  const password = args[1] || "DollShopMaster2026!Secure";
+  const password = args[1] || "DollMaster2026!";
   const name = args[2] || "Анастасия Прокопенко (Мастер)";
 
   console.log(`🔐 Инициализация учетной записи мастера: ${email}...`);
