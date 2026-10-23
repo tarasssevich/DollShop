@@ -2,6 +2,7 @@ import {
   formatNewOrderMessage,
   formatCustomRequestMessage,
   buildOrderInlineKeyboard,
+  buildCustomRequestInlineKeyboard,
   type NewOrderNotificationParams,
   type CustomRequestNotificationParams,
 } from "./templates";
@@ -94,9 +95,12 @@ export async function notifyNewOrder(
 export async function notifyCustomRequest(
   params: CustomRequestNotificationParams
 ): Promise<SendTelegramResult> {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://dollshop.by";
   const text = formatCustomRequestMessage(params);
+  const replyMarkup = buildCustomRequestInlineKeyboard(appUrl);
 
   return sendTelegramMessage({
     text,
+    replyMarkup,
   });
 }

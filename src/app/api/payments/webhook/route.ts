@@ -7,6 +7,7 @@ import { setOrderStatus } from "@/db/functions";
 import { CACHE_TAGS } from "@/lib/cache/tags";
 import { getPaymentProvider } from "@/lib/payments/bepaid";
 import { sendTelegramMessage } from "@/lib/notify/telegram";
+import { buildOrderInlineKeyboard } from "@/lib/notify/templates";
 import { formatPrice } from "@/lib/utils/format";
 
 export const runtime = "nodejs";
@@ -115,6 +116,7 @@ export async function POST(req: NextRequest) {
         const dollName = item?.productTitle || `Заказ #${order.orderNumber}`;
         const paidAmount = amountByn ? formatPrice(amountByn) : formatPrice(Number(order.totalAmount));
 
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://dollshop.by";
         await sendTelegramMessage({
           text:
             `💰 <b>ОПЛАТА ЗАКАЗА ПОЛУЧЕНА!</b>\n\n` +
@@ -123,6 +125,7 @@ export async function POST(req: NextRequest) {
             `Сумма: <b>${paidAmount}</b>\n` +
             (paymentId ? `ID транзакции: <code>${paymentId}</code>\n` : "") +
             `Кукла автоматически переведена в Архив витрины.`,
+          replyMarkup: buildOrderInlineKeyboard(order.id, appUrl),
         });
       } catch (tgErr) {
         console.error("Не критичная ошибка Telegram уведомления из вебхука:", tgErr);

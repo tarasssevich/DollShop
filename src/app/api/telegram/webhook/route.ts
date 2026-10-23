@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { setOrderStatus } from "@/db/functions";
 import { CACHE_TAGS } from "@/lib/cache/tags";
-import { escapeHtml } from "@/lib/notify/templates";
 
 function verifyWebhookSecretTimingSafe(provided: string | null, expected: string): boolean {
   if (!provided || !expected) return false;
@@ -66,11 +65,11 @@ async function editTelegramMessageText(
   newText: string,
   appUrl: string
 ): Promise<void> {
-  try {
-    const validUrl = appUrl.includes("localhost")
-      ? "https://dollshop.by"
-      : appUrl;
+  const validUrl = appUrl.includes("localhost") || appUrl.includes("127.0.0.1")
+    ? (process.env.APP_PUBLIC_URL || "https://dollshop.by")
+    : appUrl;
 
+  try {
     await fetch(`https://api.telegram.org/bot${token}/editMessageText`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -109,7 +108,13 @@ export async function POST(req: NextRequest) {
   const webhookSecret = process.env.TELEGRAM_WEBHOOK_SECRET;
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://dollshop.by";
 
-  // Проверка секретного токена вебхука с защитой от Timing Attack (если настроен)
+  // В продакшене секретный токен вебхука обязателен
+  if (process.env.NODE_ENV === "production" && !webhookSecret) {
+    console.error("Критическая ошибка: TELEGRAM_WEBHOOK_SECRET не установлен в продакшене");
+    return NextResponse.json({ error: "Server misconfiguration" }, { status: 500 });
+  }
+
+  // Проверка секретного токена вебхука с защитой от Timing Attack
   if (webhookSecret) {
     const receivedSecret = req.headers.get("x-telegram-bot-api-secret-token");
     if (!verifyWebhookSecretTimingSafe(receivedSecret, webhookSecret)) {
@@ -128,15 +133,9 @@ export async function POST(req: NextRequest) {
   const cb = update.callback_query;
   if (cb && cb.data) {
     const fromChatId = cb.message?.chat.id;
-    const fromUserId = cb.from?.id;
 
-    // Защита: действия разрешены только из чата мастера (проверяем chat.id и user.id)
-    const isAuthorized =
-      !authorizedChatId ||
-      String(fromChatId) === String(authorizedChatId) ||
-      String(fromUserId) === String(authorizedChatId);
-
-    if (!isAuthorized) {
+    // Защита: действия разрешены только из чата мастера
+    if (authorizedChatId && String(fromChatId) !== String(authorizedChatId)) {
       if (token) {
         await answerCallbackQuery(token, cb.id, "Доступ запрещен: действие разрешено только мастеру");
       }
@@ -167,7 +166,7 @@ export async function POST(req: NextRequest) {
 
           if (cb.message?.text && fromChatId) {
             const updatedText =
-              escapeHtml(cb.message.text) +
+              cb.message.text +
               "\n\n✅ <b>ПОДТВЕРЖДЕНО МАСТЕРОМ:</b> Заказ оплачен, кукла переведена в архив (Галерею).";
             await editTelegramMessageText(token, fromChatId, cb.message.message_id, updatedText, appUrl);
           }
@@ -198,7 +197,7 @@ export async function POST(req: NextRequest) {
 
           if (cb.message?.text && fromChatId) {
             const updatedText =
-              escapeHtml(cb.message.text) +
+              cb.message.text +
               "\n\n❌ <b>ЗАКАЗ ОТМЕНЕН:</b> Бронь снята, кукла снова доступна для покупки в каталоге.";
             await editTelegramMessageText(token, fromChatId, cb.message.message_id, updatedText, appUrl);
           }

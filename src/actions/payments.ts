@@ -5,6 +5,7 @@ import { revalidateTag, revalidatePath } from "next/cache";
 import { setOrderStatus } from "@/db/functions";
 import { CACHE_TAGS } from "@/lib/cache/tags";
 import { sendTelegramMessage } from "@/lib/notify/telegram";
+import { buildOrderInlineKeyboard } from "@/lib/notify/templates";
 import { formatPrice } from "@/lib/utils/format";
 
 const simulateCardSchema = z.object({
@@ -69,12 +70,14 @@ export async function simulateSandboxCardPaymentAction(
 
     // 3. Отправка радостного Telegram-уведомления мастеру об успешной онлайн-оплате
     try {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://dollshop.by";
       await sendTelegramMessage({
         text:
           `💰 <b>ОПЛАТА ОНЛАЙН КАРТОЙ ПОЛУЧЕНА!</b>\n\n` +
           `🎉 <b>Заказ #${orderNumber}</b> на куклу «${dollTitle}» успешно оплачен!\n` +
           `Сумма: <b>${formatPrice(amountByn)}</b>\n` +
           `Статус куклы: 🏡 <b>«Нашла дом» (переведена в Архив)</b>.`,
+        replyMarkup: buildOrderInlineKeyboard(orderId, appUrl),
       });
     } catch (tgErr) {
       console.error("Ошибка Telegram уведомления об оплате:", tgErr);
@@ -124,12 +127,14 @@ export async function simulateSandboxEripPaymentAction(
     }
 
     try {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://dollshop.by";
       await sendTelegramMessage({
         text:
           `📱 <b>ОПЛАТА ЧЕРЕЗ ЕРИП ПОЛУЧЕНА!</b>\n\n` +
           `✅ <b>Заказ #${orderNumber}</b> на куклу «${dollTitle}» оплачен в ЕРИП!\n` +
           `Сумма: <b>${formatPrice(amountByn)}</b>\n` +
           `Кукла автоматически переведена в Архив витрины.`,
+        replyMarkup: buildOrderInlineKeyboard(orderId, appUrl),
       });
     } catch (tgErr) {
       console.error("Ошибка Telegram уведомления об оплате ЕРИП:", tgErr);

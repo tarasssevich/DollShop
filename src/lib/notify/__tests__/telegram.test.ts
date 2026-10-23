@@ -4,6 +4,7 @@ import {
   formatNewOrderMessage,
   formatCustomRequestMessage,
   buildOrderInlineKeyboard,
+  buildCustomRequestInlineKeyboard,
 } from "../templates";
 import { sendTelegramMessage, notifyNewOrder } from "../telegram";
 
@@ -79,23 +80,36 @@ describe("Step 5.3 — Telegram Templates & Notification Client", () => {
   });
 
   describe("buildOrderInlineKeyboard", () => {
-    it("создает интерактивные кнопки подтверждения, отмены и перехода в админку", () => {
+    it("создает ссылку-кнопку для перехода мастера в панель управления заказами на сайте", () => {
       const markup = buildOrderInlineKeyboard("order-123", "https://dollshop.by");
-      expect(markup.inline_keyboard.length).toBe(2);
+      expect(markup.inline_keyboard.length).toBe(1);
 
-      const [firstRow, secondRow] = markup.inline_keyboard;
-      const btn1 = firstRow?.[0] as { text: string; callback_data?: string } | undefined;
-      const btn2 = firstRow?.[1] as { text: string; callback_data?: string } | undefined;
-      const btn3 = secondRow?.[0] as { text: string; url?: string } | undefined;
+      const [row] = markup.inline_keyboard;
+      const btn = row?.[0] as { text: string; url?: string } | undefined;
 
-      expect(btn1?.text).toContain("Подтвердить");
-      expect(btn1?.callback_data).toBe("confirm_order:order-123");
+      expect(btn?.text).toContain("админке");
+      expect(btn?.url).toBe("https://dollshop.by/admin/zakazy");
+    });
 
-      expect(btn2?.text).toContain("Отменить");
-      expect(btn2?.callback_data).toBe("cancel_order:order-123");
+    it("заменяет localhost на публичный домен для валидности в Telegram Bot API", () => {
+      const markup = buildOrderInlineKeyboard("order-123", "http://localhost:3000");
+      const [row] = markup.inline_keyboard;
+      const btn = row?.[0] as { text: string; url?: string } | undefined;
 
-      expect(btn3?.text).toContain("админке");
-      expect(btn3?.url).toBe("https://dollshop.by/admin/zakazy");
+      expect(btn?.url).toBe("https://dollshop.by/admin/zakazy");
+    });
+  });
+
+  describe("buildCustomRequestInlineKeyboard", () => {
+    it("создает ссылку-кнопку для перехода к заявкам «Хочу похожую»", () => {
+      const markup = buildCustomRequestInlineKeyboard("https://dollshop.by");
+      expect(markup.inline_keyboard.length).toBe(1);
+
+      const [row] = markup.inline_keyboard;
+      const btn = row?.[0] as { text: string; url?: string } | undefined;
+
+      expect(btn?.text).toContain("заявки");
+      expect(btn?.url).toBe("https://dollshop.by/admin/zayavki");
     });
   });
 

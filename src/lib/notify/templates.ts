@@ -106,36 +106,46 @@ export function formatNewOrderMessage(params: NewOrderNotificationParams): strin
     message += `\n📝 <b>Пожелание покупателя:</b>\n<i>«${escapeHtml(params.comment.trim())}»</i>\n`;
   }
 
-  message += `\n⏳ <i>Кукла зафиксирована в брони. Согласуйте детали с покупателем.</i>`;
+  message += `\n⏳ <i>Кукла зафиксирована в брони. Согласуйте детали с покупателем. Управление заказом доступно в панели сайта.</i>`;
 
   return message;
 }
 
 /**
- * Интерактивные Inline-кнопки для Telegram сообщения о заказе (Step 5.3).
+ * Инлайн-кнопка для быстрого перехода мастера в панель управления заказом на сайте.
  */
 export function buildOrderInlineKeyboard(orderId: string, appUrl: string) {
   // Telegram Bot API требует валидный публичный URL для кнопок (отклоняет localhost)
-  const validUrl = appUrl.includes("localhost")
-    ? "https://dollshop.by"
+  const validUrl = appUrl.includes("localhost") || appUrl.includes("127.0.0.1")
+    ? (process.env.APP_PUBLIC_URL || "https://dollshop.by")
     : appUrl;
 
   return {
     inline_keyboard: [
       [
         {
-          text: "✅ Подтвердить продажу",
-          callback_data: `confirm_order:${orderId}`,
-        },
-        {
-          text: "❌ Отменить бронь",
-          callback_data: `cancel_order:${orderId}`,
-        },
-      ],
-      [
-        {
           text: "🔗 Открыть заказ в админке",
           url: `${validUrl}/admin/zakazy`,
+        },
+      ],
+    ],
+  };
+}
+
+/**
+ * Инлайн-кнопка для быстрого перехода мастера в панель управления заявками «Хочу похожую».
+ */
+export function buildCustomRequestInlineKeyboard(appUrl: string) {
+  const validUrl = appUrl.includes("localhost") || appUrl.includes("127.0.0.1")
+    ? (process.env.APP_PUBLIC_URL || "https://dollshop.by")
+    : appUrl;
+
+  return {
+    inline_keyboard: [
+      [
+        {
+          text: "🔗 Открыть заявки в админке",
+          url: `${validUrl}/admin/zayavki`,
         },
       ],
     ],
@@ -174,6 +184,8 @@ export function formatCustomRequestMessage(
   if (params.comment && params.comment.trim()) {
     message += `\n📝 <b>Пожелания к образу:</b>\n<i>«${escapeHtml(params.comment.trim())}»</i>\n`;
   }
+
+  message += `\n📋 <i>Управление заявкой доступно в панели сайта.</i>`;
 
   return message;
 }
