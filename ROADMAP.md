@@ -122,10 +122,10 @@
 - **Файлы:** `docker-compose.yml`, `drizzle.config.ts`, `src/db/client.ts`, `src/lib/env.ts`, `src/lib/__tests__/env.test.ts`, `src/db/__tests__/client.test.ts`, `vitest.config.mts`, `.env.example`, `.env.local`, `package.json`.
 - **✅ Готово:** `docker-compose.yml` сконфигурирован для PostgreSQL 18; локальный кластер PostgreSQL 18 в `/tmp/dollshop_pg` инициализирован и активен в фоне (`task-1584`); создана БД `dollshop` и роль `dollshop_app`; строгая Zod-валидация выбрасывает понятную ошибку `DATABASE_URL обязательна для подключения к PostgreSQL`; пул `client` и Drizzle `db` успешно выполняют запросы; `npm test` ✅ (69 тестов зелёные, 13 тест-сьютов), `npm run typecheck` ✅, `npm run lint` ✅, `npm run build` ✅ (24 статические страницы).
 
-### Step 3.2 — Схема и миграции
-- **Что делаем:** enums, таблицы ТЗ + дополнения (`reservations`, `site_settings`, `rate_limits`, поля Европочты, `customer_phone`, `contact_channel`, `payment_method`, `pd_consent_at`, `public_token`, `storage_key/width/height/alt`), FK, индексы, CHECK-ограничения (`currency = 'BYN'`, цена ≥ 0), триггер `updated_at`.
-- **Файлы:** `src/db/schema.ts`, `drizzle/0000_*.sql`.
-- **✅ Готово, когда:** `npm run db:migrate` на чистой БД проходит воспроизводимо; схема видна в `drizzle-kit studio`.
+### Step 3.2 — Схема и миграции [x]
+- **Что делаем:** enums (`product_status`, `media_type`, `order_status`, `contact_channel`, `payment_method`, `request_status`), таблицы (`products`, `product_media`, `reservations`, `orders`, `order_items`, `custom_requests`, `site_settings`, `rate_limits`), FK (cascade/restrict/set null), индексы, CHECK-ограничения (`currency = 'BYN'`, цена ≥ 0, сумма заказа ≥ 0), автоматический триггер `updated_at` (`update_updated_at_column`), скрипт `src/db/migrate.ts`.
+- **Файлы:** `src/db/schema.ts`, `drizzle/0000_lyrical_sleeper.sql`, `src/db/migrate.ts`, `src/db/__tests__/schema.test.ts`, `drizzle.config.ts`, `package.json`.
+- **✅ Готово:** миграции успешно сгенерированы (`drizzle/0000_lyrical_sleeper.sql`) и применены к PostgreSQL 18 через `npm run db:migrate`; в БД созданы все 8 таблиц, 6 перечислений и 4 триггера `updated_at`; CHECK-ограничения блокируют отрицательные цены и чужие валюты; каскадное удаление медиа и броней работает; `npm test` ✅ (79 тестов зелёные, 14 сьютов), `npm run typecheck` ✅, `npm run lint` ✅, `npm run build` ✅ (24 страницы).
 
 ### Step 3.3 — Роли и права БД
 - **Что делаем:** роли `app_owner` (миграции) и `app_user` (только DML + `EXECUTE` функций), revoke у `PUBLIC`.
