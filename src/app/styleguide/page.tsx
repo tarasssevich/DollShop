@@ -378,7 +378,7 @@ export default function StyleguidePage() {
                     <div className="flex justify-between items-center text-base font-medium">
                       <span>Итого:</span>
                       <span className="font-semibold text-xl text-terracotta">
-                        420 BYN
+                        55 BYN
                       </span>
                     </div>
                     <Button
