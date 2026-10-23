@@ -51,7 +51,7 @@ describe("Better Auth & Admin Route Protection (Step 4.1)", () => {
     const res = await auth.api.signInEmail({
       body: {
         email: "master@dollshop.by",
-        password: "DollShopMaster2026!Secure",
+        password: "DollMaster2026!",
       },
     });
 

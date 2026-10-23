@@ -34,7 +34,42 @@ export const auth = betterAuth({
     },
   },
   secret: env.BETTER_AUTH_SECRET,
-  baseURL: env.BETTER_AUTH_URL,
+  baseURL:
+    process.env.NODE_ENV === "production" ? env.BETTER_AUTH_URL : undefined,
+  trustedOrigins: (request) => {
+    const list: Array<string | undefined | null> = [
+      "http://localhost:3000",
+      "http://localhost:3001",
+      "http://127.0.0.1:3000",
+      "http://127.0.0.1:3001",
+      "https://dollshop.by",
+      env.NEXT_PUBLIC_APP_URL,
+      env.BETTER_AUTH_URL,
+    ];
+
+    const origin =
+      request?.headers.get("origin") || request?.headers.get("referer");
+    if (origin) {
+      try {
+        const parsed = new URL(origin);
+        if (
+          process.env.NODE_ENV !== "production" ||
+          parsed.hostname === "localhost" ||
+          parsed.hostname === "127.0.0.1" ||
+          parsed.hostname.startsWith("192.168.") ||
+          parsed.hostname.startsWith("10.") ||
+          parsed.hostname === "dollshop.by" ||
+          parsed.hostname.endsWith(".dollshop.by")
+        ) {
+          list.push(parsed.origin);
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    return list;
+  },
 });
 
 export type Auth = typeof auth;
