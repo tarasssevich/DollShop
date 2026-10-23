@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Heart, ShoppingBag, Sparkles, ArrowRight } from "lucide-react";
 import type { Doll } from "@/types/domain";
 import { formatPrice } from "@/lib/utils/format";
-import { getEffectiveDollStatus } from "@/lib/data/catalog";
+import { getEffectiveDollStatus } from "@/lib/data/status";
 import { StatusBadge } from "./StatusBadge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

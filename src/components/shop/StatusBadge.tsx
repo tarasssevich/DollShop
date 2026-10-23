@@ -4,7 +4,7 @@ import * as React from "react";
 import { Clock, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { DollStatus } from "@/types/domain";
-import { getEffectiveDollStatus } from "@/lib/data/catalog";
+import { getEffectiveDollStatus } from "@/lib/data/status";
 
 interface StatusBadgeProps {
   status: DollStatus;

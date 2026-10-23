@@ -34,11 +34,14 @@ describe("catalog repository layer", () => {
       includeDrafts: true,
     });
     expect(draftDoll).not.toBeNull();
-    expect(draftDoll?.id).toBe("doll-draft");
+    expect(draftDoll?.slug).toBe("chernovik-mastera");
+    expect(draftDoll?.id).toBeDefined();
   });
 
   it("finds a doll by id", async () => {
-    const doll = await getDollById("doll-001");
+    const selestaBySlug = await getDollBySlug("selesta");
+    expect(selestaBySlug).not.toBeNull();
+    const doll = await getDollById(selestaBySlug!.id);
     expect(doll).not.toBeNull();
     expect(doll?.slug).toBe("selesta");
   });

@@ -84,6 +84,7 @@ export async function seedDatabase(): Promise<void> {
         price: mock.priceByn.toFixed(2),
         currency: "BYN",
         status: dbStatus,
+        reservedUntil: mock.reservedUntil ? new Date(mock.reservedUntil) : null,
         isFeatured: Boolean(mock.isFeatured),
         sortOrder: i,
       })
@@ -94,6 +95,7 @@ export async function seedDatabase(): Promise<void> {
           story: mock.story,
           price: mock.priceByn.toFixed(2),
           status: dbStatus,
+          reservedUntil: mock.reservedUntil ? new Date(mock.reservedUntil) : null,
           isFeatured: Boolean(mock.isFeatured),
           sortOrder: i,
         },

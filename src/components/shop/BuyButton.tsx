@@ -26,7 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { formatPrice } from "@/lib/utils/format";
-import { getEffectiveDollStatus } from "@/lib/data/catalog";
+import { getEffectiveDollStatus } from "@/lib/data/status";
 import type { Doll } from "@/types/domain";
 import { ReservationCountdown } from "./ReservationCountdown";
 

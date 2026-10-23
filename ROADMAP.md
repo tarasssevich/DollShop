@@ -142,10 +142,10 @@
 - **Файлы:** `src/db/seed.ts`, `src/lib/data/drizzle/mappers.ts`, `src/db/__tests__/seed.test.ts`, `package.json`.
 - **✅ Готово:** `npm run db:seed` успешно наполнил PostgreSQL 18 всеми 13 куклами-феями, студийными фотографиями и реквизитами ИП; мапперы `mapDbProductToDoll` и `mapDbSiteSettingsToDomain` обеспечивают строгую типизацию без `any`; `npm test` ✅ (94 теста зелёные, 17 сьютов), `npm run typecheck` ✅, `npm run lint` ✅.
 
-### Step 3.6 — Витрина на БД с тегами кэша
-- **Что делаем:** реализация `catalog.ts` на Drizzle с тегами (`products`, `product:{slug}`, `settings`), реестр тегов; витрина переключается с моков на БД.
-- **Файлы:** `src/lib/data/drizzle/catalog.ts`, `src/lib/cache/tags.ts`.
-- **✅ Готово, когда:** витрина показывает данные из БД; `next build` — публичные маршруты статические/ISR; при `next start` правка в БД **не** меняет страницу до ревалидации, а лог Postgres не показывает запросов при обновлении страницы.
+### Step 3.6 — Витрина на БД с тегами кэша [x]
+- **Что делаем:** реализация `src/lib/data/drizzle/catalog.ts` на Drizzle с тегами (`products`, `product:{slug}`, `settings`), реестр тегов `src/lib/cache/tags.ts`, чистая изоляция клиентских утилит `src/lib/data/status.ts`; публичная витрина переключена с моков на живую базу данных.
+- **Файлы:** `src/lib/data/drizzle/catalog.ts`, `src/lib/cache/tags.ts`, `src/lib/data/status.ts`, `src/lib/data/catalog.ts`, `src/components/shop/{ProductCard,StatusBadge,BuyButton}.tsx`.
+- **✅ Готово:** витрина, каталог `/kukly`, страница куклы `/kukly/[slug]` и галерея `/galereya` читают данные напрямую из PostgreSQL 18; Next.js ISR кэширует страницы с тегами (`Revalidate: 1h, Expire: 1y`); `server-only` гарантирует отсутствие утечек драйверов в бандлы браузера; `npm run build` ✅ генерирует все 27 страниц, `npm test` ✅ (94 теста зелёные, 17 сьютов), `npm run typecheck` ✅, `npm run lint` ✅.
 
 ### Step 3.7 — `/api/revalidate`
 - **Что делаем:** Route Handler с `REVALIDATE_SECRET`, Zod-валидация списка тегов.
