@@ -1,34 +1,28 @@
-import { ShoppingBag } from "lucide-react";
+import { getAdminOrdersAction } from "@/actions/admin/orders";
+import { OrdersClient } from "@/components/admin/OrdersClient";
 
 export const metadata = {
   title: "Заказы покупателей · Панель мастера",
 };
 
-export default function AdminOrdersPage() {
+export const dynamic = "force-dynamic";
+
+export default async function AdminOrdersPage() {
+  const result = await getAdminOrdersAction();
+  const orders = result.success ? result.orders : [];
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div>
         <h1 className="font-serif text-2xl sm:text-3xl font-light text-espresso">
           Заказы покупателей
         </h1>
         <p className="text-xs text-muted">
-          История и управление заказами: почта и самовывоз (Фаза 5)
+          Управление заказами: почта (Белпочта), самовывоз в Минске, статусы брони и трек-номера
         </p>
       </div>
 
-      <div className="bg-white rounded-2xl border border-linen-dark p-8 text-center space-y-3">
-        <div className="w-12 h-12 rounded-2xl bg-linen flex items-center justify-center mx-auto text-muted">
-          <ShoppingBag className="w-6 h-6" />
-        </div>
-        <div className="space-y-1">
-          <h2 className="font-serif text-base text-espresso">
-            Раздел чекаута и заказов
-          </h2>
-          <p className="text-xs text-muted max-w-sm mx-auto">
-            Здесь будут появляться заказы с данными для почты или самовывоза, телефонами и статусами оплаты. Настройка чекаута — в Фазе 5.
-          </p>
-        </div>
-      </div>
+      <OrdersClient initialOrders={orders} />
     </div>
   );
 }

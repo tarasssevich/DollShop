@@ -12,9 +12,6 @@ import {
   Package,
   ShieldCheck,
   CheckCircle2,
-  Mail,
-  MapPin,
-  CreditCard,
   Phone,
 } from "lucide-react";
 import { getDollBySlug } from "@/lib/data/catalog";
@@ -27,6 +24,7 @@ import {
 import { formatPrice } from "@/lib/utils/format";
 import { Button } from "@/components/ui/button";
 import { CheckoutReservationBar } from "@/components/checkout/CheckoutReservationBar";
+import { CheckoutForm } from "@/components/checkout/CheckoutForm";
 
 interface CheckoutPageProps {
   params: Promise<{ slug: string }>;
@@ -196,74 +194,13 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
             </div>
           </div>
 
-          {/* Превью формы оформления (подготовка к Step 5.2) */}
-          <div className="rounded-2xl border border-linen-dark bg-white p-5 sm:p-6 shadow-sm space-y-5">
-            <div className="flex items-center justify-between border-b border-linen-dark pb-3">
-              <h2 className="font-serif text-xl font-medium text-espresso">
-                Детали получения и покупателя
-              </h2>
-              <span className="text-xs text-muted">Шаг 5.1 готов ✅</span>
-            </div>
-
-            {/* Способ получения */}
-            <div className="space-y-3">
-              <span className="text-xs uppercase tracking-wider text-muted font-medium">
-                Способ получения
-              </span>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="rounded-xl border-2 border-terracotta bg-terracotta/5 p-3.5 flex items-start gap-3">
-                  <Mail className="h-5 w-5 text-terracotta shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium text-espresso">
-                      Почта по Беларуси
-                    </p>
-                    <p className="text-xs text-muted mt-0.5">
-                      Доставка в любое отделение связи с трек-номером
-                    </p>
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-linen-dark bg-alabaster/60 p-3.5 flex items-start gap-3">
-                  <MapPin className="h-5 w-5 text-muted shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium text-espresso">
-                      Самовывоз в Минске
-                    </p>
-                    <p className="text-xs text-muted mt-0.5">
-                      Бесплатно по согласованию с мастером
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Способы оплаты */}
-            <div className="space-y-2 pt-2">
-              <span className="text-xs uppercase tracking-wider text-muted font-medium">
-                Способы оплаты
-              </span>
-              <div className="flex flex-wrap gap-2 text-xs text-muted">
-                <span className="inline-flex items-center gap-1 rounded-lg bg-linen px-2.5 py-1">
-                  <CreditCard className="h-3.5 w-3.5 text-terracotta" /> ЕРИП
-                </span>
-                <span className="inline-flex items-center gap-1 rounded-lg bg-linen px-2.5 py-1">
-                  💳 Банковская карта
-                </span>
-                <span className="inline-flex items-center gap-1 rounded-lg bg-linen px-2.5 py-1">
-                  📦 Наложенный платёж при получении
-                </span>
-              </div>
-            </div>
-
-            <div className="rounded-xl bg-sage-subtle/80 border border-sage/20 p-4 text-xs text-sage-dark space-y-1">
-              <p className="font-medium">
-                🎉 Атомарная бронь куклы на 15 минут успешно зафиксирована!
-              </p>
-              <p className="text-muted leading-relaxed">
-                В базе данных PostgreSQL активирована запись блокировки строки (Step 5.1). В следующем шаге (Step 5.2) будет подключена полная форма с сохранением заказа в таблицу orders и интеграцией с Telegram-ботом.
-              </p>
-            </div>
-          </div>
+          {/* Интерактивная форма оформления заказа (Step 5.2) */}
+          <CheckoutForm
+            productId={doll.id}
+            slug={doll.slug}
+            dollName={doll.name}
+            dollPriceByn={doll.priceByn}
+          />
         </div>
 
         {/* Правая колонка: Итоговая стоимость и связь с мастером */}

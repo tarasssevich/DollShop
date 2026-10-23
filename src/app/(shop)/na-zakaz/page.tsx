@@ -19,7 +19,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { isValidBelarusPhone, normalizeBelarusPhone } from "@/lib/utils/phone";
+import { isValidBelarusPhone } from "@/lib/utils/phone";
+import { createCustomRequestAction } from "@/actions/request";
 
 export default function CustomOrderPage() {
   return (
@@ -51,7 +52,7 @@ function CustomOrderContent() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [submitted, setSubmitted] = React.useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (name.trim().length < 2) {
@@ -71,14 +72,27 @@ function CustomOrderContent() {
 
     setIsSubmitting(true);
 
-    // Simulate instant safe request handling
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setSubmitted(true);
-      toast.success("Ваша заявка успешно отправлена мастеру!", {
-        description: `Мастер свяжется с вами по номеру ${normalizeBelarusPhone(phone)} в ближайшее время.`,
+    try {
+      const res = await createCustomRequestAction({
+        customerName: name,
+        customerPhone: phone,
+        contactChannel: "telegram",
+        referenceSlug: fromDoll || undefined,
+        wishes,
+        pdConsent: agreed,
       });
-    }, 600);
+
+      setIsSubmitting(false);
+      if (res.success) {
+        setSubmitted(true);
+        toast.success(res.message);
+      } else {
+        toast.error(res.error);
+      }
+    } catch {
+      setIsSubmitting(false);
+      toast.error("Не удалось отправить заявку. Попробуйте еще раз.");
+    }
   };
 
   return (
