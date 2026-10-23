@@ -142,6 +142,7 @@ flowchart LR
 | Галерея «Нашли дом» | `/galereya` |
 | О мастере | `/o-mastere` |
 | Получение и оплата | `/dostavka-i-oplata` |
+| Корзина и статус брони | `/cart`, `/korzina` |
 | Публичный договор / Политика ПД | `/oferta`, `/politika-konfidencialnosti` |
 | Оформление / статус заказа | `/oformlenie/[slug]`, `/zakaz/[token]` |
 | Админка | `/admin` (`/admin/zakazy`, `/admin/kukly`, `/admin/zayavki`, `/admin/nastroyki`) |

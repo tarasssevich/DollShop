@@ -1,16 +1,12 @@
 import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ShoppingBag, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { Container } from "./Container";
 import { MobileNav } from "./MobileNav";
-import { Button } from "@/components/ui/button";
+import { CartHeaderButton } from "./CartHeaderButton";
 
-interface HeaderProps {
-  cartItemCount?: number;
-}
-
-export function Header({ cartItemCount = 0 }: HeaderProps) {
+export function Header() {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-linen-dark/80 bg-alabaster/95 backdrop-blur-md transition-all">
       {/* Top micro-bar */}
@@ -105,24 +101,8 @@ export function Header({ cartItemCount = 0 }: HeaderProps) {
 
           {/* Actions & Mobile menu */}
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Cart Button */}
-            <Link href="/cart" aria-label="Корзина покупок">
-              <Button
-                variant="outline"
-                size="icon"
-                className="relative rounded-full border-linen-dark bg-alabaster hover:bg-linen text-espresso"
-              >
-                <ShoppingBag className="h-4 w-4" />
-                {cartItemCount > 0 && (
-                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-terracotta text-[10px] font-bold text-white shadow-xs">
-                    {cartItemCount}
-                  </span>
-                )}
-                <span className="sr-only">
-                  Корзина ({cartItemCount} товаров)
-                </span>
-              </Button>
-            </Link>
+            {/* Cart & Reservation Button */}
+            <CartHeaderButton />
 
             {/* Mobile Navigation Trigger */}
             <MobileNav />

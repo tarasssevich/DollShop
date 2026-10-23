@@ -622,7 +622,7 @@ export default function StyleguidePage() {
                   className="flex-1"
                   onClick={() =>
                     toast.success("Бронь открыта!", {
-                      description: "Перейдите в корзину для подтверждения.",
+                      description: "Кукла забронирована на 15 минут для оформления заказа.",
                     })
                   }
                 >

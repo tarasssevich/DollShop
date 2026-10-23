@@ -6,13 +6,14 @@ import { cookies, headers } from "next/headers";
 import { revalidateTag } from "next/cache";
 import { eq, and, gt } from "drizzle-orm";
 import { db } from "@/db/client";
-import { reservations, products } from "@/db/schema";
+import { reservations, products, productMedia } from "@/db/schema";
 import { reserveProduct, releaseReservation } from "@/db/functions";
 import { CACHE_TAGS } from "@/lib/cache/tags";
 import { checkRateLimit } from "@/lib/security/rate-limit";
 import {
   RESERVATION_TTL_MINUTES,
   RESERVATION_TTL_SECONDS,
+  RESERVATION_COOKIE_PREFIX,
   getReservationCookieName,
   hashReservationToken,
   type ReserveActionResult,
@@ -262,4 +263,103 @@ export async function checkReservationStatusAction(
     console.error("Ошибка при проверке статуса брони:", err);
     return { hasReservation: false, reason: "NOT_FOUND" };
   }
+}
+
+export type ActiveUserReservationResult =
+  | {
+      hasReservation: true;
+      productId: string;
+      slug: string;
+      dollName: string;
+      priceByn: number;
+      coverImageUrl: string;
+      category: string;
+      heightCm: number;
+      expiresAt: string;
+      secondsRemaining: number;
+    }
+  | {
+      hasReservation: false;
+    };
+
+/**
+ * Получение текущей активной брони пользователя по cookie сессии.
+ * Используется в шапке (/cart) и на странице корзины для отображения забронированной куклы.
+ */
+export async function getActiveReservationAction(): Promise<ActiveUserReservationResult> {
+  const cookieStore = await cookies();
+  const allCookies = cookieStore.getAll();
+  const resCookies = allCookies.filter((c) =>
+    c.name.startsWith(RESERVATION_COOKIE_PREFIX)
+  );
+
+  if (resCookies.length === 0) {
+    return { hasReservation: false };
+  }
+
+  for (const c of resCookies) {
+    const productId = c.name.slice(RESERVATION_COOKIE_PREFIX.length);
+    const rawToken = c.value;
+    if (!rawToken || rawToken.trim().length < 16) continue;
+
+    const tokenHash = hashReservationToken(rawToken);
+
+    try {
+      const [active] = await db
+        .select({
+          productId: reservations.productId,
+          expiresAt: reservations.expiresAt,
+          slug: products.slug,
+          title: products.title,
+          price: products.price,
+          specs: products.specs,
+        })
+        .from(reservations)
+        .innerJoin(products, eq(products.id, reservations.productId))
+        .where(
+          and(
+            eq(reservations.productId, productId),
+            eq(reservations.tokenHash, tokenHash),
+            gt(reservations.expiresAt, new Date())
+          )
+        );
+
+      if (active) {
+        const now = Date.now();
+        const secondsRemaining = Math.max(
+          0,
+          Math.floor((active.expiresAt.getTime() - now) / 1000)
+        );
+
+        const [coverMedia] = await db
+          .select({ url: productMedia.url })
+          .from(productMedia)
+          .where(eq(productMedia.productId, active.productId))
+          .orderBy(productMedia.displayOrder)
+          .limit(1);
+
+        const specs = active.specs as {
+          category?: string;
+          height_cm?: number;
+        } | null;
+
+        return {
+          hasReservation: true,
+          productId: active.productId,
+          slug: active.slug,
+          dollName: active.title,
+          priceByn: Number(active.price),
+          coverImageUrl: coverMedia?.url || "/mock/dolls/fairy-blue-1.jpg",
+          category: specs?.category || "Цветочные феи",
+          heightCm: specs?.height_cm || 21,
+          expiresAt: active.expiresAt.toISOString(),
+          secondsRemaining,
+        };
+      }
+    } catch (err) {
+      console.error("Ошибка при поиске активной брони в сессии:", err);
+    }
+  }
+
+  return { hasReservation: false };
 }

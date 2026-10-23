@@ -3,14 +3,16 @@
 import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Heart, ShoppingBag, Sparkles, ArrowRight } from "lucide-react";
+import { Heart, ShoppingBag, Sparkles, ArrowRight, Loader2 } from "lucide-react";
 import type { Doll } from "@/types/domain";
 import { formatPrice } from "@/lib/utils/format";
 import { getEffectiveDollStatus } from "@/lib/data/status";
 import { StatusBadge } from "./StatusBadge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { reserveProductAction } from "@/actions/reserve";
 
 interface ProductCardProps {
   doll: Doll;
@@ -18,6 +20,8 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ doll, priority = false }: ProductCardProps) {
+  const router = useRouter();
+  const [isReserving, startTransition] = React.useTransition();
   const [isLiked, setIsLiked] = React.useState(false);
   const coverImage = doll.images[0];
   const effectiveStatus = getEffectiveDollStatus(doll);
@@ -31,23 +35,46 @@ export function ProductCard({ doll, priority = false }: ProductCardProps) {
     }
   };
 
-  const handleQuickAction = (e: React.MouseEvent) => {
+  const handleReserve = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    if (effectiveStatus === "available") {
-      toast.success(`Бронь куклы «${doll.name}» открыта!`, {
-        description: "Перейдите в корзину для подтверждения резерва на 15 минут.",
-      });
-    } else if (effectiveStatus === "sold") {
-      toast.info(`Запрос на повтор куклы «${doll.name}»`, {
-        description: "Мастер свяжется с вами для согласования деталей заказа.",
-      });
-    } else if (effectiveStatus === "in_progress") {
-      toast.info(`Предзаказ куклы «${doll.name}»`, {
-        description: "Работа находится на стадии завершения. Мы забронируем её за вами.",
-      });
-    }
+    startTransition(async () => {
+      try {
+        const res = await reserveProductAction({
+          productId: doll.id,
+          slug: doll.slug,
+        });
+
+        if (res.success) {
+          toast.success(`Бронь куклы «${doll.name}» оформлена!`, {
+            description: "Переходим к оформлению заказа...",
+          });
+          router.push(res.redirectUrl);
+        } else {
+          if (res.code === "ALREADY_RESERVED") {
+            toast.error("Кукла только что забронирована другим покупателем", {
+              description:
+                "Бронь действует 15 минут. Если заказ не завершат, кукла вернется в каталог.",
+            });
+          } else if (res.code === "SOLD") {
+            toast.error("Кукла уже продана", {
+              description: "Вы можете заказать похожую куклу у мастера.",
+            });
+          } else {
+            toast.error(res.error || "Не удалось забронировать куклу.");
+          }
+        }
+      } catch {
+        toast.error("Произошла ошибка при бронировании.");
+      }
+    });
+  };
+
+  const handleRepeatOrPreorder = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    router.push(`/na-zakaz?from=${encodeURIComponent(doll.name)}`);
   };
 
   return (
@@ -139,17 +166,27 @@ export function ProductCard({ doll, priority = false }: ProductCardProps) {
               <Button
                 size="sm"
                 variant="default"
-                onClick={handleQuickAction}
+                disabled={isReserving}
+                onClick={handleReserve}
                 className="rounded-full px-3.5 shadow-xs"
               >
-                <ShoppingBag className="h-3.5 w-3.5 mr-1" />
-                <span>Бронь</span>
+                {isReserving ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                    <span>Бронь...</span>
+                  </>
+                ) : (
+                  <>
+                    <ShoppingBag className="h-3.5 w-3.5 mr-1" />
+                    <span>Бронь</span>
+                  </>
+                )}
               </Button>
             ) : effectiveStatus === "sold" ? (
               <Button
                 size="sm"
                 variant="outline"
-                onClick={handleQuickAction}
+                onClick={handleRepeatOrPreorder}
                 className="rounded-full px-3 text-xs"
               >
                 Повтор
@@ -158,7 +195,7 @@ export function ProductCard({ doll, priority = false }: ProductCardProps) {
               <Button
                 size="sm"
                 variant="subtle"
-                onClick={handleQuickAction}
+                onClick={handleRepeatOrPreorder}
                 className="rounded-full px-3 text-xs"
               >
                 <Sparkles className="h-3.5 w-3.5 mr-1" />

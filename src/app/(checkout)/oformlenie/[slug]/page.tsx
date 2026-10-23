@@ -15,6 +15,7 @@ import {
   Phone,
 } from "lucide-react";
 import { getDollBySlug } from "@/lib/data/catalog";
+import { getEffectiveDollStatus } from "@/lib/data/status";
 import { db } from "@/db/client";
 import { reservations } from "@/db/schema";
 import {
@@ -25,6 +26,7 @@ import { formatPrice } from "@/lib/utils/format";
 import { Button } from "@/components/ui/button";
 import { CheckoutReservationBar } from "@/components/checkout/CheckoutReservationBar";
 import { CheckoutForm } from "@/components/checkout/CheckoutForm";
+import { QuickReserveButton } from "@/components/checkout/QuickReserveButton";
 
 interface CheckoutPageProps {
   params: Promise<{ slug: string }>;
@@ -89,6 +91,8 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
 
   // Сценарий 1: У пользователя нет активной брони на эту куклу (истекла, снята или кукла открыта напрямую)
   if (!isReservedByCurrentSession) {
+    const effectiveStatus = getEffectiveDollStatus(doll);
+
     return (
       <div className="mx-auto max-w-2xl px-4 py-12 sm:py-16">
         <div className="rounded-3xl border border-linen-dark bg-white p-6 sm:p-10 text-center shadow-sm">
@@ -105,7 +109,19 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Button asChild variant="default" size="lg" className="w-full sm:w-auto">
+            {effectiveStatus === "available" && (
+              <QuickReserveButton
+                productId={doll.id}
+                slug={doll.slug}
+                dollName={doll.name}
+              />
+            )}
+            <Button
+              asChild
+              variant={effectiveStatus === "available" ? "outline" : "default"}
+              size="lg"
+              className="w-full sm:w-auto"
+            >
               <Link href={`/kukly/${doll.slug}`}>
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Вернуться к кукле «{doll.name}»

@@ -43,6 +43,14 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async rewrites() {
+    return [
+      {
+        source: "/korzina",
+        destination: "/cart",
+      },
+    ];
+  },
   async headers() {
     return [
       {
