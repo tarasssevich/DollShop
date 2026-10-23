@@ -13,6 +13,7 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,css,md}\"",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx --conditions=react-server --env-file=.env.local src/db/migrate.ts",
+    "db:seed": "tsx --conditions=react-server --env-file=.env.local src/db/seed.ts",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio"
   },

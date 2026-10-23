@@ -137,10 +137,10 @@
 - **Файлы:** `drizzle/0002_functions.sql`, `docker/postgres/init/03_functions.sql`, `src/db/functions.ts`, `scripts/race-reserve.ts`, `src/db/__tests__/functions.test.ts`.
 - **✅ Готово:** все 5 функций созданы и переданы под управление `app_owner` с правами `EXECUTE` для `app_user`; стресс-тест `scripts/race-reserve.ts` при **200 параллельных запросах** бронирования на одну куклу показал ровно **1 победу** и 199 отсечений `ALREADY_RESERVED` за 38 мс; проверена идемпотентность и повторное бронирование после освобождения; интеграционные тесты покрывают бронь, заказ с ценой из БД, оплату, отмену и cron-истечение; `npm test` ✅ (90 тестов зелёные, 16 сьютов), `npm run typecheck` ✅, `npm run lint` ✅.
 
-### Step 3.5 — Сид
-- **Что делаем:** перенос моков в `seed.ts`, маппинг строк БД → доменные типы.
-- **Файлы:** `src/db/seed.ts`, `src/lib/data/drizzle/mappers.ts`.
-- **✅ Готово, когда:** `npm run db:seed` наполняет БД, `typecheck` зелёный.
+### Step 3.5 — Сид [x]
+- **Что делаем:** идемпотентный сид каталога `src/db/seed.ts`, маппинг строк БД в доменные модели витрины `src/lib/data/drizzle/mappers.ts`, команда `npm run db:seed`.
+- **Файлы:** `src/db/seed.ts`, `src/lib/data/drizzle/mappers.ts`, `src/db/__tests__/seed.test.ts`, `package.json`.
+- **✅ Готово:** `npm run db:seed` успешно наполнил PostgreSQL 18 всеми 13 куклами-феями, студийными фотографиями и реквизитами ИП; мапперы `mapDbProductToDoll` и `mapDbSiteSettingsToDomain` обеспечивают строгую типизацию без `any`; `npm test` ✅ (94 теста зелёные, 17 сьютов), `npm run typecheck` ✅, `npm run lint` ✅.
 
 ### Step 3.6 — Витрина на БД с тегами кэша
 - **Что делаем:** реализация `catalog.ts` на Drizzle с тегами (`products`, `product:{slug}`, `settings`), реестр тегов; витрина переключается с моков на БД.
