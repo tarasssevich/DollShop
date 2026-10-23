@@ -132,10 +132,10 @@
 - **Файлы:** `drizzle/0001_roles.sql`, `docker/postgres/init/02_roles.sql`, `src/db/__tests__/roles.test.ts`, `src/lib/env.ts`, `src/db/migrate.ts`, `.env.example`, `.env.local`.
 - **✅ Готово:** роли созданы и проверены; все таблицы, последовательности и функции принадлежат `app_owner`; `app_user` успешно выполняет SELECT, INSERT, UPDATE, DELETE, но не может выполнить DROP TABLE, ALTER TABLE, TRUNCATE TABLE или CREATE TABLE (возвращается ошибка 42501 insufficient_privilege); мигратор `src/db/migrate.ts` использует `app_owner`; `npm test` ✅ (86 тестов зелёные, 15 сьютов), `npm run typecheck` ✅, `npm run lint` ✅, `npm run build` ✅.
 
-### Step 3.4 — Функции брони и заказов
-- **Что делаем:** SQL-функции `reserve_product`, `release_reservation`, `create_order`, `set_order_status`, `expire_reservations`; типизированные обёртки в TS; скрипт проверки гонки.
-- **Файлы:** `drizzle/0002_functions.sql`, `src/db/functions.ts`, `scripts/race-reserve.ts`.
-- **✅ Готово, когда:** **200 параллельных** `reserve_product` на одну куклу → ровно **1** успех; повтор с тем же токеном идемпотентен; после истечения TTL кукла бронируется снова.
+### Step 3.4 — Функции брони и заказов [x]
+- **Что делаем:** SQL-функции `reserve_product`, `release_reservation`, `create_order`, `set_order_status`, `expire_reservations`; типизированные TypeScript-обёртки в `src/db/functions.ts`; скрипт проверки гонки `scripts/race-reserve.ts`.
+- **Файлы:** `drizzle/0002_functions.sql`, `docker/postgres/init/03_functions.sql`, `src/db/functions.ts`, `scripts/race-reserve.ts`, `src/db/__tests__/functions.test.ts`.
+- **✅ Готово:** все 5 функций созданы и переданы под управление `app_owner` с правами `EXECUTE` для `app_user`; стресс-тест `scripts/race-reserve.ts` при **200 параллельных запросах** бронирования на одну куклу показал ровно **1 победу** и 199 отсечений `ALREADY_RESERVED` за 38 мс; проверена идемпотентность и повторное бронирование после освобождения; интеграционные тесты покрывают бронь, заказ с ценой из БД, оплату, отмену и cron-истечение; `npm test` ✅ (90 тестов зелёные, 16 сьютов), `npm run typecheck` ✅, `npm run lint` ✅.
 
 ### Step 3.5 — Сид
 - **Что делаем:** перенос моков в `seed.ts`, маппинг строк БД → доменные типы.
