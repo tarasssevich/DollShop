@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { eq, desc, inArray, asc } from "drizzle-orm";
-import { revalidateTag } from "next/cache";
+import { revalidateTag, revalidatePath } from "next/cache";
 import { db } from "@/db/client";
 import { orders, orderItems, products, productMedia } from "@/db/schema";
 import { requireAdminAction } from "@/lib/auth/guard";
@@ -168,10 +168,16 @@ export async function updateAdminOrderStatusAction(
     }
 
     try {
-      revalidateTag(CACHE_TAGS.products, "max-age=0");
+      revalidateTag(CACHE_TAGS.products, { expire: 0 });
       if (res.productSlug) {
-        revalidateTag(CACHE_TAGS.product(res.productSlug), "max-age=0");
+        revalidateTag(CACHE_TAGS.product(res.productSlug), { expire: 0 });
+        revalidatePath(`/kukly/${res.productSlug}`, "page");
       }
+      revalidatePath("/", "page");
+      revalidatePath("/kukly", "page");
+      revalidatePath("/cart", "page");
+      revalidatePath("/admin/zakazy", "page");
+      revalidatePath("/admin/kukly", "page");
     } catch {
       // Игнорируем вне Next.js
     }

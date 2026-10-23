@@ -13,6 +13,7 @@ import { StatusBadge } from "./StatusBadge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { reserveProductAction } from "@/actions/reserve";
+import { notifyCartChanged } from "@/lib/reservation/events";
 
 interface ProductCardProps {
   doll: Doll;
@@ -48,9 +49,14 @@ export function ProductCard({ doll, priority = false }: ProductCardProps) {
 
         if (res.success) {
           toast.success(`Бронь куклы «${doll.name}» оформлена!`, {
-            description: "Переходим к оформлению заказа...",
+            description: "Кукла добавлена в корзину. Можно забронировать ещё.",
+            action: {
+              label: "В корзину",
+              onClick: () => router.push("/cart"),
+            },
           });
-          router.push(res.redirectUrl);
+          notifyCartChanged();
+          router.refresh();
         } else {
           if (res.code === "ALREADY_RESERVED") {
             toast.error("Кукла только что забронирована другим покупателем", {

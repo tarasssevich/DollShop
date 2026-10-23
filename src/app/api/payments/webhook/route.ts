@@ -89,9 +89,9 @@ export async function POST(req: NextRequest) {
 
       // 3. Инвалидация кэша каталога
       try {
-        revalidateTag(CACHE_TAGS.products, "max-age=0");
+        revalidateTag(CACHE_TAGS.products, { expire: 0 });
         if (statusRes.productSlug) {
-          revalidateTag(CACHE_TAGS.product(statusRes.productSlug), "max-age=0");
+          revalidateTag(CACHE_TAGS.product(statusRes.productSlug), { expire: 0 });
         }
       } catch {
         // Игнорируем вне Next.js контекста

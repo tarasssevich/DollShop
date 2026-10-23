@@ -198,9 +198,9 @@ export async function saveProductMediaAction(
       .from(products)
       .where(eq(products.id, data.productId));
 
-    revalidateTag(CACHE_TAGS.products, "max-age=0");
+    revalidateTag(CACHE_TAGS.products, { expire: 0 });
     if (product) {
-      revalidateTag(CACHE_TAGS.product(product.slug), "max-age=0");
+      revalidateTag(CACHE_TAGS.product(product.slug), { expire: 0 });
     }
 
     return { success: true, media: saved };
@@ -253,9 +253,9 @@ export async function deleteProductMediaAction(input: {
       .from(products)
       .where(eq(products.id, input.productId));
 
-    revalidateTag(CACHE_TAGS.products, "max-age=0");
+    revalidateTag(CACHE_TAGS.products, { expire: 0 });
     if (product) {
-      revalidateTag(CACHE_TAGS.product(product.slug), "max-age=0");
+      revalidateTag(CACHE_TAGS.product(product.slug), { expire: 0 });
     }
 
     return { success: true };
@@ -289,9 +289,9 @@ export async function reorderProductMediaAction(input: {
       .from(products)
       .where(eq(products.id, input.productId));
 
-    revalidateTag(CACHE_TAGS.products, "max-age=0");
+    revalidateTag(CACHE_TAGS.products, { expire: 0 });
     if (product) {
-      revalidateTag(CACHE_TAGS.product(product.slug), "max-age=0");
+      revalidateTag(CACHE_TAGS.product(product.slug), { expire: 0 });
     }
 
     return { success: true };

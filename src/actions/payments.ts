@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { revalidateTag } from "next/cache";
+import { revalidateTag, revalidatePath } from "next/cache";
 import { setOrderStatus } from "@/db/functions";
 import { CACHE_TAGS } from "@/lib/cache/tags";
 import { sendTelegramMessage } from "@/lib/notify/telegram";
@@ -51,12 +51,18 @@ export async function simulateSandboxCardPaymentAction(
       return { success: false, error: `Ошибка смены статуса заказа: ${res.errorCode}` };
     }
 
-    // 2. Инвалидация кэша каталога
+    // 2. Инвалидация кэша каталога и страниц магазина и админки
     try {
-      revalidateTag(CACHE_TAGS.products, "max-age=0");
+      revalidateTag(CACHE_TAGS.products, { expire: 0 });
       if (res.productSlug) {
-        revalidateTag(CACHE_TAGS.product(res.productSlug), "max-age=0");
+        revalidateTag(CACHE_TAGS.product(res.productSlug), { expire: 0 });
+        revalidatePath(`/kukly/${res.productSlug}`, "page");
       }
+      revalidatePath("/", "page");
+      revalidatePath("/kukly", "page");
+      revalidatePath("/cart", "page");
+      revalidatePath("/admin/zakazy", "page");
+      revalidatePath("/admin/kukly", "page");
     } catch {
       // Игнорируем вне Next.js
     }
@@ -109,9 +115,9 @@ export async function simulateSandboxEripPaymentAction(
     }
 
     try {
-      revalidateTag(CACHE_TAGS.products, "max-age=0");
+      revalidateTag(CACHE_TAGS.products, { expire: 0 });
       if (res.productSlug) {
-        revalidateTag(CACHE_TAGS.product(res.productSlug), "max-age=0");
+        revalidateTag(CACHE_TAGS.product(res.productSlug), { expire: 0 });
       }
     } catch {
       // Игнорируем вне Next.js

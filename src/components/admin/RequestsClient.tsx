@@ -275,6 +275,28 @@ export function RequestsClient({ initialRequests }: RequestsClientProps) {
                         <p className="whitespace-pre-line leading-relaxed">{req.wishes}</p>
                       </div>
                     )}
+
+                    {req.referencePhotoUrls.length > 0 && (
+                      <div className="space-y-1.5">
+                        <p className="text-[10px] text-muted uppercase tracking-wider">
+                          Фото-референс:
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {req.referencePhotoUrls.map((url) => (
+                            <a
+                              key={url}
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="block h-20 w-20 overflow-hidden rounded-lg border border-linen-dark bg-linen"
+                            >
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={url} alt="Фото-референс" className="h-full w-full object-cover" />
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 

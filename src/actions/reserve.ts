@@ -3,7 +3,7 @@
 import crypto from "node:crypto";
 import { z } from "zod";
 import { cookies, headers } from "next/headers";
-import { revalidateTag } from "next/cache";
+import { revalidateTag, revalidatePath } from "next/cache";
 import { eq, and, gt } from "drizzle-orm";
 import { db } from "@/db/client";
 import { reservations, products, productMedia } from "@/db/schema";
@@ -99,10 +99,16 @@ export async function reserveProductAction(
         maxAge: RESERVATION_TTL_SECONDS,
       });
 
-      // Мгновенно инвалидируем кэш каталога, чтобы витрина отразила статус «В брони»
+      // Мгновенно инвалидируем кэш каталога, чтобы витрина и админка отразили статус «В брони»
       try {
-        revalidateTag(CACHE_TAGS.products, "max-age=0");
-        revalidateTag(CACHE_TAGS.product(slug), "max-age=0");
+        revalidateTag(CACHE_TAGS.products, { expire: 0 });
+        revalidateTag(CACHE_TAGS.product(slug), { expire: 0 });
+        revalidatePath("/", "page");
+        revalidatePath("/kukly", "page");
+        revalidatePath(`/kukly/${slug}`, "page");
+        revalidatePath("/cart", "page");
+        revalidatePath("/admin/kukly", "page");
+        revalidatePath("/admin/zakazy", "page");
       } catch {
         // Игнорируем вне контекста Next.js запроса (например, в vitest тестах)
       }
@@ -190,8 +196,14 @@ export async function releaseReservationAction(
     cookieStore.delete(cookieName);
 
     try {
-      revalidateTag(CACHE_TAGS.products, "max-age=0");
-      revalidateTag(CACHE_TAGS.product(slug), "max-age=0");
+      revalidateTag(CACHE_TAGS.products, { expire: 0 });
+      revalidateTag(CACHE_TAGS.product(slug), { expire: 0 });
+      revalidatePath("/", "page");
+      revalidatePath("/kukly", "page");
+      revalidatePath(`/kukly/${slug}`, "page");
+      revalidatePath("/cart", "page");
+      revalidatePath("/admin/kukly", "page");
+      revalidatePath("/admin/zakazy", "page");
     } catch {
       // Игнорируем вне Next.js
     }
@@ -282,20 +294,22 @@ export type ActiveUserReservationResult =
       hasReservation: false;
     };
 
-/**
- * Получение текущей активной брони пользователя по cookie сессии.
- * Используется в шапке (/cart) и на странице корзины для отображения забронированной куклы.
- */
-export async function getActiveReservationAction(): Promise<ActiveUserReservationResult> {
-  const cookieStore = await cookies();
-  const allCookies = cookieStore.getAll();
-  const resCookies = allCookies.filter((c) =>
-    c.name.startsWith(RESERVATION_COOKIE_PREFIX)
-  );
+export type ActiveReservationItem = Extract<
+  ActiveUserReservationResult,
+  { hasReservation: true }
+>;
 
-  if (resCookies.length === 0) {
-    return { hasReservation: false };
-  }
+/**
+ * Получение ВСЕХ активных броней пользователя по cookie сессии (корзина из нескольких кукол).
+ * Отсортированы по времени истечения (раньше истекающие — выше).
+ */
+export async function getActiveReservationsAction(): Promise<ActiveReservationItem[]> {
+  const cookieStore = await cookies();
+  const resCookies = cookieStore
+    .getAll()
+    .filter((c) => c.name.startsWith(RESERVATION_COOKIE_PREFIX));
+
+  const items: ActiveReservationItem[] = [];
 
   for (const c of resCookies) {
     const productId = c.name.slice(RESERVATION_COOKIE_PREFIX.length);
@@ -324,42 +338,50 @@ export async function getActiveReservationAction(): Promise<ActiveUserReservatio
           )
         );
 
-      if (active) {
-        const now = Date.now();
-        const secondsRemaining = Math.max(
-          0,
-          Math.floor((active.expiresAt.getTime() - now) / 1000)
-        );
+      if (!active) continue;
 
-        const [coverMedia] = await db
-          .select({ url: productMedia.url })
-          .from(productMedia)
-          .where(eq(productMedia.productId, active.productId))
-          .orderBy(productMedia.displayOrder)
-          .limit(1);
+      const secondsRemaining = Math.max(
+        0,
+        Math.floor((active.expiresAt.getTime() - Date.now()) / 1000)
+      );
 
-        const specs = active.specs as {
-          category?: string;
-          height_cm?: number;
-        } | null;
+      const [coverMedia] = await db
+        .select({ url: productMedia.url })
+        .from(productMedia)
+        .where(eq(productMedia.productId, active.productId))
+        .orderBy(productMedia.displayOrder)
+        .limit(1);
 
-        return {
-          hasReservation: true,
-          productId: active.productId,
-          slug: active.slug,
-          dollName: active.title,
-          priceByn: Number(active.price),
-          coverImageUrl: coverMedia?.url || "/mock/dolls/fairy-blue-1.jpg",
-          category: specs?.category || "Цветочные феи",
-          heightCm: specs?.height_cm || 21,
-          expiresAt: active.expiresAt.toISOString(),
-          secondsRemaining,
-        };
-      }
+      const specs = active.specs as {
+        category?: string;
+        height_cm?: number;
+      } | null;
+
+      items.push({
+        hasReservation: true,
+        productId: active.productId,
+        slug: active.slug,
+        dollName: active.title,
+        priceByn: Number(active.price),
+        coverImageUrl: coverMedia?.url || "/mock/dolls/fairy-blue-1.jpg",
+        category: specs?.category || "Цветочные феи",
+        heightCm: specs?.height_cm || 21,
+        expiresAt: active.expiresAt.toISOString(),
+        secondsRemaining,
+      });
     } catch (err) {
       console.error("Ошибка при поиске активной брони в сессии:", err);
     }
   }
 
-  return { hasReservation: false };
+  return items.sort((a, b) => a.expiresAt.localeCompare(b.expiresAt));
+}
+
+/**
+ * Первая (ближайшая к истечению) активная бронь пользователя.
+ * Оставлена для обратной совместимости — для корзины используйте `getActiveReservationsAction`.
+ */
+export async function getActiveReservationAction(): Promise<ActiveUserReservationResult> {
+  const [first] = await getActiveReservationsAction();
+  return first ?? { hasReservation: false };
 }

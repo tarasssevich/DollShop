@@ -29,3 +29,4 @@ next-env.d.ts
 
 # local utility
 scripts/force-ipv4.cjs
+public/uploads/requests/

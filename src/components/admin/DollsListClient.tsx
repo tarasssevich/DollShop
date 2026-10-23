@@ -1,10 +1,18 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, Search, ChevronRight, PackageOpen } from "lucide-react";
+import {
+  Plus,
+  Search,
+  ChevronRight,
+  PackageOpen,
+  Clock,
+  Unlock,
+} from "lucide-react";
 import type { Doll, DollStatus } from "@/types/domain";
+import { useAdminLiveSync } from "./AdminLiveSyncProvider";
 
 interface DollsListClientProps {
   initialDolls: Doll[];
@@ -12,21 +20,114 @@ interface DollsListClientProps {
 
 type FilterOption = "all" | DollStatus | "draft";
 
-const STATUS_FILTERS: Array<{ id: FilterOption; label: string }> = [
-  { id: "all", label: "Все" },
-  { id: "available", label: "🟢 В наличии" },
-  { id: "sold", label: "🏡 В архиве" },
-  { id: "in_progress", label: "✨ На заказ" },
-  { id: "reserved", label: "⏳ Бронь" },
-  { id: "draft", label: "📝 Черновики" },
-];
+function DollReservationTimer({
+  reservedUntil,
+  onRelease,
+  dollName,
+}: {
+  reservedUntil: string | null;
+  onRelease: () => void;
+  dollName: string;
+}) {
+  const [remainingSec, setRemainingSec] = useState<number>(() => {
+    if (!reservedUntil) return 0;
+    return Math.max(
+      0,
+      Math.floor((new Date(reservedUntil).getTime() - Date.now()) / 1000)
+    );
+  });
+
+  useEffect(() => {
+    if (!reservedUntil) return;
+    const interval = setInterval(() => {
+      const sec = Math.max(
+        0,
+        Math.floor((new Date(reservedUntil).getTime() - Date.now()) / 1000)
+      );
+      setRemainingSec(sec);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [reservedUntil]);
+
+  const mm = Math.floor(remainingSec / 60);
+  const ss = remainingSec % 60;
+  const timeFormatted = `${mm}:${ss < 10 ? "0" : ""}${ss}`;
+
+  return (
+    <div className="flex flex-wrap items-center gap-2 pt-1">
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-100/90 text-amber-900 text-xs font-medium border border-amber-300 shadow-2xs">
+        <Clock className="w-3.5 h-3.5 text-amber-700 animate-pulse" />
+        <span>
+          {remainingSec > 0
+            ? `Забронирована (осталось ${timeFormatted})`
+            : "Время брони истекает..."}
+        </span>
+      </span>
+
+      <button
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onRelease();
+        }}
+        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 text-xs font-medium border border-red-200 transition cursor-pointer active:scale-95"
+        title={`Снять бронь с куклы «${dollName}» и мгновенно вернуть её на витрину`}
+      >
+        <Unlock className="w-3.5 h-3.5" />
+        <span>Освободить</span>
+      </button>
+    </div>
+  );
+}
 
 export function DollsListClient({ initialDolls }: DollsListClientProps) {
   const [activeFilter, setActiveFilter] = useState<FilterOption>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const { activeReservations, releaseReservation } = useAdminLiveSync();
+
+  // Создаем быстрый lookup активных броней из live-состояния
+  const reservationsByProductId = useMemo(() => {
+    const map = new Map<string, (typeof activeReservations)[0]>();
+    for (const r of activeReservations) {
+      map.set(r.productId, r);
+    }
+    return map;
+  }, [activeReservations]);
+
+  // Объединяем серверные данные кукол с живыми бронями в реальном времени
+  const mergedDolls = useMemo(() => {
+    return initialDolls.map((doll) => {
+      const liveRes = reservationsByProductId.get(doll.id);
+      if (liveRes) {
+        return {
+          ...doll,
+          status: "reserved" as DollStatus,
+          reservedUntil: liveRes.reservedUntil,
+        };
+      }
+      return doll;
+    });
+  }, [initialDolls, reservationsByProductId]);
+
+  const reservedCount = useMemo(() => {
+    return mergedDolls.filter((d) => d.status === "reserved" && !d.isDraft).length;
+  }, [mergedDolls]);
+
+  const statusFilters: Array<{ id: FilterOption; label: string }> = [
+    { id: "all", label: "Все" },
+    { id: "available", label: "🟢 В наличии" },
+    { id: "sold", label: "🏡 В архиве" },
+    { id: "in_progress", label: "✨ На заказ" },
+    {
+      id: "reserved",
+      label: reservedCount > 0 ? `⏳ Бронь (${reservedCount})` : "⏳ Бронь",
+    },
+    { id: "draft", label: "📝 Черновики" },
+  ];
 
   const filteredDolls = useMemo(() => {
-    return initialDolls.filter((doll) => {
+    return mergedDolls.filter((doll) => {
       // 1. Фильтр по статусу
       if (activeFilter === "draft") {
         if (!doll.isDraft) return false;
@@ -45,7 +146,16 @@ export function DollsListClient({ initialDolls }: DollsListClientProps) {
 
       return true;
     });
-  }, [initialDolls, activeFilter, searchQuery]);
+  }, [mergedDolls, activeFilter, searchQuery]);
+
+  const handleRelease = async (dollId: string, dollName: string) => {
+    const confirmed = window.confirm(
+      `Снять бронь с куклы «${dollName}»?\n\nКукла сразу вернется в открытую продажу на витрину магазина.`
+    );
+    if (!confirmed) return;
+
+    await releaseReservation(dollId);
+  };
 
   return (
     <div className="space-y-4">
@@ -56,10 +166,10 @@ export function DollsListClient({ initialDolls }: DollsListClientProps) {
             Мои куклы
           </h1>
           <p className="text-xs text-muted">
-            Всего в мастерской: {initialDolls.length}{" "}
-            {initialDolls.length === 1
+            Всего в мастерской: {mergedDolls.length}{" "}
+            {mergedDolls.length === 1
               ? "работа"
-              : initialDolls.length < 5
+              : mergedDolls.length < 5
                 ? "работы"
                 : "работ"}
           </p>
@@ -79,7 +189,7 @@ export function DollsListClient({ initialDolls }: DollsListClientProps) {
 
       {/* Горизонтальные чипсы-фильтры под палец */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
-        {STATUS_FILTERS.map((filter) => {
+        {statusFilters.map((filter) => {
           const isActive = activeFilter === filter.id;
           return (
             <button
@@ -117,15 +227,18 @@ export function DollsListClient({ initialDolls }: DollsListClientProps) {
           {filteredDolls.map((doll) => {
             const coverImage = doll.images[0]?.url || "/mock/dolls/placeholder.webp";
             const isDraft = doll.isDraft;
+            const isReserved = doll.status === "reserved" && !isDraft;
 
             return (
               <Link
                 key={doll.id}
                 href={`/admin/kukly/${doll.id}`}
                 className={`flex items-center gap-3 p-3 rounded-2xl bg-white border transition hover:shadow-sm active:scale-[0.99] ${
-                  isDraft
-                    ? "border-dashed border-amber-300 bg-amber-50/20"
-                    : "border-linen-dark hover:border-terracotta/40"
+                  isReserved
+                    ? "border-amber-300 bg-amber-50/30"
+                    : isDraft
+                      ? "border-dashed border-amber-300 bg-amber-50/20"
+                      : "border-linen-dark hover:border-terracotta/40"
                 }`}
               >
                 {/* Превью 72x72 */}
@@ -182,6 +295,15 @@ export function DollsListClient({ initialDolls }: DollsListClientProps) {
                       )
                     </span>
                   </div>
+
+                  {/* Живой таймер брони и кнопка прямого освобождения для мастера */}
+                  {isReserved && (
+                    <DollReservationTimer
+                      reservedUntil={doll.reservedUntil}
+                      onRelease={() => handleRelease(doll.id, doll.name)}
+                      dollName={doll.name}
+                    />
+                  )}
                 </div>
 
                 {/* Стрелочка */}

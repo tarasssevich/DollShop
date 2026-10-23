@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Clock, AlertTriangle, XCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { releaseReservationAction } from "@/actions/reserve";
+import { releaseReservationAction, checkReservationStatusAction } from "@/actions/reserve";
 
 interface CheckoutReservationBarProps {
   productId: string;
@@ -29,18 +29,37 @@ export function CheckoutReservationBar({
 
   React.useEffect(() => {
     const end = new Date(reservedUntil).getTime();
+    let tickCount = 0;
 
-    const interval = setInterval(() => {
+    const interval = setInterval(async () => {
       const remaining = Math.max(0, end - Date.now());
       setTimeLeftMs(remaining);
 
       if (remaining <= 0) {
         clearInterval(interval);
+        router.refresh();
+        return;
+      }
+
+      // Каждые 3 секунды проверяем живой статус в БД (вдруг мастер освободил бронь из админки)
+      tickCount++;
+      if (tickCount % 3 === 0) {
+        try {
+          const status = await checkReservationStatusAction(productId);
+          if (!status.hasReservation) {
+            setTimeLeftMs(0);
+            toast.info("Бронь на данную куклу была освобождена.");
+            clearInterval(interval);
+            router.refresh();
+          }
+        } catch {
+          // Игнорируем ошибки сети
+        }
       }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [reservedUntil]);
+  }, [reservedUntil, productId, router]);
 
   const totalSeconds = Math.floor(timeLeftMs / 1000);
   const minutes = Math.floor(totalSeconds / 60);

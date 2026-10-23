@@ -27,7 +27,7 @@ export async function ensureAvailableTestDollAction(): Promise<{
     if (available) {
       // Очищаем зависшие брони, если были
       await db.delete(reservations).where(eq(reservations.productId, available.id));
-      revalidateTag(CACHE_TAGS.products, "max-age=0");
+      revalidateTag(CACHE_TAGS.products, { expire: 0 });
       return {
         success: true,
         slug: available.slug,
@@ -48,8 +48,8 @@ export async function ensureAvailableTestDollAction(): Promise<{
         .set({ status: "available" })
         .where(eq(products.id, anyDoll.id));
 
-      revalidateTag(CACHE_TAGS.products, "max-age=0");
-      revalidateTag(CACHE_TAGS.product(anyDoll.slug), "max-age=0");
+      revalidateTag(CACHE_TAGS.products, { expire: 0 });
+      revalidateTag(CACHE_TAGS.product(anyDoll.slug), { expire: 0 });
       return {
         success: true,
         slug: anyDoll.slug,
@@ -75,7 +75,7 @@ export async function ensureAvailableTestDollAction(): Promise<{
       RETURNING id, slug, title;
     `;
 
-    revalidateTag(CACHE_TAGS.products, "max-age=0");
+    revalidateTag(CACHE_TAGS.products, { expire: 0 });
     return {
       success: true,
       slug: newDoll!.slug,

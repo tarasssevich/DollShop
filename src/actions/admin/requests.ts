@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { eq, desc, inArray, asc } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
 import { db } from "@/db/client";
 import { customRequests, products, productMedia } from "@/db/schema";
 import { requireAdminAction } from "@/lib/auth/guard";
@@ -13,6 +14,7 @@ export interface AdminCustomRequestItem {
   customerContact: string | null;
   contactChannel: "telegram" | "viber" | "call";
   wishes: string | null;
+  referencePhotoUrls: string[];
   status: "new" | "in_discussion" | "accepted" | "declined";
   createdAt: string;
   referenceDoll: {
@@ -110,6 +112,7 @@ export async function getAdminRequestsAction(): Promise<{
         customerContact: req.customerContact,
         contactChannel: req.contactChannel as "telegram" | "viber" | "call",
         wishes: req.wishes,
+        referencePhotoUrls: req.referencePhotoUrls ?? [],
         status: req.status as "new" | "in_discussion" | "accepted" | "declined",
         createdAt: req.createdAt.toISOString(),
         referenceDoll,
@@ -148,6 +151,12 @@ export async function updateAdminRequestStatusAction(
       .update(customRequests)
       .set({ status, updatedAt: new Date() })
       .where(eq(customRequests.id, requestId));
+
+    try {
+      revalidatePath("/admin/zayavki", "page");
+    } catch {
+      // Игнорируем вне Next.js
+    }
 
     return { success: true };
   } catch (err) {

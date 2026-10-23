@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { headers } from "next/headers";
+import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { customRequests, products } from "@/db/schema";
@@ -40,6 +41,18 @@ export const customRequestSchema = z.object({
   pdConsent: z.boolean().refine((val) => val === true, {
     message: "Необходимо согласие на обработку персональных данных",
   }),
+
+  referencePhotoUrls: z
+    .array(
+      z
+        .string()
+        .regex(
+          /^\/uploads\/requests\/[0-9a-f-]{36}\.(jpg|png|webp)$/,
+          "Некорректная ссылка на фото"
+        )
+    )
+    .max(3, "Можно прикрепить не более 3 фото")
+    .optional(),
 
   honeypot: z.string().optional(),
 });
@@ -153,6 +166,7 @@ export async function createCustomRequestAction(
         contactChannel: data.contactChannel,
         referenceProductId: resolvedProductId,
         wishes: data.wishes,
+        referencePhotoUrls: data.referencePhotoUrls ?? [],
         status: "new",
         pdConsentAt: new Date(),
       })
@@ -179,6 +193,13 @@ export async function createCustomRequestAction(
       });
     } catch (tgErr) {
       console.error("Ошибка отправки заявки в Telegram:", tgErr);
+    }
+
+    // Мгновенно обновляем админку мастера
+    try {
+      revalidatePath("/admin/zayavki", "page");
+    } catch {
+      // Игнорируем вне Next.js
     }
 
     return {

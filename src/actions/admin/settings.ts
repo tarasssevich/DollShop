@@ -68,7 +68,7 @@ export async function updateSiteSettingsAction(input: SiteSettingsInput): Promis
         },
       });
 
-    revalidateTag(CACHE_TAGS.settings, "max-age=0");
+    revalidateTag(CACHE_TAGS.settings, { expire: 0 });
     revalidatePath("/");
     revalidatePath("/admin/nastrojki");
     revalidatePath("/dostavka-i-oplata");

@@ -16,6 +16,8 @@ import {
   Palette,
   Clock,
   CheckCircle2,
+  ImagePlus,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -51,6 +53,37 @@ function CustomOrderContent() {
   const [agreed, setAgreed] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [submitted, setSubmitted] = React.useState(false);
+  const [photos, setPhotos] = React.useState<File[]>([]);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const previews = React.useMemo(
+    () => photos.map((f) => ({ file: f, url: URL.createObjectURL(f) })),
+    [photos]
+  );
+  React.useEffect(() => {
+    return () => previews.forEach((p) => URL.revokeObjectURL(p.url));
+  }, [previews]);
+
+  const handlePhotosSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const picked = Array.from(e.target.files ?? []);
+    e.target.value = "";
+    const valid = picked.filter((f) => {
+      if (!/^image\/(jpeg|png|webp)$/.test(f.type)) {
+        toast.error(`«${f.name}»: допустимы только JPEG, PNG или WebP`);
+        return false;
+      }
+      if (f.size > 5 * 1024 * 1024) {
+        toast.error(`«${f.name}»: файл больше 5 МБ`);
+        return false;
+      }
+      return true;
+    });
+    setPhotos((prev) => {
+      const next = [...prev, ...valid];
+      if (next.length > 3) toast.error("Можно прикрепить не более 3 фото");
+      return next.slice(0, 3);
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,18 +106,37 @@ function CustomOrderContent() {
     setIsSubmitting(true);
 
     try {
+      let referencePhotoUrls: string[] = [];
+      if (photos.length > 0) {
+        const fd = new FormData();
+        photos.forEach((f) => fd.append("files", f));
+        const up = await fetch("/api/request-photo", { method: "POST", body: fd });
+        const upJson = (await up.json().catch(() => ({}))) as {
+          urls?: string[];
+          error?: string;
+        };
+        if (!up.ok || !upJson.urls) {
+          setIsSubmitting(false);
+          toast.error(upJson.error || "Не удалось загрузить фото. Попробуйте еще раз.");
+          return;
+        }
+        referencePhotoUrls = upJson.urls;
+      }
+
       const res = await createCustomRequestAction({
         customerName: name,
         customerPhone: phone,
         contactChannel: "telegram",
         referenceSlug: fromDoll || undefined,
         wishes,
+        referencePhotoUrls,
         pdConsent: agreed,
       });
 
       setIsSubmitting(false);
       if (res.success) {
         setSubmitted(true);
+        setPhotos([]);
         toast.success(res.message);
       } else {
         toast.error(res.error);
@@ -293,6 +345,50 @@ function CustomOrderContent() {
                       rows={4}
                       placeholder="Расскажите о фее: для кого она создается, повод (подарок, оберег, день рождения), желаемые оттенки наряда и цветочки в ручках..."
                     />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="order-photos">
+                      Фото-референс (необязательно, до 3 шт., JPEG/PNG/WebP до 5 МБ)
+                    </Label>
+                    <input
+                      ref={fileInputRef}
+                      id="order-photos"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      multiple
+                      className="sr-only"
+                      onChange={handlePhotosSelected}
+                    />
+                    <div className="flex flex-wrap gap-3">
+                      {previews.map((p, i) => (
+                        <div
+                          key={p.url}
+                          className="relative h-24 w-24 overflow-hidden rounded-xl border border-linen-dark bg-linen"
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={p.url} alt={`Фото ${i + 1}`} className="h-full w-full object-cover" />
+                          <button
+                            type="button"
+                            aria-label="Убрать фото"
+                            onClick={() => setPhotos((prev) => prev.filter((_, idx) => idx !== i))}
+                            className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-espresso/80 text-white hover:bg-espresso"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                      {photos.length < 3 && (
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="flex h-24 w-24 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-linen-dark text-xs text-muted transition-colors hover:border-terracotta hover:text-terracotta"
+                        >
+                          <ImagePlus className="h-5 w-5" />
+                          <span>Добавить</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <label

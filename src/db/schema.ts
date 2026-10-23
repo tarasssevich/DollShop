@@ -252,6 +252,10 @@ export const customRequests = pgTable(
       .notNull()
       .default("telegram"),
     wishes: text("wishes"),
+    referencePhotoUrls: text("reference_photo_urls")
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
     status: requestStatusEnum("status").notNull().default("new"),
     pdConsentAt: timestamp("pd_consent_at", { withTimezone: true }).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })

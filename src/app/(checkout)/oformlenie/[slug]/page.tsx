@@ -94,7 +94,7 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
     const effectiveStatus = getEffectiveDollStatus(doll);
 
     return (
-      <div className="mx-auto max-w-2xl px-4 py-12 sm:py-16">
+      <div className="mx-auto max-w-3xl px-4 py-12 sm:py-16">
         <div className="rounded-3xl border border-linen-dark bg-white p-6 sm:p-10 text-center shadow-sm">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 mb-5">
             <Clock className="h-7 w-7" />
@@ -108,7 +108,7 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
             Каждая кукла в нашей мастерской создается вручную в единственном экземпляре, поэтому бронь удерживается 15 минут. Если вы не успели завершить оформление, кукла вернулась в каталог.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+          <div className="flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:flex-wrap sm:items-center">
             {effectiveStatus === "available" && (
               <QuickReserveButton
                 productId={doll.id}

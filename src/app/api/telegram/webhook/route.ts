@@ -140,9 +140,9 @@ export async function POST(req: NextRequest) {
 
           // Сбрасываем кэш каталога
           try {
-            revalidateTag(CACHE_TAGS.products, "max-age=0");
+            revalidateTag(CACHE_TAGS.products, { expire: 0 });
             if (res.productSlug) {
-              revalidateTag(CACHE_TAGS.product(res.productSlug), "max-age=0");
+              revalidateTag(CACHE_TAGS.product(res.productSlug), { expire: 0 });
             }
           } catch {
             // Игнорируем вне Next.js
@@ -171,9 +171,9 @@ export async function POST(req: NextRequest) {
           await answerCallbackQuery(token, cb.id, "❌ Заказ отменен. Кукла снова доступна на витрине.");
 
           try {
-            revalidateTag(CACHE_TAGS.products, "max-age=0");
+            revalidateTag(CACHE_TAGS.products, { expire: 0 });
             if (res.productSlug) {
-              revalidateTag(CACHE_TAGS.product(res.productSlug), "max-age=0");
+              revalidateTag(CACHE_TAGS.product(res.productSlug), { expire: 0 });
             }
           } catch {
             // Игнорируем вне Next.js

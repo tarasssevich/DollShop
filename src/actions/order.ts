@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { cookies } from "next/headers";
-import { revalidateTag } from "next/cache";
+import { revalidateTag, revalidatePath } from "next/cache";
 import { createOrder } from "@/db/functions";
 import { CACHE_TAGS } from "@/lib/cache/tags";
 import {
@@ -231,10 +231,16 @@ export async function createOrderAction(
     // Удаляем cookie временной брони (теперь кукла удерживается заказом в статусе pending)
     cookieStore.delete(cookieName);
 
-    // Сбрасываем кэш каталога
+    // Сбрасываем кэш каталога и обновляем страницы витрины и панели мастера
     try {
-      revalidateTag(CACHE_TAGS.products, "max-age=0");
-      revalidateTag(CACHE_TAGS.product(data.slug), "max-age=0");
+      revalidateTag(CACHE_TAGS.products, { expire: 0 });
+      revalidateTag(CACHE_TAGS.product(data.slug), { expire: 0 });
+      revalidatePath("/", "page");
+      revalidatePath("/kukly", "page");
+      revalidatePath(`/kukly/${data.slug}`, "page");
+      revalidatePath("/cart", "page");
+      revalidatePath("/admin/zakazy", "page");
+      revalidatePath("/admin/kukly", "page");
     } catch {
       // Игнорируем вне Next.js
     }

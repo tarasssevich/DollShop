@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { eq, ne } from "drizzle-orm";
-import { revalidateTag } from "next/cache";
+import { revalidateTag, revalidatePath } from "next/cache";
 import { db } from "@/db/client";
 import { products, type ProductSpecs } from "@/db/schema";
 import { requireAdminAction } from "@/lib/auth/guard";
@@ -137,9 +137,19 @@ export async function saveProductAction(
         })
         .where(eq(products.id, data.id));
 
-      // Инвалидация кэша Next.js ISR
-      revalidateTag(CACHE_TAGS.products, "max-age=0");
-      revalidateTag(CACHE_TAGS.product(existing.slug), "max-age=0");
+      // Инвалидация кэша Next.js ISR и обновление витрины и админки
+      try {
+        revalidateTag(CACHE_TAGS.products, { expire: 0 });
+        revalidateTag(CACHE_TAGS.product(existing.slug), { expire: 0 });
+        revalidatePath("/", "page");
+        revalidatePath("/kukly", "page");
+        revalidatePath(`/kukly/${existing.slug}`, "page");
+        revalidatePath("/cart", "page");
+        revalidatePath("/galereya", "page");
+        revalidatePath("/admin/kukly", "page");
+      } catch {
+        // Игнорируем вне Next.js
+      }
 
       return {
         success: true,
@@ -168,9 +178,19 @@ export async function saveProductAction(
         return { success: false, error: "Не удалось сохранить куклу" };
       }
 
-      // Инвалидация кэша Next.js ISR
-      revalidateTag(CACHE_TAGS.products, "max-age=0");
-      revalidateTag(CACHE_TAGS.product(slug), "max-age=0");
+      // Инвалидация кэша Next.js ISR и обновление витрины и админки
+      try {
+        revalidateTag(CACHE_TAGS.products, { expire: 0 });
+        revalidateTag(CACHE_TAGS.product(slug), { expire: 0 });
+        revalidatePath("/", "page");
+        revalidatePath("/kukly", "page");
+        revalidatePath(`/kukly/${slug}`, "page");
+        revalidatePath("/cart", "page");
+        revalidatePath("/galereya", "page");
+        revalidatePath("/admin/kukly", "page");
+      } catch {
+        // Игнорируем вне Next.js
+      }
 
       return {
         success: true,
@@ -201,8 +221,18 @@ export async function deleteProductAction(
       return { success: false, error: "Кукла не найдена" };
     }
 
-    revalidateTag(CACHE_TAGS.products, "max-age=0");
-    revalidateTag(CACHE_TAGS.product(deleted.slug), "max-age=0");
+    try {
+      revalidateTag(CACHE_TAGS.products, { expire: 0 });
+      revalidateTag(CACHE_TAGS.product(deleted.slug), { expire: 0 });
+      revalidatePath("/", "page");
+      revalidatePath("/kukly", "page");
+      revalidatePath(`/kukly/${deleted.slug}`, "page");
+      revalidatePath("/cart", "page");
+      revalidatePath("/galereya", "page");
+      revalidatePath("/admin/kukly", "page");
+    } catch {
+      // Игнорируем вне Next.js
+    }
 
     return { success: true, data: { deleted: true } };
   } catch (err) {

@@ -6,7 +6,7 @@ import { Container } from "@/components/layout/Container";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { getDolls } from "@/lib/data/catalog";
-import { getActiveReservationAction } from "@/actions/reserve";
+import { getActiveReservationsAction } from "@/actions/reserve";
 import { CartReservationView } from "@/components/cart/CartReservationView";
 
 export const metadata: Metadata = {
@@ -22,7 +22,8 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function CartPage() {
-  const reservation = await getActiveReservationAction();
+  const reservations = await getActiveReservationsAction();
+  const hasReservation = reservations.length > 0;
   const availableDolls = await getDolls({ status: "available", limit: 3 });
 
   return (
@@ -35,18 +36,22 @@ export default async function CartPage() {
             <span>Ателье авторских кукол · Единственный экземпляр</span>
           </div>
           <h1 className="font-serif text-3xl sm:text-4xl font-light text-espresso">
-            {reservation.hasReservation ? "Ваша бронь" : "Корзина"}
+            {hasReservation ? (reservations.length > 1 ? `Ваша бронь · ${reservations.length}` : "Ваша бронь") : "Корзина"}
           </h1>
           <p className="text-sm text-muted mt-1 max-w-xl">
-            {reservation.hasReservation
-              ? "Выбранная авторская работа удерживается за вами на 15 минут для завершения заказа."
+            {hasReservation
+              ? "Выбранные авторские работы удерживаются за вами по 15 минут каждая. Оформите заказ на каждую куклу отдельно."
               : "Каждая кукла создаётся вручную в одном экземпляре. Нажмите «Бронь» у понравившейся работы, чтобы закрепить её за собой."}
           </p>
         </div>
 
         {/* Content */}
-        {reservation.hasReservation ? (
-          <CartReservationView reservation={reservation} />
+        {hasReservation ? (
+          <div className="space-y-8">
+            {reservations.map((reservation) => (
+              <CartReservationView key={reservation.productId} reservation={reservation} />
+            ))}
+          </div>
         ) : (
           <div className="space-y-12">
             {/* Empty State Card */}

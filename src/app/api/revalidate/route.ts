@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
 
   // 3. Вызов инвалидации Next.js кэша
   for (const tag of tagsToRevalidate) {
-    revalidateTag(tag, "max-age=0");
+    revalidateTag(tag, { expire: 0 });
   }
 
   for (const path of pathsToRevalidate) {

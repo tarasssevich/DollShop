@@ -32,6 +32,7 @@ import { getEffectiveDollStatus } from "@/lib/data/status";
 import type { Doll } from "@/types/domain";
 import { ReservationCountdown } from "./ReservationCountdown";
 import { reserveProductAction } from "@/actions/reserve";
+import { notifyCartChanged } from "@/lib/reservation/events";
 
 interface BuyButtonProps {
   doll: Pick<
@@ -80,6 +81,7 @@ export function BuyButton({ doll, isStickyMobile = false }: BuyButtonProps) {
           toast.success(`Бронь на «${doll.name}» оформлена!`, {
             description: "У вас есть 15 минут для оформления заказа.",
           });
+          notifyCartChanged();
           router.push(res.redirectUrl);
         } else {
           setReserveModalOpen(false);

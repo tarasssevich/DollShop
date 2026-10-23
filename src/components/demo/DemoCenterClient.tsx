@@ -397,7 +397,7 @@ export function DemoCenterClient({
 
           <div className="pt-2 border-t border-linen-dark flex items-center justify-between">
             <Link
-              href="/zakaz-po-foto"
+              href="/na-zakaz"
               className="inline-flex items-center gap-1 text-xs font-medium text-purple-700 hover:underline"
             >
               <span>Форма заявки</span>

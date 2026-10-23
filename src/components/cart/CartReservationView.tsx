@@ -16,7 +16,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { formatPrice } from "@/lib/utils/format";
-import { releaseReservationAction } from "@/actions/reserve";
+import { releaseReservationAction, checkReservationStatusAction } from "@/actions/reserve";
+import { notifyCartChanged } from "@/lib/reservation/events";
 import type { ActiveUserReservationResult } from "@/actions/reserve";
 
 interface CartReservationViewProps {
@@ -34,19 +35,39 @@ export function CartReservationView({ reservation }: CartReservationViewProps) {
 
   React.useEffect(() => {
     const end = new Date(reservation.expiresAt).getTime();
+    let tickCount = 0;
 
-    const interval = setInterval(() => {
+    const interval = setInterval(async () => {
       const remaining = Math.max(0, end - Date.now());
       setTimeLeftMs(remaining);
 
       if (remaining <= 0) {
         clearInterval(interval);
+        notifyCartChanged();
         router.refresh();
+        return;
+      }
+
+      // Каждые 3 секунды проверяем живой статус в БД (вдруг мастер освободил бронь из админки)
+      tickCount++;
+      if (tickCount % 3 === 0) {
+        try {
+          const status = await checkReservationStatusAction(reservation.productId);
+          if (!status.hasReservation) {
+            setTimeLeftMs(0);
+            toast.info("Бронь на данную куклу была освобождена.");
+            notifyCartChanged();
+            clearInterval(interval);
+            router.refresh();
+          }
+        } catch {
+          // Игнорируем ошибки сети
+        }
       }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [reservation.expiresAt, router]);
+  }, [reservation.expiresAt, reservation.productId, router]);
 
   const totalSeconds = Math.floor(timeLeftMs / 1000);
   const minutes = Math.floor(totalSeconds / 60);
@@ -66,6 +87,7 @@ export function CartReservationView({ reservation }: CartReservationViewProps) {
           toast.success(`Бронь на «${reservation.dollName}» снята`, {
             description: "Кукла возвращена в каталог магазина.",
           });
+          notifyCartChanged();
           router.refresh();
         } else {
           toast.error(res.error || "Не удалось освободить бронь.");
