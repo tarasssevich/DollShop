@@ -17,6 +17,37 @@ export function CatalogTabs({
   inProgressDolls,
   soldDolls,
 }: CatalogTabsProps) {
+  const visibleAvailable = React.useMemo(
+    () =>
+      availableDolls.filter(
+        (d) =>
+          Array.isArray(d.images) &&
+          d.images.length > 0 &&
+          Boolean(d.images[0]?.url)
+      ),
+    [availableDolls]
+  );
+  const visibleInProgress = React.useMemo(
+    () =>
+      inProgressDolls.filter(
+        (d) =>
+          Array.isArray(d.images) &&
+          d.images.length > 0 &&
+          Boolean(d.images[0]?.url)
+      ),
+    [inProgressDolls]
+  );
+  const visibleSold = React.useMemo(
+    () =>
+      soldDolls.filter(
+        (d) =>
+          Array.isArray(d.images) &&
+          d.images.length > 0 &&
+          Boolean(d.images[0]?.url)
+      ),
+    [soldDolls]
+  );
+
   return (
     <Tabs defaultValue="available" className="w-full space-y-8">
       {/* Scrollable Tabs on mobile for thumb ergonomics */}
@@ -29,7 +60,7 @@ export function CatalogTabs({
             <Heart className="h-3.5 w-3.5" />
             <span>Ищут дом</span>
             <span className="rounded-full bg-terracotta-subtle px-2 py-0.5 text-[11px] font-semibold text-terracotta">
-              {availableDolls.length}
+              {visibleAvailable.length}
             </span>
           </TabsTrigger>
 
@@ -40,7 +71,7 @@ export function CatalogTabs({
             <Sparkles className="h-3.5 w-3.5 text-sage" />
             <span>В процессе</span>
             <span className="rounded-full bg-sage-subtle px-2 py-0.5 text-[11px] font-semibold text-sage">
-              {inProgressDolls.length}
+              {visibleInProgress.length}
             </span>
           </TabsTrigger>
 
@@ -51,7 +82,7 @@ export function CatalogTabs({
             <Archive className="h-3.5 w-3.5 text-muted" />
             <span>Архив</span>
             <span className="rounded-full bg-linen px-2 py-0.5 text-[11px] font-medium text-muted">
-              {soldDolls.length}
+              {visibleSold.length}
             </span>
           </TabsTrigger>
         </TabsList>
@@ -65,7 +96,7 @@ export function CatalogTabs({
           </p>
         </div>
         <ProductGrid
-          dolls={availableDolls}
+          dolls={visibleAvailable}
           emptyMessage="Все куклы из текущей коллекции уже нашли свой дом"
         />
       </TabsContent>
@@ -78,7 +109,7 @@ export function CatalogTabs({
           </p>
         </div>
         <ProductGrid
-          dolls={inProgressDolls}
+          dolls={visibleInProgress}
           emptyMessage="Сейчас все начатые куклы завершены и перенесены в основной каталог"
         />
       </TabsContent>
@@ -91,7 +122,7 @@ export function CatalogTabs({
           </p>
         </div>
         <ProductGrid
-          dolls={soldDolls}
+          dolls={visibleSold}
           emptyMessage="Архив пока пуст"
         />
       </TabsContent>

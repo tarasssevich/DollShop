@@ -17,6 +17,15 @@ describe("catalog repository layer", () => {
     expect(draftById).toBeUndefined();
   });
 
+  it("never includes dolls without photos in public getDolls() queries", async () => {
+    const dolls = await getDolls();
+    expect(dolls.length).toBeGreaterThan(0);
+    for (const d of dolls) {
+      expect(d.images.length).toBeGreaterThan(0);
+      expect(Boolean(d.images[0]?.url)).toBe(true);
+    }
+  });
+
   it("finds a published doll by slug ('selesta')", async () => {
     const doll = await getDollBySlug("selesta");
     expect(doll).not.toBeNull();

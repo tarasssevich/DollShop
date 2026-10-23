@@ -39,10 +39,21 @@ export function GalleryGrid({
   // Lightbox state for examining artwork
   const [lightboxDoll, setLightboxDoll] = React.useState<Doll | null>(null);
 
+  const dollsWithPhotos = React.useMemo(
+    () =>
+      dolls.filter(
+        (d) =>
+          Array.isArray(d.images) &&
+          d.images.length > 0 &&
+          Boolean(d.images[0]?.url)
+      ),
+    [dolls]
+  );
+
   const filteredDolls = React.useMemo(() => {
-    if (selectedCategory === "all") return dolls;
-    return dolls.filter((d) => d.category === selectedCategory);
-  }, [dolls, selectedCategory]);
+    if (selectedCategory === "all") return dollsWithPhotos;
+    return dollsWithPhotos.filter((d) => d.category === selectedCategory);
+  }, [dollsWithPhotos, selectedCategory]);
 
   return (
     <div className="space-y-8">

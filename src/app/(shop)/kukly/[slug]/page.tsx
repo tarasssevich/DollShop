@@ -86,7 +86,13 @@ export default async function DollDetailPage({ params }: PageProps) {
   // Related dolls recommendation
   const allDolls = await getDolls();
   const relatedDolls = allDolls
-    .filter((d) => d.slug !== slug)
+    .filter(
+      (d) =>
+        d.slug !== slug &&
+        Array.isArray(d.images) &&
+        d.images.length > 0 &&
+        Boolean(d.images[0]?.url)
+    )
     .slice(0, 3);
 
   return (

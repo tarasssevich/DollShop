@@ -24,8 +24,12 @@ export function ProductCard({ doll, priority = false }: ProductCardProps) {
   const router = useRouter();
   const [isReserving, startTransition] = React.useTransition();
   const [isLiked, setIsLiked] = React.useState(false);
-  const coverImage = doll.images[0];
+  const coverImage = doll.images?.[0];
   const effectiveStatus = getEffectiveDollStatus(doll);
+
+  if (!coverImage?.url) {
+    return null;
+  }
 
   const handleLike = (e: React.MouseEvent) => {
     e.preventDefault();

@@ -85,7 +85,7 @@ export default async function CartPage() {
             </div>
 
             {/* Recommendations: Available dolls right now */}
-            {availableDolls.length > 0 && (
+            {availableDolls.filter((d) => d.images && d.images.length > 0 && d.images[0]?.url).length > 0 && (
               <div className="space-y-6 pt-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -98,15 +98,17 @@ export default async function CartPage() {
                   </div>
                   <Button asChild variant="link" className="text-terracotta text-xs">
                     <Link href="/kukly">
-                      Все в наличии ({availableDolls.length}) →
+                      Все в наличии ({availableDolls.filter((d) => d.images && d.images.length > 0 && d.images[0]?.url).length}) →
                     </Link>
                   </Button>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {availableDolls.map((doll) => (
-                    <ProductCard key={doll.id} doll={doll} />
-                  ))}
+                  {availableDolls
+                    .filter((d) => d.images && d.images.length > 0 && d.images[0]?.url)
+                    .map((doll) => (
+                      <ProductCard key={doll.id} doll={doll} />
+                    ))}
                 </div>
               </div>
             )}
