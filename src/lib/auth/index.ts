@@ -19,6 +19,14 @@ export const auth = betterAuth({
       verification: schema.verification,
     },
   }),
+  user: {
+    additionalFields: {
+      role: {
+        type: "string",
+        defaultValue: "admin",
+      },
+    },
+  },
   emailAndPassword: {
     enabled: true,
     disableSignUp: true, // Публичная регистрация закрыта: только предсозданная учетная запись мастера

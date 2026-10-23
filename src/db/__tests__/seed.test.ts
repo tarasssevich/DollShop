@@ -1,13 +1,17 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll } from "vitest";
 import { eq } from "drizzle-orm";
 import { db } from "../client";
 import { products, productMedia, siteSettings } from "../schema";
+import { seedDatabase } from "../seed";
 import {
   mapDbProductToDoll,
   mapDbSiteSettingsToDomain,
 } from "@/lib/data/drizzle/mappers";
 
 describe("Database Seed and Drizzle Mappers (Step 3.5)", () => {
+  beforeAll(async () => {
+    await seedDatabase();
+  });
   it("база данных успешно наполнена 13 куклами из сида", async () => {
     const allProducts = await db.select().from(products);
     expect(allProducts.length).toBeGreaterThanOrEqual(13);

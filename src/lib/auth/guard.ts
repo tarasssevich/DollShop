@@ -1,7 +1,10 @@
 import "server-only";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { eq } from "drizzle-orm";
 import { auth } from "./index";
+import { db } from "@/db/client";
+import { user } from "@/db/schema";
 
 export interface AdminUser {
   id: string;
@@ -34,7 +37,15 @@ export async function getAdminSession(): Promise<AdminSession | null> {
       return null;
     }
 
-    const userRole = (sessionData.user as { role?: string }).role;
+    let userRole = (sessionData.user as { role?: string }).role;
+    if (!userRole) {
+      const [dbUser] = await db
+        .select({ role: user.role })
+        .from(user)
+        .where(eq(user.id, sessionData.user.id));
+      userRole = dbUser?.role;
+    }
+
     if (userRole !== "admin") {
       return null;
     }

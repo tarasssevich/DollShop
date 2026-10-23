@@ -2,13 +2,12 @@
 
 import { useState, Suspense } from "react";
 import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff, Loader2, ArrowLeft, ShieldAlert } from "lucide-react";
 import { signIn } from "@/lib/auth/client";
 
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const rawReturnUrl = searchParams.get("returnUrl") || "/admin/kukly";
   // Защита от Open Redirect (CWE-601): разрешаем только безопасные внутренние маршруты админки
@@ -50,12 +49,17 @@ function LoginForm() {
         return;
       }
 
-      router.push(returnUrl);
-      router.refresh();
+      window.location.href = returnUrl;
     } catch {
       setErrorMessage("Ошибка подключения к серверу. Попробуйте еще раз.");
       setIsLoading(false);
     }
+  };
+
+  const handleFillDemo = () => {
+    setEmail("master@dollshop.by");
+    setPassword("DollMaster2026!");
+    setErrorMessage(null);
   };
 
   return (
@@ -139,6 +143,20 @@ function LoginForm() {
           <span>Войти в кабинет</span>
         )}
       </button>
+
+      {/* Подсказка и быстрое заполнение для тестирования */}
+      <div className="pt-3 border-t border-linen-dark/60 text-center">
+        <button
+          type="button"
+          onClick={handleFillDemo}
+          className="text-xs text-terracotta hover:underline font-medium cursor-pointer"
+        >
+          Заполнить данные мастера (1 клик)
+        </button>
+        <p className="text-[11px] text-muted mt-1 font-mono">
+          master@dollshop.by / DollMaster2026!
+        </p>
+      </div>
     </form>
   );
 }
