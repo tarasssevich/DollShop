@@ -11,6 +11,10 @@ import {
 } from "@/lib/reservation/token";
 import { isValidBelarusPhone, normalizeBelarusPhone } from "@/lib/utils/phone";
 import { notifyNewOrder } from "@/lib/notify/telegram";
+import { getPaymentProvider } from "@/lib/payments/bepaid";
+import { db } from "@/db/client";
+import { orders } from "@/db/schema";
+import { eq } from "drizzle-orm";
 
 export const orderFormSchema = z
   .object({
@@ -45,9 +49,12 @@ export const orderFormSchema = z
     deliveryCity: z.string().max(100).optional(),
     deliveryBranch: z.string().max(200).optional(),
 
-    paymentMethod: z.enum(["erip_invoice", "bank_transfer", "cod"], {
-      required_error: "Выберите способ оплаты",
-    }),
+    paymentMethod: z.enum(
+      ["erip_invoice", "bank_transfer", "cod", "online_card", "online_erip"],
+      {
+        required_error: "Выберите способ оплаты",
+      }
+    ),
 
     comment: z.string().max(500, "Комментарий слишком длинный").optional().nullable(),
 
@@ -253,11 +260,66 @@ export async function createOrderAction(
       console.error("Не критичная ошибка отправки уведомления в Telegram:", notifyErr);
     }
 
+    // Инициализация онлайн-платежа (Фаза 6)
+    let redirectUrl = `/zakaz/${res.publicToken}`;
+
+    if (data.paymentMethod === "online_card") {
+      try {
+        const provider = getPaymentProvider();
+        const origin = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3001";
+        const cardRes = await provider.createCardPayment({
+          orderId: res.orderId,
+          orderNumber: res.orderNumber,
+          amountByn: data.dollPriceByn,
+          customerName: data.customerName,
+          customerPhone: normalizedPhone,
+          dollTitle: data.dollName,
+          returnUrl: `${origin}/zakaz/${res.publicToken}`,
+          notificationUrl: `${origin}/api/payments/webhook`,
+        });
+
+        if (cardRes.success && cardRes.redirectUrl) {
+          redirectUrl = cardRes.redirectUrl;
+        }
+        if (cardRes.paymentId) {
+          await db
+            .update(orders)
+            .set({ paymentId: cardRes.paymentId })
+            .where(eq(orders.id, res.orderId));
+        }
+      } catch (payErr) {
+        console.error("Ошибка при инициализации онлайн-оплаты картой:", payErr);
+      }
+    } else if (data.paymentMethod === "online_erip") {
+      try {
+        const provider = getPaymentProvider();
+        const origin = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3001";
+        const eripRes = await provider.createEripInvoice({
+          orderId: res.orderId,
+          orderNumber: res.orderNumber,
+          amountByn: data.dollPriceByn,
+          customerName: data.customerName,
+          customerPhone: normalizedPhone,
+          dollTitle: data.dollName,
+          notificationUrl: `${origin}/api/payments/webhook`,
+        });
+
+        if (eripRes.paymentId) {
+          await db
+            .update(orders)
+            .set({ paymentId: eripRes.paymentId })
+            .where(eq(orders.id, res.orderId));
+        }
+      } catch (payErr) {
+        console.error("Ошибка при инициализации счёта в ЕРИП:", payErr);
+      }
+    }
+
     return {
       success: true,
       orderNumber: res.orderNumber,
       publicToken: res.publicToken,
-      redirectUrl: `/zakaz/${res.publicToken}`,
+      redirectUrl,
     };
   } catch (err) {
     console.error("Ошибка при создании заказа:", err);

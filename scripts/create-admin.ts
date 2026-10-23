@@ -1,12 +1,15 @@
 import { db, client } from "@/db/client";
-import { user } from "@/db/schema";
+import { user, account } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { auth } from "@/lib/auth";
+import { hashPassword } from "better-auth/crypto";
+import crypto from "crypto";
 
 /**
  * CLI-скрипт создания или сброса пароля мастера-администратора магазина.
+ * Работает напрямую с базой данных, независимо от настройки disableSignUp: true.
+ *
  * Использование:
- *   npx tsx --conditions=react-server --env-file=.env.local scripts/create-admin.ts [email] [password] [name]
+ *   npm run auth:create-admin [email] [password] [name]
  */
 async function main() {
   const args = process.argv.slice(2);
@@ -17,36 +20,73 @@ async function main() {
   console.log(`🔐 Инициализация учетной записи мастера: ${email}...`);
 
   try {
+    const hashedPassword = await hashPassword(password);
+
     // Проверяем, существует ли пользователь
     const [existing] = await db
       .select()
       .from(user)
       .where(eq(user.email, email));
 
+    let userId: string;
+
     if (existing) {
       console.log(`⚠️ Пользователь с email ${email} уже существует.`);
-      console.log(`🔄 Обновление пароля через Better Auth API...`);
-      // Удаляем старого и создаем заново с новым хэшем пароля
-      await db.delete(user).where(eq(user.id, existing.id));
-    }
+      console.log(`🔄 Обновление пароля и роли...`);
+      userId = existing.id;
 
-    const created = await auth.api.signUpEmail({
-      body: {
-        email,
-        password,
+      await db
+        .update(user)
+        .set({
+          name,
+          role: "admin",
+          emailVerified: true,
+          updatedAt: new Date(),
+        })
+        .where(eq(user.id, userId));
+
+      // Обновляем или вставляем запись в account
+      const [existingAccount] = await db
+        .select()
+        .from(account)
+        .where(eq(account.userId, userId));
+
+      if (existingAccount) {
+        await db
+          .update(account)
+          .set({
+            password: hashedPassword,
+            updatedAt: new Date(),
+          })
+          .where(eq(account.id, existingAccount.id));
+      } else {
+        await db.insert(account).values({
+          id: crypto.randomUUID(),
+          accountId: userId,
+          providerId: "credential",
+          userId,
+          password: hashedPassword,
+        });
+      }
+    } else {
+      userId = crypto.randomUUID();
+
+      await db.insert(user).values({
+        id: userId,
         name,
-      },
-    });
+        email,
+        emailVerified: true,
+        role: "admin",
+      });
 
-    if (!created?.user) {
-      throw new Error("Не удалось создать учетную запись мастера");
+      await db.insert(account).values({
+        id: crypto.randomUUID(),
+        accountId: userId,
+        providerId: "credential",
+        userId,
+        password: hashedPassword,
+      });
     }
-
-    // Убеждаемся, что роль установлена в admin
-    await db
-      .update(user)
-      .set({ role: "admin", emailVerified: true })
-      .where(eq(user.email, email));
 
     console.log("✅ Учётная запись мастера успешно настроена!");
     console.log(`   Email:    ${email}`);

@@ -95,6 +95,12 @@ export function Header({ cartItemCount = 0 }: HeaderProps) {
             >
               Styleguide
             </Link>
+            <Link
+              href="/demo"
+              className="relative rounded-full bg-terracotta/10 px-2.5 py-1 text-xs font-semibold text-terracotta hover:bg-terracotta/20 transition-colors border border-terracotta/20"
+            >
+              Тест-центр ⚡
+            </Link>
           </nav>
 
           {/* Actions & Mobile menu */}

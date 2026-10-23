@@ -14,6 +14,7 @@ import {
   AlertCircle,
   Send,
   Phone,
+  QrCode,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,7 +52,9 @@ export function CheckoutForm({
   const [contactChannel, setContactChannel] = React.useState<"telegram" | "viber" | "call">("telegram");
   const [customerContact, setCustomerContact] = React.useState("");
 
-  const [paymentMethod, setPaymentMethod] = React.useState<"cod" | "erip_invoice" | "bank_transfer">("cod");
+  const [paymentMethod, setPaymentMethod] = React.useState<
+    "cod" | "erip_invoice" | "bank_transfer" | "online_card" | "online_erip"
+  >("online_card");
   const [comment, setComment] = React.useState("");
 
   const [pdConsent, setPdConsent] = React.useState(true);
@@ -313,15 +316,72 @@ export function CheckoutForm({
 
         <RadioGroup
           value={paymentMethod}
-          onValueChange={(val) => setPaymentMethod(val as "cod" | "erip_invoice" | "bank_transfer")}
+          onValueChange={(val) =>
+            setPaymentMethod(
+              val as
+                | "cod"
+                | "erip_invoice"
+                | "bank_transfer"
+                | "online_card"
+                | "online_erip"
+            )
+          }
           className="space-y-2.5"
         >
+          {/* 1. Онлайн-оплата картой (Фаза 6) */}
+          <label
+            htmlFor="pay-online-card"
+            className={`flex items-start gap-3 rounded-xl border p-3.5 cursor-pointer transition-all ${
+              paymentMethod === "online_card"
+                ? "border-emerald-600 bg-emerald-50/50 shadow-xs"
+                : "border-linen-dark hover:bg-linen/40"
+            }`}
+          >
+            <RadioGroupItem value="online_card" id="pay-online-card" className="mt-1 text-emerald-600" />
+            <div>
+              <p className="font-medium text-sm text-espresso flex flex-wrap items-center gap-1.5">
+                <CreditCard className="h-4 w-4 text-emerald-700" />
+                Банковской картой онлайн (БЕЛКАРТ / МИР / Visa / Mastercard)
+                <span className="text-[10px] font-sans font-medium text-emerald-800 bg-emerald-100 rounded-full px-2 py-0.2">
+                  Мгновенно
+                </span>
+              </p>
+              <p className="text-xs text-muted mt-0.5">
+                Безопасная оплата через 3-D Secure без комиссии. Электронный чек сразу после оплаты
+              </p>
+            </div>
+          </label>
+
+          {/* 2. Онлайн ЕРИП с QR-кодом (Фаза 6) */}
+          <label
+            htmlFor="pay-online-erip"
+            className={`flex items-start gap-3 rounded-xl border p-3.5 cursor-pointer transition-all ${
+              paymentMethod === "online_erip"
+                ? "border-terracotta bg-terracotta/5 shadow-xs"
+                : "border-linen-dark hover:bg-linen/40"
+            }`}
+          >
+            <RadioGroupItem value="online_erip" id="pay-online-erip" className="mt-1" />
+            <div>
+              <p className="font-medium text-sm text-espresso flex flex-wrap items-center gap-1.5">
+                <QrCode className="h-4 w-4 text-terracotta" />
+                Онлайн ЕРИП с QR-кодом
+                <span className="text-[10px] font-sans font-medium text-amber-800 bg-amber-100 rounded-full px-2 py-0.2">
+                  QR-код
+                </span>
+              </p>
+              <p className="text-xs text-muted mt-0.5">
+                Счёт в системе «Расчет» (ЕРИП) с QR-кодом для приложения любого банка Беларуси
+              </p>
+            </div>
+          </label>
+
           {deliveryType === "postal" && (
             <label
               htmlFor="pay-cod"
               className={`flex items-start gap-3 rounded-xl border p-3.5 cursor-pointer transition-all ${
                 paymentMethod === "cod"
-                  ? "border-terracotta bg-terracotta/5"
+                  ? "border-terracotta bg-terracotta/5 shadow-xs"
                   : "border-linen-dark hover:bg-linen/40"
               }`}
             >
@@ -332,7 +392,7 @@ export function CheckoutForm({
                   Наложенный платёж
                 </p>
                 <p className="text-xs text-muted mt-0.5">
-                  Оплата наличными или банковской картой в отделении связи при получении посылки
+                  Оплата наличными или банковской картой в отделении Белпочты при получении посылки
                 </p>
               </div>
             </label>
@@ -342,7 +402,7 @@ export function CheckoutForm({
             htmlFor="pay-erip"
             className={`flex items-start gap-3 rounded-xl border p-3.5 cursor-pointer transition-all ${
               paymentMethod === "erip_invoice"
-                ? "border-terracotta bg-terracotta/5"
+                ? "border-terracotta bg-terracotta/5 shadow-xs"
                 : "border-linen-dark hover:bg-linen/40"
             }`}
           >
@@ -350,10 +410,10 @@ export function CheckoutForm({
             <div>
               <p className="font-medium text-sm text-espresso flex items-center gap-1.5">
                 <CreditCard className="h-4 w-4 text-terracotta" />
-                ЕРИП (Счёт для оплаты)
+                Счёт ЕРИП от мастера
               </p>
               <p className="text-xs text-muted mt-0.5">
-                Мастер выставит счёт в ЕРИП, оплатить можно в любом интернет-банке РБ без комиссии
+                Мастер выставит счёт в ЕРИП вручную после согласования деталей заказа
               </p>
             </div>
           </label>
@@ -362,7 +422,7 @@ export function CheckoutForm({
             htmlFor="pay-card"
             className={`flex items-start gap-3 rounded-xl border p-3.5 cursor-pointer transition-all ${
               paymentMethod === "bank_transfer"
-                ? "border-terracotta bg-terracotta/5"
+                ? "border-terracotta bg-terracotta/5 shadow-xs"
                 : "border-linen-dark hover:bg-linen/40"
             }`}
           >

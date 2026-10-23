@@ -26,6 +26,7 @@ const navItems: NavItem[] = [
   { href: "/na-zakaz", label: "На заказ" },
   { href: "/galereya", label: "Галерея работ" },
   { href: "/o-mastere", label: "О мастере и технике" },
+  { href: "/demo", label: "Тест-центр фичей ⚡", badge: "Demo" },
   { href: "/styleguide", label: "Styleguide (Дизайн-система)" },
 ];
 

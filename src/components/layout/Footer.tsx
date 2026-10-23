@@ -134,6 +134,14 @@ export function Footer() {
                   Дизайн-система (Styleguide)
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/demo"
+                  className="hover:text-terracotta transition-colors font-medium text-espresso flex items-center gap-1"
+                >
+                  <span>Тест-центр всех фичей ⚡</span>
+                </Link>
+              </li>
             </ul>
           </div>
 

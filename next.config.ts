@@ -5,6 +5,8 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   productionBrowserSourceMaps: false,
   allowedDevOrigins: [
+    "192.168.0.201",
+    "192.168.0.201:3001",
     "192.168.1.3",
     "192.168.1.3:3001",
     "127.0.0.1",
@@ -30,6 +32,10 @@ const nextConfig: NextConfig = {
       {
         protocol: "http",
         hostname: "127.0.0.1",
+      },
+      {
+        protocol: "http",
+        hostname: "192.168.0.201",
       },
       {
         protocol: "http",

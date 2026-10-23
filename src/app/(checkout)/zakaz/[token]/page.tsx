@@ -17,6 +17,8 @@ import { getOrderByPublicToken } from "@/lib/data/orders";
 import { formatPrice } from "@/lib/utils/format";
 import { formatBelarusPhone } from "@/lib/utils/phone";
 import { Button } from "@/components/ui/button";
+import { generateEripQrDataUrl, ERIP_CONFIG } from "@/lib/payments/erip";
+import { EripPaymentBlock } from "@/components/checkout/EripPaymentBlock";
 
 interface OrderPageProps {
   params: Promise<{ token: string }>;
@@ -53,6 +55,14 @@ export default async function OrderSuccessPage({ params }: OrderPageProps) {
       order.deliveryBranch.toLowerCase().includes("согласован");
 
   const coverUrl = order.item?.coverUrl || "/mock/dolls/fairy-blue-1.jpg";
+
+  const isErip =
+    order.paymentMethod === "online_erip" ||
+    order.paymentMethod === "erip_invoice";
+
+  const eripQrDataUrl = isErip
+    ? await generateEripQrDataUrl(order.orderNumber, Number(order.totalAmount))
+    : "";
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:py-14 space-y-8">
@@ -162,13 +172,27 @@ export default async function OrderSuccessPage({ params }: OrderPageProps) {
               Способ оплаты
             </p>
             <p className="text-muted leading-relaxed">
-              {order.paymentMethod === "cod" && "Наложенный платёж при получении в отделении связи"}
-              {order.paymentMethod === "erip_invoice" && "ЕРИП (счёт будет выставлен после согласования)"}
+              {order.paymentMethod === "online_card" && "Банковской картой онлайн (БЕЛКАРТ / МИР / Visa / Mastercard)"}
+              {order.paymentMethod === "online_erip" && "Онлайн ЕРИП с QR-кодом"}
+              {order.paymentMethod === "cod" && "Наложенный платёж при получении в отделении Белпочты"}
+              {order.paymentMethod === "erip_invoice" && "ЕРИП (счёт мастера)"}
               {order.paymentMethod === "bank_transfer" && "Банковский перевод на карту мастера"}
             </p>
             <p className="pt-1 text-[11px] text-muted">
               К оплате: <b className="text-espresso font-sans text-sm">{formatPrice(order.totalAmount)}</b>
             </p>
+
+            {order.paymentMethod === "online_card" && order.status === "pending" && (
+              <div className="pt-2">
+                <Link
+                  href={`/oplata/sandbox/${order.publicToken}`}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-medium px-3 py-1.5 transition-colors shadow-xs"
+                >
+                  <CreditCard className="h-3.5 w-3.5" />
+                  <span>Завершить оплату картой онлайн →</span>
+                </Link>
+              </div>
+            )}
           </div>
         </div>
 
@@ -201,6 +225,19 @@ export default async function OrderSuccessPage({ params }: OrderPageProps) {
           )}
         </div>
       </div>
+
+      {/* 2.1 Интерактивный блок ЕРИП (Step 6.3) */}
+      {isErip && (
+        <EripPaymentBlock
+          orderId={order.id}
+          orderNumber={order.orderNumber}
+          dollTitle={order.item?.productTitle || `Заказ #${order.orderNumber}`}
+          amountByn={Number(order.totalAmount)}
+          qrDataUrl={eripQrDataUrl}
+          treeSteps={ERIP_CONFIG.treeSteps}
+          isPaid={order.status === "paid" || order.status === "completed"}
+        />
+      )}
 
       {/* 3. Связь с мастером и возврат в магазин */}
       <div className="rounded-2xl border border-linen-dark bg-alabaster/60 p-6 text-center space-y-4">
