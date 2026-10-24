@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import { Container } from "./Container";
 import { MobileNav } from "./MobileNav";
+import { DesktopNav } from "./DesktopNav";
 import { CartHeaderButton } from "./CartHeaderButton";
 
 export function Header() {
@@ -59,45 +60,8 @@ export function Header() {
             </div>
           </Link>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-7 text-sm font-medium text-espresso">
-            <Link
-              href="/kukly"
-              className="relative py-1 transition-colors hover:text-terracotta focus-visible:outline-none focus-visible:text-terracotta"
-            >
-              Куклы в наличии
-            </Link>
-            <Link
-              href="/na-zakaz"
-              className="relative py-1 transition-colors hover:text-terracotta focus-visible:outline-none focus-visible:text-terracotta"
-            >
-              На заказ
-            </Link>
-            <Link
-              href="/galereya"
-              className="relative py-1 transition-colors hover:text-terracotta focus-visible:outline-none focus-visible:text-terracotta"
-            >
-              Галерея
-            </Link>
-            <Link
-              href="/o-mastere"
-              className="relative py-1 transition-colors hover:text-terracotta focus-visible:outline-none focus-visible:text-terracotta"
-            >
-              О мастере
-            </Link>
-            <Link
-              href="/styleguide"
-              className="relative py-1 text-xs uppercase tracking-wider text-muted hover:text-terracotta transition-colors"
-            >
-              Styleguide
-            </Link>
-            <Link
-              href="/demo"
-              className="relative rounded-full bg-terracotta/10 px-2.5 py-1 text-xs font-semibold text-terracotta hover:bg-terracotta/20 transition-colors border border-terracotta/20"
-            >
-              Тест-центр ⚡
-            </Link>
-          </nav>
+          {/* Desktop Navigation Links with Active State */}
+          <DesktopNav />
 
           {/* Actions & Mobile menu */}
           <div className="flex items-center gap-2 sm:gap-3">

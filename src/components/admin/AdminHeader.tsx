@@ -2,8 +2,17 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { LogOut, ExternalLink, RefreshCw, Radio } from "lucide-react";
+import { useRouter, usePathname } from "next/navigation";
+import {
+  LogOut,
+  ExternalLink,
+  RefreshCw,
+  Radio,
+  Sparkles,
+  ShoppingBag,
+  MessageSquareHeart,
+  SlidersHorizontal,
+} from "lucide-react";
 import { signOut } from "@/lib/auth/client";
 import { useAdminLiveSync } from "./AdminLiveSyncProvider";
 
@@ -17,7 +26,14 @@ export function AdminHeader({
   userEmail = "master@dollshop.by",
 }: AdminHeaderProps) {
   const router = useRouter();
-  const { isSyncing, triggerSync, activeReservations } = useAdminLiveSync();
+  const pathname = usePathname();
+  const {
+    isSyncing,
+    triggerSync,
+    activeReservations,
+    pendingOrdersCount,
+    newRequestsCount,
+  } = useAdminLiveSync();
 
   const handleLogout = async () => {
     try {
@@ -65,6 +81,52 @@ export function AdminHeader({
             </span>
           </div>
         </div>
+
+        {/* Десктопная навигация панели мастера */}
+        <nav aria-label="Разделы панели мастера" className="hidden md:flex items-center gap-1.5">
+          {[
+            { href: "/admin/kukly", label: "Куклы", icon: Sparkles },
+            {
+              href: "/admin/zakazy",
+              label: "Заказы",
+              icon: ShoppingBag,
+              count: pendingOrdersCount,
+            },
+            {
+              href: "/admin/zayavki",
+              label: "Заявки",
+              icon: MessageSquareHeart,
+              count: newRequestsCount,
+            },
+            { href: "/admin/nastrojki", label: "Настройки", icon: SlidersHorizontal },
+          ].map((tab) => {
+            const Icon = tab.icon;
+            const isActive =
+              tab.href === "/admin/kukly"
+                ? pathname.startsWith("/admin/kukly") || pathname === "/admin"
+                : pathname.startsWith(tab.href);
+
+            return (
+              <Link
+                key={tab.href}
+                href={tab.href}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs transition-all ${
+                  isActive
+                    ? "bg-terracotta/10 text-terracotta font-semibold border border-terracotta/25 shadow-2xs"
+                    : "text-muted hover:text-espresso hover:bg-linen/60"
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                <span>{tab.label}</span>
+                {tab.count !== undefined && tab.count > 0 && (
+                  <span className="px-1.5 py-0.2 text-[10px] font-bold rounded-full bg-terracotta text-white leading-none shadow-2xs">
+                    {tab.count}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
+        </nav>
 
         {/* Действия: кнопка синхронизации, брони, витрина и выход */}
         <div className="flex items-center gap-1.5 sm:gap-2">

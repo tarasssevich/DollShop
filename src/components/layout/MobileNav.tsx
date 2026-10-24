@@ -3,6 +3,7 @@
 import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Menu, Send, Phone, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,6 +34,7 @@ const navItems: NavItem[] = [
 
 export function MobileNav() {
   const [open, setOpen] = React.useState(false);
+  const pathname = usePathname();
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -76,23 +78,45 @@ export function MobileNav() {
 
           <Separator />
 
-          {/* Navigation links */}
+          {/* Navigation links with Active State */}
           <nav className="flex flex-col space-y-1">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setOpen(false)}
-                className="flex items-center justify-between rounded-xl px-4 py-3 text-base font-medium text-espresso transition-colors hover:bg-linen hover:text-terracotta active:scale-[0.99]"
-              >
-                <span>{item.label}</span>
-                {item.badge ? (
-                  <span className="rounded-full bg-terracotta-subtle px-2 py-0.5 font-serif italic text-xs text-terracotta border border-terracotta/20">
-                    {item.badge}
-                  </span>
-                ) : null}
-              </Link>
-            ))}
+            {navItems.map((item) => {
+              const isActive =
+                item.href === "/"
+                  ? pathname === "/"
+                  : pathname === item.href || pathname.startsWith(`${item.href}/`);
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setOpen(false)}
+                  className={`flex items-center justify-between rounded-xl px-4 py-3 text-base font-medium transition-all ${
+                    isActive
+                      ? "bg-terracotta/10 text-terracotta font-semibold border border-terracotta/25 shadow-2xs"
+                      : "text-espresso hover:bg-linen hover:text-terracotta"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    {isActive && (
+                      <span className="w-2 h-2 rounded-full bg-terracotta shrink-0 animate-pulse" />
+                    )}
+                    <span>{item.label}</span>
+                  </div>
+                  {item.badge ? (
+                    <span
+                      className={`rounded-full px-2.5 py-0.5 font-serif italic text-xs border ${
+                        isActive
+                          ? "bg-terracotta text-white border-terracotta shadow-xs"
+                          : "bg-terracotta-subtle text-terracotta border-terracotta/20"
+                      }`}
+                    >
+                      {item.badge}
+                    </span>
+                  ) : null}
+                </Link>
+              );
+            })}
           </nav>
 
           <Separator />
