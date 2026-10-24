@@ -25,6 +25,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
+  Link2,
+  Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -34,7 +36,11 @@ import {
   updateAdminRequestPhotosAction,
   getAdminRequestsAction,
   getAdminDollByIdAction,
+  getAvailableDollsForRequestAction,
+  attachExistingDollToRequestAction,
+  markResponseDollSoldAction,
   type AdminCustomRequestItem,
+  type AvailableDollOption,
 } from "@/actions/admin/requests";
 import { buildCustomOrderNotificationText } from "@/lib/notify/templates";
 import { detachResponseDollAction } from "@/actions/admin/products";
@@ -57,6 +63,14 @@ export function RequestsClient({ initialRequests }: RequestsClientProps) {
   const [activeDollFormRequestId, setActiveDollFormRequestId] = React.useState<string | null>(null);
   const [editingDoll, setEditingDoll] = React.useState<Doll | null>(null);
   const [loadingDollId, setLoadingDollId] = React.useState<string | null>(null);
+
+  // Состояние модального окна выбора существующей куклы из каталога
+  const [pickerRequestId, setPickerRequestId] = React.useState<string | null>(null);
+  const [availableDolls, setAvailableDolls] = React.useState<AvailableDollOption[]>([]);
+  const [isLoadingAvailableDolls, setIsLoadingAvailableDolls] = React.useState(false);
+  const [dollSearchTerm, setDollSearchTerm] = React.useState("");
+  const [attachingDollId, setAttachingDollId] = React.useState<string | null>(null);
+  const [copiedLinkSlug, setCopiedLinkSlug] = React.useState<string | null>(null);
 
   // Lightbox для полноэкранного просмотра фото-референсов
   const [photoViewerState, setPhotoViewerState] = React.useState<{
@@ -166,6 +180,21 @@ export function RequestsClient({ initialRequests }: RequestsClientProps) {
     if (filter === "all") return requests;
     return requests.filter((r) => r.status === filter);
   }, [requests, filter]);
+
+  const filteredAvailableDolls = React.useMemo(() => {
+    if (!dollSearchTerm.trim()) return availableDolls;
+    const term = dollSearchTerm.toLowerCase();
+    return availableDolls.filter(
+      (d) =>
+        d.title.toLowerCase().includes(term) ||
+        (d.collection && d.collection.toLowerCase().includes(term))
+    );
+  }, [availableDolls, dollSearchTerm]);
+
+  const activePickerRequest = React.useMemo(() => {
+    if (!pickerRequestId) return null;
+    return requests.find((r) => r.id === pickerRequestId) || null;
+  }, [requests, pickerRequestId]);
 
   const activeRequest = React.useMemo(() => {
     if (!activeDollFormRequestId) return null;
@@ -281,6 +310,82 @@ export function RequestsClient({ initialRequests }: RequestsClientProps) {
     setCopiedNotifyId(req.id);
     toast.success("Сообщение для покупателя скопировано в буфер обмена!");
     setTimeout(() => setCopiedNotifyId(null), 3500);
+  };
+
+  const handleOpenDollPicker = async (req: AdminCustomRequestItem) => {
+    setPickerRequestId(req.id);
+    setDollSearchTerm("");
+    setIsLoadingAvailableDolls(true);
+    try {
+      const res = await getAvailableDollsForRequestAction();
+      if (res.success) {
+        setAvailableDolls(res.dolls);
+      } else {
+        toast.error(res.error || "Не удалось загрузить куклы из каталога");
+      }
+    } catch {
+      toast.error("Ошибка при загрузке каталога");
+    } finally {
+      setIsLoadingAvailableDolls(false);
+    }
+  };
+
+  const handleAttachExistingDoll = async (productId: string) => {
+    if (!pickerRequestId) return;
+    setAttachingDollId(productId);
+    try {
+      const res = await attachExistingDollToRequestAction({
+        requestId: pickerRequestId,
+        productId,
+      });
+      if (res.success) {
+        toast.success("Кукла успешно прикреплена к заявке!");
+        setPickerRequestId(null);
+        const listRes = await getAdminRequestsAction();
+        if (listRes.success) {
+          setRequests(listRes.requests);
+        }
+      } else {
+        toast.error(res.error || "Не удалось прикрепить куклу");
+      }
+    } catch {
+      toast.error("Ошибка при прикреплении куклы");
+    } finally {
+      setAttachingDollId(null);
+    }
+  };
+
+  const handleMarkSold = async (req: AdminCustomRequestItem) => {
+    if (!req.responseDoll) return;
+    try {
+      const res = await markResponseDollSoldAction({
+        requestId: req.id,
+        productId: req.responseDoll.id,
+      });
+      if (res.success) {
+        setRequests((prev) =>
+          prev.map((r) =>
+            r.id === req.id && r.responseDoll
+              ? { ...r, responseDoll: { ...r.responseDoll, status: "sold" } }
+              : r
+          )
+        );
+        toast.success("Заказ отмечен как выполненный и оплаченный!");
+      } else {
+        toast.error(res.error || "Не удалось обновить статус");
+      }
+    } catch {
+      toast.error("Ошибка при закрытии заказа");
+    }
+  };
+
+  const handleCopyDirectLink = (slug: string) => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "https://dollshop.by";
+    const url = `${origin}/kukly/${slug}`;
+    navigator.clipboard.writeText(url);
+    setCopiedLinkSlug(slug);
+    toast.success("Прямая ссылка на куклу скопирована в буфер!");
+    setTimeout(() => setCopiedLinkSlug(null), 3000);
   };
 
   return (
@@ -604,8 +709,8 @@ export function RequestsClient({ initialRequests }: RequestsClientProps) {
                   </div>
                 </div>
 
-                {/* БЛОК КУКЛЫ-ОТВЕТА (КОГДА ЗАЯВКА ПРИНЯТА В РАБОТУ) */}
-                {req.status === "accepted" && (
+                {/* БЛОК КУКЛЫ-ОТВЕТА (КОГДА ЗАЯВКА В РАБОТЕ ИЛИ В ОБСУЖДЕНИИ) */}
+                {(req.status === "accepted" || req.status === "in_discussion" || req.responseDoll) && (
                   <div className="pt-2">
                     {req.responseDoll ? (
                       <div className="rounded-2xl border border-linen-dark bg-alabaster/40 p-4 space-y-3.5">
@@ -614,9 +719,24 @@ export function RequestsClient({ initialRequests }: RequestsClientProps) {
                             <Gift className="h-4 w-4 text-terracotta" />
                             Кукла-ответ к этой заявке
                           </span>
-                          <span className="text-[11px] text-muted bg-linen px-2 py-0.5 rounded-full border border-linen-dark">
-                            🔒 Скрыта из общего каталога
-                          </span>
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            {req.responseDoll.status === "sold" ? (
+                              <span className="text-[11px] font-medium text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                                <CheckCircle2 className="h-3 w-3 text-emerald-700" /> Выполнен и оплачен
+                              </span>
+                            ) : req.responseDoll.status === "reserved" ? (
+                              <span className="text-[11px] font-medium text-amber-800 bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-200 flex items-center gap-1">
+                                <Clock className="h-3 w-3 text-amber-700" /> В брони для заказчика
+                              </span>
+                            ) : (
+                              <span className="text-[11px] font-medium text-sky-800 bg-sky-100 px-2.5 py-0.5 rounded-full border border-sky-200">
+                                🟢 Готова к оплате
+                              </span>
+                            )}
+                            <span className="text-[11px] text-muted bg-linen px-2 py-0.5 rounded-full border border-linen-dark">
+                              🔒 Скрыта из общего каталога
+                            </span>
+                          </div>
                         </div>
 
                         {/* Карточка готовой куклы */}
@@ -675,6 +795,19 @@ export function RequestsClient({ initialRequests }: RequestsClientProps) {
                               >
                                 Отвязать
                               </button>
+                              {req.responseDoll.status !== "sold" && (
+                                <>
+                                  <span className="text-muted text-xs">·</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleMarkSold(req)}
+                                    className="text-xs text-emerald-700 hover:text-emerald-800 font-semibold underline cursor-pointer inline-flex items-center gap-1"
+                                  >
+                                    <CheckCircle2 className="h-3 w-3" />
+                                    Отметить заказ выполненным и оплаченным
+                                  </button>
+                                </>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -719,6 +852,26 @@ export function RequestsClient({ initialRequests }: RequestsClientProps) {
                               )}
                             </Button>
 
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="h-8 text-xs border-linen-dark hover:bg-linen text-espresso gap-1.5"
+                              onClick={() => handleCopyDirectLink(req.responseDoll!.slug)}
+                            >
+                              {copiedLinkSlug === req.responseDoll.slug ? (
+                                <>
+                                  <Check className="h-3.5 w-3.5 text-emerald-600" />
+                                  Ссылка скопирована!
+                                </>
+                              ) : (
+                                <>
+                                  <Link2 className="h-3.5 w-3.5 text-muted" />
+                                  Скопировать ссылку
+                                </>
+                              )}
+                            </Button>
+
                             {tgHandle && (
                               <Button
                                 type="button"
@@ -758,26 +911,40 @@ export function RequestsClient({ initialRequests }: RequestsClientProps) {
                         </div>
                       </div>
                     ) : (
-                      /* Заявка принята, кукла еще не добавлена */
+                      /* Заявка в работе/обсуждении, кукла еще не привязана */
                       <div className="rounded-xl border border-dashed border-terracotta/40 bg-terracotta/5 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div className="space-y-0.5">
                           <div className="flex items-center gap-1.5 text-xs font-semibold text-terracotta">
                             <Sparkles className="h-4 w-4" />
-                            Заявка принята в работу: добавьте куклу-ответ
+                            {req.status === "accepted"
+                              ? "Заявка принята в работу: добавьте куклу"
+                              : "Заявка в обсуждении: прикрепите куклу"}
                           </div>
                           <p className="text-[11px] text-muted">
-                            Создайте куклу прямо здесь с фотографиями и ценой. Она будет привязана к этой заявке, не попадет в каталог, и сформирует ссылку для покупателя.
+                            Прикрепите существующую куклу из каталога или создайте новую работу специально под этот заказ.
                           </p>
                         </div>
-                        <Button
-                          type="button"
-                          size="sm"
-                          className="bg-terracotta hover:bg-terracotta-dark text-white text-xs gap-1.5 shrink-0"
-                          onClick={() => handleOpenDollForm(req)}
-                        >
-                          <Plus className="h-3.5 w-3.5" />
-                          Дать ответ в виде куклы
-                        </Button>
+                        <div className="flex flex-wrap items-center gap-2 shrink-0">
+                          <Button
+                            type="button"
+                            size="sm"
+                            className="bg-terracotta hover:bg-terracotta-dark text-white text-xs gap-1.5"
+                            onClick={() => handleOpenDollPicker(req)}
+                          >
+                            <Link2 className="h-3.5 w-3.5" />
+                            Прикрепить из каталога
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="border-terracotta/40 hover:bg-terracotta/10 text-terracotta text-xs gap-1.5"
+                            onClick={() => handleOpenDollForm(req)}
+                          >
+                            <Plus className="h-3.5 w-3.5" />
+                            Создать новую
+                          </Button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -952,6 +1119,143 @@ export function RequestsClient({ initialRequests }: RequestsClientProps) {
                 setEditingDoll(null);
               }}
             />
+          </div>
+        </div>
+      )}
+
+      {/* МОДАЛЬНОЕ ОКНО ПРИВЯЗКИ СУЩЕСТВУЮЩЕЙ КУКЛЫ ИЗ КАТАЛОГА */}
+      {activePickerRequest && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200">
+          <div className="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl p-5 sm:p-6 border border-linen-dark max-h-[88vh] flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-linen-dark pb-3 mb-4">
+              <div>
+                <h3 className="font-serif text-lg font-medium text-espresso flex items-center gap-2">
+                  <Link2 className="h-5 w-5 text-terracotta" />
+                  Прикрепить готовую куклу
+                </h3>
+                <p className="text-xs text-muted mt-0.5">
+                  Заявка от {activePickerRequest.customerName}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPickerRequestId(null)}
+                className="p-1.5 text-muted hover:text-espresso rounded-full hover:bg-linen transition cursor-pointer"
+                title="Закрыть"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Search bar */}
+            <div className="relative mb-4">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
+              <input
+                type="text"
+                placeholder="Поиск по названию или коллекции куклы..."
+                value={dollSearchTerm}
+                onChange={(e) => setDollSearchTerm(e.target.value)}
+                className="w-full pl-9 pr-3.5 py-2 text-xs rounded-xl border border-linen-dark bg-alabaster/40 text-espresso placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-terracotta/20 focus:border-terracotta transition"
+              />
+            </div>
+
+            {/* Dolls list */}
+            <div className="flex-1 overflow-y-auto space-y-2.5 pr-1 min-h-[220px]">
+              {isLoadingAvailableDolls ? (
+                <div className="flex flex-col items-center justify-center py-12 text-muted text-xs gap-2">
+                  <Loader2 className="h-6 w-6 animate-spin text-terracotta" />
+                  <span>Загрузка доступных кукол...</span>
+                </div>
+              ) : filteredAvailableDolls.length === 0 ? (
+                <div className="text-center py-12 text-muted text-xs space-y-1">
+                  <p className="font-medium text-espresso">Куклы не найдены</p>
+                  <p className="text-muted text-[11px]">
+                    {dollSearchTerm
+                      ? "По вашему поисковому запросу ничего не нашлось."
+                      : "В наличии пока нет свободных кукол. Вы можете создать новую куклу через форму."}
+                  </p>
+                </div>
+              ) : (
+                filteredAvailableDolls.map((doll) => (
+                  <div
+                    key={doll.id}
+                    className="flex items-center justify-between gap-3 p-3 rounded-xl border border-linen-dark bg-white hover:bg-linen/30 transition shadow-2xs"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      {doll.coverUrl ? (
+                        <div className="relative h-14 w-12 shrink-0 overflow-hidden rounded-lg border border-linen-dark bg-linen">
+                          <Image
+                            src={doll.coverUrl}
+                            alt={doll.title}
+                            fill
+                            sizes="50px"
+                            className="object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div className="h-14 w-12 shrink-0 rounded-lg border border-dashed border-linen-dark bg-linen/50 flex items-center justify-center text-[10px] text-muted">
+                          Нет фото
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <p className="font-serif text-sm font-medium text-espresso truncate">
+                          {doll.title}
+                        </p>
+                        <p className="text-xs font-semibold text-terracotta">
+                          {doll.priceByn.toFixed(2)} BYN
+                        </p>
+                        <div className="flex items-center gap-2 text-[10px] text-muted mt-0.5">
+                          {doll.collection && <span>{doll.collection}</span>}
+                          <span>·</span>
+                          <span className="capitalize">
+                            {doll.status === "available"
+                              ? "В наличии"
+                              : doll.status === "draft"
+                              ? "Черновик"
+                              : "Под заказ"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="h-8 text-xs bg-terracotta hover:bg-terracotta-dark text-white gap-1 shrink-0"
+                      disabled={attachingDollId === doll.id}
+                      onClick={() => handleAttachExistingDoll(doll.id)}
+                    >
+                      {attachingDollId === doll.id ? (
+                        <>
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          Прикрепление...
+                        </>
+                      ) : (
+                        <>
+                          <Link2 className="h-3 w-3" />
+                          Прикрепить
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="border-t border-linen-dark pt-3 mt-3 flex items-center justify-between text-xs text-muted">
+              <span>Доступно: {filteredAvailableDolls.length}</span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 text-xs text-muted hover:text-espresso"
+                onClick={() => setPickerRequestId(null)}
+              >
+                Отмена
+              </Button>
+            </div>
           </div>
         </div>
       )}

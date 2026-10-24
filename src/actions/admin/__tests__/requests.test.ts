@@ -4,6 +4,9 @@ import {
   updateAdminRequestStatusAction,
   updateAdminRequestPhotosAction,
   getAdminDollByIdAction,
+  getAvailableDollsForRequestAction,
+  attachExistingDollToRequestAction,
+  markResponseDollSoldAction,
 } from "../requests";
 import { buildCustomOrderNotificationText } from "@/lib/notify/templates";
 import { detachResponseDollAction } from "@/actions/admin/products";
@@ -210,5 +213,65 @@ describe("Admin Requests Actions (Step 5.6 - Zero-IT UX)", () => {
       SELECT reference_photo_urls FROM custom_requests WHERE id = ${testRequestId}::uuid
     `;
     expect(updated?.reference_photo_urls).toEqual(newPhotos);
+  });
+
+  it("attachExistingDollToRequestAction прикрепляет существующую куклу к заявке и меняет статус", async () => {
+    // 1. Создаем существующую куклу со статусом 'available'
+    const [existingDoll] = await client`
+      INSERT INTO products (
+        title, slug, story, price, specs, status
+      ) VALUES (
+        'Лесная нимфа Ирида',
+        ${`attach-doll-${Date.now()}`},
+        'Готовая авторская работа из каталога',
+        110.00,
+        '{"height_cm": 22, "materials": ["Хлопок", "Фатин"]}'::jsonb,
+        'available'
+      ) RETURNING id, slug, title
+    `;
+
+    try {
+      // 2. Проверяем, что она отображается в списке доступных
+      const availRes = await getAvailableDollsForRequestAction();
+      expect(availRes.success).toBe(true);
+      const inList = availRes.dolls.find((d) => d.id === existingDoll!.id);
+      expect(inList).toBeDefined();
+      expect(inList?.title).toBe("Лесная нимфа Ирида");
+
+      // 3. Прикрепляем к заявке
+      const attachRes = await attachExistingDollToRequestAction({
+        requestId: testRequestId,
+        productId: existingDoll!.id,
+      });
+      expect(attachRes.success).toBe(true);
+
+      // 4. Проверяем, что заявка перешла в 'accepted', а кукла забронирована
+      const [reqRow] = await client<Array<{ status: string; response_product_id: string }>>`
+        SELECT status, response_product_id FROM custom_requests WHERE id = ${testRequestId}::uuid
+      `;
+      expect(reqRow?.response_product_id).toBe(existingDoll!.id);
+      expect(reqRow?.status).toBe("accepted");
+
+      const [prodRow] = await client<Array<{ status: string; is_custom_order: boolean; custom_request_id: string }>>`
+        SELECT status, is_custom_order, custom_request_id FROM products WHERE id = ${existingDoll!.id}::uuid
+      `;
+      expect(prodRow?.status).toBe("reserved");
+      expect(prodRow?.is_custom_order).toBe(true);
+      expect(prodRow?.custom_request_id).toBe(testRequestId);
+
+      // 5. Проверяем быструю отметку о выполнении и оплате
+      const soldRes = await markResponseDollSoldAction({
+        requestId: testRequestId,
+        productId: existingDoll!.id,
+      });
+      expect(soldRes.success).toBe(true);
+
+      const [prodSold] = await client<Array<{ status: string }>>`
+        SELECT status FROM products WHERE id = ${existingDoll!.id}::uuid
+      `;
+      expect(prodSold?.status).toBe("sold");
+    } finally {
+      await client`DELETE FROM products WHERE id = ${existingDoll!.id}::uuid`;
+    }
   });
 });

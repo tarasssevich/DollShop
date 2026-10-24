@@ -3,6 +3,7 @@ import {
   normalizeBelarusPhone,
   isValidBelarusPhone,
   formatBelarusPhone,
+  formatAsBelarusPhoneInput,
 } from "../phone";
 
 describe("phone utility for Belarus (+375)", () => {
@@ -37,5 +38,14 @@ describe("phone utility for Belarus (+375)", () => {
   it("formats phone for display: +375 (29) 123-45-67", () => {
     expect(formatBelarusPhone("+375291234567")).toBe("+375 (29) 123-45-67");
     expect(formatBelarusPhone("80447654321")).toBe("+375 (44) 765-43-21");
+  });
+
+  it("formats user input live for mask input", () => {
+    expect(formatAsBelarusPhoneInput("")).toBe("");
+    expect(formatAsBelarusPhoneInput("29")).toBe("+375 (29) ");
+    expect(formatAsBelarusPhoneInput("29123")).toBe("+375 (29) 123");
+    expect(formatAsBelarusPhoneInput("2912345")).toBe("+375 (29) 123-45");
+    expect(formatAsBelarusPhoneInput("291234567")).toBe("+375 (29) 123-45-67");
+    expect(formatAsBelarusPhoneInput("+375 (29) 123-45-67")).toBe("+375 (29) 123-45-67");
   });
 });

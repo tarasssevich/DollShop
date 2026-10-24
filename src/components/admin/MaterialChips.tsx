@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, X } from "lucide-react";
 
 const SUGGESTED_MATERIALS = [
@@ -26,6 +26,26 @@ interface MaterialChipsProps {
 
 export function MaterialChips({ selected, onChange, error }: MaterialChipsProps) {
   const [customInput, setCustomInput] = useState("");
+  const [savedCustomMaterials, setSavedCustomMaterials] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = localStorage.getItem("dollshop_custom_materials");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          setSavedCustomMaterials(parsed);
+        }
+      }
+    } catch {
+      // Игнорируем ошибку чтения localStorage
+    }
+  }, []);
+
+  const allSuggestions = Array.from(
+    new Set([...SUGGESTED_MATERIALS, ...savedCustomMaterials])
+  );
 
   const toggleMaterial = (mat: string) => {
     if (selected.includes(mat)) {
@@ -39,6 +59,17 @@ export function MaterialChips({ selected, onChange, error }: MaterialChipsProps)
     const trimmed = customInput.trim();
     if (trimmed && !selected.includes(trimmed)) {
       onChange([...selected, trimmed]);
+      if (!allSuggestions.includes(trimmed)) {
+        const next = [...savedCustomMaterials, trimmed];
+        setSavedCustomMaterials(next);
+        if (typeof window !== "undefined") {
+          try {
+            localStorage.setItem("dollshop_custom_materials", JSON.stringify(next));
+          } catch {
+            // Игнорируем
+          }
+        }
+      }
       setCustomInput("");
     }
   };
@@ -56,7 +87,7 @@ export function MaterialChips({ selected, onChange, error }: MaterialChipsProps)
 
       {/* Быстрые чипы-подсказки */}
       <div className="flex flex-wrap gap-1.5">
-        {SUGGESTED_MATERIALS.map((mat) => {
+        {allSuggestions.map((mat) => {
           const isSelected = selected.includes(mat);
           return (
             <button

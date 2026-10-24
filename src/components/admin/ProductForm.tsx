@@ -10,7 +10,9 @@ import {
   ShieldAlert,
   Trash2,
   Sparkles,
+  Link2,
 } from "lucide-react";
+import { slugify } from "@/lib/utils/slugify";
 import { MaterialChips } from "./MaterialChips";
 import { MediaManager, type MediaItem } from "./MediaManager";
 import { AiStoryButton } from "./AiStoryButton";
@@ -400,6 +402,10 @@ export function ProductForm({
             placeholder="Например: Селеста · Фея незабудок"
             className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-linen-dark bg-white text-espresso placeholder:text-muted/60 focus:outline-none focus:ring-2 focus:ring-terracotta/20 focus:border-terracotta transition"
           />
+          <div className="flex items-center gap-1.5 mt-1.5 text-[11px] text-muted font-mono">
+            <Link2 className="h-3 w-3 text-terracotta shrink-0" />
+            <span className="truncate">Ссылка: dollshop.by/kukly/{slugify(title) || "feya"}</span>
+          </div>
         </div>
 
         {/* Менеджер фотографий куклы («Без боли на телефоне») */}
@@ -428,7 +434,7 @@ export function ProductForm({
                 inputMode="decimal"
                 required
                 value={price}
-                onChange={(e) => setPrice(e.target.value)}
+                onChange={(e) => setPrice(e.target.value.replace(",", "."))}
                 placeholder="45.00"
                 className="w-full pl-3.5 pr-12 py-2.5 text-sm font-semibold text-terracotta rounded-xl border border-linen-dark bg-white placeholder:text-muted/60 focus:outline-none focus:ring-2 focus:ring-terracotta/20 focus:border-terracotta transition"
               />

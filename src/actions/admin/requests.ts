@@ -2,11 +2,12 @@
 
 import { z } from "zod";
 import { eq, desc, inArray, asc } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { db } from "@/db/client";
 import { customRequests, products, productMedia, type ProductSpecs } from "@/db/schema";
 import { requireAdminAction } from "@/lib/auth/guard";
 import { mapDbProductToDoll } from "@/lib/data/drizzle/mappers";
+import { CACHE_TAGS } from "@/lib/cache/tags";
 import type { Doll } from "@/types/domain";
 
 export interface AdminCustomRequestItem {
@@ -285,3 +286,218 @@ export async function updateAdminRequestPhotosAction(
     return { success: false, error: "Не удалось сохранить фото-референсы" };
   }
 }
+
+export interface AvailableDollOption {
+  id: string;
+  title: string;
+  slug: string;
+  priceByn: number;
+  coverUrl: string | null;
+  status: string;
+  collection?: string;
+}
+
+/**
+ * Получение списка кукол, доступных для прикрепления к индивидуальной заявке.
+ */
+export async function getAvailableDollsForRequestAction(): Promise<{
+  success: boolean;
+  dolls: AvailableDollOption[];
+  error?: string;
+}> {
+  await requireAdminAction();
+
+  try {
+    const rawProducts = await db
+      .select({
+        id: products.id,
+        title: products.title,
+        slug: products.slug,
+        price: products.price,
+        status: products.status,
+        specs: products.specs,
+      })
+      .from(products)
+      .where(inArray(products.status, ["available", "draft", "made_to_order"]))
+      .orderBy(desc(products.createdAt));
+
+    if (rawProducts.length === 0) {
+      return { success: true, dolls: [] };
+    }
+
+    const prodIds = rawProducts.map((p) => p.id);
+    const media = await db
+      .select({
+        productId: productMedia.productId,
+        url: productMedia.url,
+      })
+      .from(productMedia)
+      .where(inArray(productMedia.productId, prodIds))
+      .orderBy(asc(productMedia.displayOrder));
+
+    const coverMap = new Map<string, string>();
+    for (const m of media) {
+      if (!coverMap.has(m.productId)) {
+        coverMap.set(m.productId, m.url);
+      }
+    }
+
+    const dolls: AvailableDollOption[] = rawProducts.map((p) => ({
+      id: p.id,
+      title: p.title,
+      slug: p.slug,
+      priceByn: parseFloat(p.price),
+      coverUrl: coverMap.get(p.id) ?? null,
+      status: p.status,
+      collection: p.specs.collection,
+    }));
+
+    return { success: true, dolls };
+  } catch (err) {
+    console.error("Ошибка загрузки доступных кукол:", err);
+    return { success: false, dolls: [], error: "Не удалось загрузить каталог кукол" };
+  }
+}
+
+const attachExistingDollSchema = z.object({
+  requestId: z.string().uuid(),
+  productId: z.string().uuid(),
+});
+
+/**
+ * Прикрепление существующей куклы из каталога к индивидуальной заявке в 1 клик.
+ */
+export async function attachExistingDollToRequestAction(
+  input: z.infer<typeof attachExistingDollSchema>
+): Promise<{ success: boolean; error?: string }> {
+  await requireAdminAction();
+
+  const parsed = attachExistingDollSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, error: "Некорректные параметры запроса" };
+  }
+
+  const { requestId, productId } = parsed.data;
+
+  try {
+    const [request] = await db
+      .select()
+      .from(customRequests)
+      .where(eq(customRequests.id, requestId));
+
+    if (!request) {
+      return { success: false, error: "Заявка не найдена" };
+    }
+
+    const [product] = await db
+      .select()
+      .from(products)
+      .where(eq(products.id, productId));
+
+    if (!product) {
+      return { success: false, error: "Выбранная кукла не найдена" };
+    }
+
+    // Привязываем куклу к заявке и обновляем статус заявки при необходимости
+    await db
+      .update(customRequests)
+      .set({
+        responseProductId: productId,
+        status: request.status === "new" ? "accepted" : request.status,
+        updatedAt: new Date(),
+      })
+      .where(eq(customRequests.id, requestId));
+
+    await db
+      .update(products)
+      .set({
+        customRequestId: requestId,
+        isCustomOrder: true,
+        status: product.status === "available" ? "reserved" : product.status,
+        updatedAt: new Date(),
+      })
+      .where(eq(products.id, productId));
+
+    try {
+      revalidateTag(CACHE_TAGS.products, { expire: 0 });
+      revalidateTag(CACHE_TAGS.product(product.slug), { expire: 0 });
+      revalidatePath("/admin/zayavki", "page");
+      revalidatePath("/admin/kukly", "page");
+      revalidatePath("/kukly", "page");
+      revalidatePath("/", "page");
+    } catch {
+      // Игнорируем вне Next.js
+    }
+
+    return { success: true };
+  } catch (err) {
+    console.error("Ошибка прикрепления куклы к заявке:", err);
+    return { success: false, error: "Не удалось прикрепить куклу к заявке" };
+  }
+}
+
+const markResponseDollSoldSchema = z.object({
+  requestId: z.string().uuid(),
+  productId: z.string().uuid(),
+});
+
+/**
+ * Быстрая отметка куклы-ответа как оплаченной/выполненной мастером.
+ */
+export async function markResponseDollSoldAction(
+  input: z.infer<typeof markResponseDollSoldSchema>
+): Promise<{ success: boolean; error?: string }> {
+  await requireAdminAction();
+
+  const parsed = markResponseDollSoldSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, error: "Некорректные параметры" };
+  }
+
+  const { requestId, productId } = parsed.data;
+
+  try {
+    const [product] = await db
+      .select({ id: products.id, slug: products.slug })
+      .from(products)
+      .where(eq(products.id, productId));
+
+    if (!product) {
+      return { success: false, error: "Кукла не найдена" };
+    }
+
+    await db
+      .update(products)
+      .set({
+        status: "sold",
+        updatedAt: new Date(),
+      })
+      .where(eq(products.id, productId));
+
+    await db
+      .update(customRequests)
+      .set({
+        status: "accepted",
+        updatedAt: new Date(),
+      })
+      .where(eq(customRequests.id, requestId));
+
+    try {
+      revalidateTag(CACHE_TAGS.products, { expire: 0 });
+      revalidateTag(CACHE_TAGS.product(product.slug), { expire: 0 });
+      revalidatePath("/admin/zayavki", "page");
+      revalidatePath("/admin/kukly", "page");
+      revalidatePath("/kukly", "page");
+      revalidatePath("/galereya", "page");
+      revalidatePath("/", "page");
+    } catch {
+      // Игнорируем вне Next.js
+    }
+
+    return { success: true };
+  } catch (err) {
+    console.error("Ошибка закрытия заявки как проданной:", err);
+    return { success: false, error: "Не удалось перевести статус в 'Продано'" };
+  }
+}
+

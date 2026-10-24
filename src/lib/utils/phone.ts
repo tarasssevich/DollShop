@@ -58,3 +58,49 @@ export function formatBelarusPhone(input: string): string {
 
   return `+375 (${code}) ${part1}-${part2}-${part3}`;
 }
+
+/**
+ * Live mask formatter for Belarusian phone input field in forms:
+ * "+375 (29) 123-45-67"
+ */
+export function formatAsBelarusPhoneInput(input: string): string {
+  if (!input || input.trim() === "") return "";
+
+  // Extract digits
+  let digits = input.replace(/\D/g, "");
+
+  // If user starts with 80..., normalize to local
+  if (digits.startsWith("80")) {
+    digits = digits.slice(2);
+  } else if (digits.startsWith("375")) {
+    digits = digits.slice(3);
+  }
+
+  // Cap at 9 digits
+  digits = digits.slice(0, 9);
+
+  let formatted = "+375";
+  if (digits.length === 0) {
+    return formatted + " ";
+  }
+
+  if (digits.length > 0) {
+    const op = digits.slice(0, 2);
+    formatted += ` (${op}`;
+    if (digits.length >= 2) {
+      formatted += ") ";
+    }
+  }
+  if (digits.length > 2) {
+    formatted += digits.slice(2, 5);
+  }
+  if (digits.length > 5) {
+    formatted += `-${digits.slice(5, 7)}`;
+  }
+  if (digits.length > 7) {
+    formatted += `-${digits.slice(7, 9)}`;
+  }
+
+  return formatted;
+}
+

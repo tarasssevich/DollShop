@@ -16,6 +16,7 @@ import {
   Clock,
   Truck,
   ExternalLink,
+  MessageCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +37,8 @@ export function OrdersClient({ initialOrders }: OrdersClientProps) {
   const [orders, setOrders] = React.useState<AdminOrderItem[]>(initialOrders);
   const [filter, setFilter] = React.useState<"all" | "pending" | "paid" | "cancelled">("all");
   const [copiedId, setCopiedId] = React.useState<string | null>(null);
+  const [copiedAddressId, setCopiedAddressId] = React.useState<string | null>(null);
+  const [copiedTrackingId, setCopiedTrackingId] = React.useState<string | null>(null);
   const [trackingInputs, setTrackingInputs] = React.useState<Record<string, string>>({});
 
   const filteredOrders = React.useMemo(() => {
@@ -111,6 +114,50 @@ export function OrdersClient({ initialOrders }: OrdersClientProps) {
     setCopiedId(order.id);
     toast.success("Шаблон сообщения скопирован в буфер обмена!");
     setTimeout(() => setCopiedId(null), 3000);
+  };
+
+  const handleCopyBelpostAddress = (order: AdminOrderItem) => {
+    const dollTitle = order.doll?.title || "Интерьерная кукла";
+    const paymentLine =
+      order.paymentMethod === "cod"
+        ? `Наложенный платёж (${formatPrice(order.totalAmount)})`
+        : "Оплачено (Без наложенного платежа)";
+
+    const text = `--- ДАННЫЕ ДЛЯ БЕЛПОЧТЫ ---
+Получатель: ${order.customerName}
+Телефон: ${formatBelarusPhone(order.customerPhone)}
+Город/НП: ${order.deliveryCity}
+Отделение / Индекс: ${order.deliveryBranch}
+Оплата: ${paymentLine}
+Вложение: Авторская интерьерная кукла «${dollTitle}»`;
+
+    navigator.clipboard.writeText(text);
+    setCopiedAddressId(order.id);
+    toast.success("Адресный бланк скопирован для Белпочты!");
+    setTimeout(() => setCopiedAddressId(null), 3000);
+  };
+
+  const handleCopyTrackingMessage = (order: AdminOrderItem) => {
+    const name = order.customerName.split(" ")[0] || order.customerName;
+    const doll = order.doll?.title || "куколку";
+    const tracking = order.trackingNumber || trackingInputs[order.id]?.trim();
+
+    if (!tracking) {
+      toast.error("Сначала укажите и сохраните трек-номер");
+      return;
+    }
+
+    const text = `Здравствуйте, ${name}! Ваш заказ #${order.orderNumber} («${doll}») передан в службу доставки Белпочты.
+
+📦 Трек-номер для отслеживания: ${tracking}
+🌐 Отследить посылку на сайте: https://belpost.by/Otslezhivaniyeotpravleniy?number=${tracking}
+
+Желаем радости от встречи с вашей куколкой! Если возникнут любые вопросы — мы на связи.`;
+
+    navigator.clipboard.writeText(text);
+    setCopiedTrackingId(order.id);
+    toast.success("Уведомление с трек-номером скопировано!");
+    setTimeout(() => setCopiedTrackingId(null), 3500);
   };
 
   return (
@@ -275,50 +322,133 @@ export function OrdersClient({ initialOrders }: OrdersClientProps) {
                         «{ord.comment}»
                       </p>
                     )}
+                    <div className="pt-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-[11px] text-terracotta hover:bg-terracotta/10 px-2 gap-1 font-medium cursor-pointer"
+                        onClick={() => handleCopyBelpostAddress(ord)}
+                      >
+                        {copiedAddressId === ord.id ? (
+                          <>
+                            <Check className="h-3 w-3 text-emerald-600" />
+                            Бланк скопирован!
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="h-3 w-3" />
+                            Скопировать бланк для Белпочты
+                          </>
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 </div>
 
                 {/* Почтовый трек-номер */}
-                <div className="rounded-xl bg-alabaster/60 p-3 border border-linen-dark flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <div className="flex items-center gap-2">
-                    <Truck className="h-4 w-4 text-terracotta" />
-                    <span>Почтовый трек-номер:</span>
-                    {ord.trackingNumber ? (
-                      <a
-                        href={`https://belpost.by/Otslezhivaniyeotpravleniy?number=${ord.trackingNumber}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="font-mono font-medium text-terracotta hover:underline inline-flex items-center gap-1"
+                <div className="rounded-xl bg-alabaster/60 p-3.5 border border-linen-dark space-y-2.5 text-xs">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Truck className="h-4 w-4 text-terracotta" />
+                      <span className="font-medium text-espresso">Почтовый трек-номер:</span>
+                      {ord.trackingNumber ? (
+                        <a
+                          href={`https://belpost.by/Otslezhivaniyeotpravleniy?number=${ord.trackingNumber}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-mono font-medium text-terracotta hover:underline inline-flex items-center gap-1"
+                        >
+                          {ord.trackingNumber}
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      ) : (
+                        <span className="text-muted italic">не указан</span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Input
+                        placeholder="BY123456789"
+                        value={trackingInputs[ord.id] ?? ""}
+                        onChange={(e) =>
+                          setTrackingInputs((prev) => ({
+                            ...prev,
+                            [ord.id]: e.target.value,
+                          }))
+                        }
+                        className="h-8 w-36 text-xs font-mono"
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 text-xs"
+                        onClick={() => handleSaveTracking(ord.id)}
                       >
-                        {ord.trackingNumber}
-                        <ExternalLink className="h-3 w-3" />
-                      </a>
-                    ) : (
-                      <span className="text-muted italic">не указан</span>
-                    )}
+                        Сохранить
+                      </Button>
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <Input
-                      placeholder="BY123456789"
-                      value={trackingInputs[ord.id] ?? ""}
-                      onChange={(e) =>
-                        setTrackingInputs((prev) => ({
-                          ...prev,
-                          [ord.id]: e.target.value,
-                        }))
-                      }
-                      className="h-8 w-36 text-xs font-mono"
-                    />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 text-xs"
-                      onClick={() => handleSaveTracking(ord.id)}
-                    >
-                      Сохранить
-                    </Button>
-                  </div>
+                  {/* Быстрая отправка трек-номера клиенту в 1 клик */}
+                  {ord.trackingNumber && (
+                    <div className="flex flex-wrap items-center gap-2 pt-1.5 border-t border-linen-dark/60">
+                      <span className="text-[11px] text-muted">Отправить клиенту:</span>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-[11px] border-emerald-300 bg-emerald-50 text-emerald-900 hover:bg-emerald-100 gap-1"
+                        onClick={() => handleCopyTrackingMessage(ord)}
+                      >
+                        {copiedTrackingId === ord.id ? (
+                          <>
+                            <Check className="h-3 w-3 text-emerald-600" />
+                            Текст с треком скопирован!
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="h-3 w-3" />
+                            Скопировать текст с треком
+                          </>
+                        )}
+                      </Button>
+
+                      {tgHandle && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-[11px] border-emerald-300 hover:bg-emerald-100 text-emerald-900 gap-1"
+                          asChild
+                        >
+                          <a
+                            href={`https://t.me/${tgHandle}?text=${encodeURIComponent(
+                              `Здравствуйте, ${ord.customerName.split(" ")[0]}! Ваш заказ #${ord.orderNumber} отправлен Белпочтой. Трек-номер: ${ord.trackingNumber}. Отслеживание: https://belpost.by/Otslezhivaniyeotpravleniy?number=${ord.trackingNumber}`
+                            )}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <Send className="h-3 w-3 text-emerald-700" />
+                            В Telegram
+                          </a>
+                        </Button>
+                      )}
+
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-[11px] border-emerald-300 hover:bg-emerald-100 text-emerald-900 gap-1"
+                        asChild
+                      >
+                        <a href={`viber://chat?number=%2B${cleanDigits}`}>
+                          <MessageCircle className="h-3 w-3 text-emerald-700" />
+                          В Viber
+                        </a>
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Панель быстрых действий (Zero-IT UX) */}

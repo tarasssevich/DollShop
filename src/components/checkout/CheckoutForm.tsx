@@ -24,6 +24,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { formatPrice } from "@/lib/utils/format";
+import { formatAsBelarusPhoneInput } from "@/lib/utils/phone";
 import { createOrderAction } from "@/actions/order";
 
 interface CheckoutFormProps {
@@ -212,6 +213,9 @@ export function CheckoutForm({
                   onChange={(e) => setDeliveryBranch(e.target.value)}
                   required
                 />
+                <p className="text-[10px] text-muted">
+                  6 цифр индекса (например, 220030) или номер отделения
+                </p>
               </div>
             </div>
             <p className="text-[11px] text-muted">
@@ -258,7 +262,7 @@ export function CheckoutForm({
               type="tel"
               placeholder="+375 (29) 123-45-67"
               value={customerPhone}
-              onChange={(e) => setCustomerPhone(e.target.value)}
+              onChange={(e) => setCustomerPhone(formatAsBelarusPhoneInput(e.target.value))}
               required
             />
           </div>
