@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { setOrderStatus } from "@/db/functions";
 import { CACHE_TAGS } from "@/lib/cache/tags";
+import { isAuthorizedTelegramChat } from "@/lib/notify/telegram";
 
 function verifyWebhookSecretTimingSafe(provided: string | null, expected: string): boolean {
   if (!provided || !expected) return false;
@@ -134,8 +135,8 @@ export async function POST(req: NextRequest) {
   if (cb && cb.data) {
     const fromChatId = cb.message?.chat.id;
 
-    // Защита: действия разрешены только из чата мастера
-    if (authorizedChatId && String(fromChatId) !== String(authorizedChatId)) {
+    // Защита: действия разрешены только из чата мастера (из белого списка)
+    if (!isAuthorizedTelegramChat(fromChatId)) {
       if (token) {
         await answerCallbackQuery(token, cb.id, "Доступ запрещен: действие разрешено только мастеру");
       }
@@ -210,12 +211,19 @@ export async function POST(req: NextRequest) {
 
   // Ответ на стандартные команды (например /start)
   if (update.message?.text === "/start" && token && update.message.chat.id) {
+    const senderChatId = String(update.message.chat.id);
+    const authorized = isAuthorizedTelegramChat(senderChatId);
+
+    const replyText = authorized
+      ? `✨ <b>Добро пожаловать в бот уведомлений DollShop!</b>\n\nВаш аккаунт авторизован в системе (Chat ID: <code>${senderChatId}</code>). Сюда будут мгновенно приходить все уведомления о новых заказах кукол, оплатах и индивидуальных заявках.`
+      : `⛔ <b>Доступ ограничен.</b>\n\nЭтот бот предназначен исключительно для служебных уведомлений мастера DollShop.\n\nВаш Chat ID: <code>${senderChatId}</code>\nЕсли вы администратор или мастер, передайте этот ID разработчику для добавления в белый список.`;
+
     await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         chat_id: update.message.chat.id,
-        text: `✨ <b>Бот уведомлений DollShop подключен!</b>\n\nВаш Chat ID: <code>${update.message.chat.id}</code>\nДобавьте его в файл <code>.env.local</code> в переменную <code>TELEGRAM_CHAT_ID</code>.`,
+        text: replyText,
         parse_mode: "HTML",
       }),
     });

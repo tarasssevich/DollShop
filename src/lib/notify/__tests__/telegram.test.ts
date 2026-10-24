@@ -11,6 +11,8 @@ import {
   sendTelegramPhoto,
   notifyNewOrder,
   notifyCustomRequest,
+  getAuthorizedTelegramChatIds,
+  isAuthorizedTelegramChat,
 } from "../telegram";
 
 describe("Step 5.3 — Telegram Templates & Notification Client", () => {
@@ -258,6 +260,46 @@ describe("Step 5.3 — Telegram Templates & Notification Client", () => {
 
       expect(res.success).toBe(true);
       expect(mockFetch).toHaveBeenCalled();
+    });
+
+    it("getAuthorizedTelegramChatIds и isAuthorizedTelegramChat корректно парсят список нескольких ID", () => {
+      process.env.TELEGRAM_CHAT_ID = "1154656833, 987654321,  555444333 ";
+      const ids = getAuthorizedTelegramChatIds();
+      expect(ids).toEqual(["1154656833", "987654321", "555444333"]);
+
+      expect(isAuthorizedTelegramChat("1154656833")).toBe(true);
+      expect(isAuthorizedTelegramChat(987654321)).toBe(true);
+      expect(isAuthorizedTelegramChat("0000000000")).toBe(false);
+    });
+
+    it("отправляет сообщение всем получателям из списка TELEGRAM_CHAT_ID", async () => {
+      process.env.TELEGRAM_BOT_TOKEN = "mock_bot_token";
+      process.env.TELEGRAM_CHAT_ID = "11111111, 22222222";
+
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ ok: true, result: { message_id: 123 } }),
+      });
+      globalThis.fetch = mockFetch;
+
+      const res = await sendTelegramMessage({ text: "Уведомление для обоих" });
+      expect(res.success).toBe(true);
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        1,
+        "https://api.telegram.org/botmock_bot_token/sendMessage",
+        expect.objectContaining({
+          body: expect.stringContaining('"chat_id":"11111111"'),
+        })
+      );
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        2,
+        "https://api.telegram.org/botmock_bot_token/sendMessage",
+        expect.objectContaining({
+          body: expect.stringContaining('"chat_id":"22222222"'),
+        })
+      );
     });
   });
 });

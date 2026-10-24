@@ -19,7 +19,31 @@ export interface SendTelegramResult {
 }
 
 /**
+ * Получение списка разрешенных Chat ID из переменной TELEGRAM_CHAT_ID.
+ * Поддерживает как одиночный ID ("1154656833"), так и список через запятую ("1154656833, 987654321").
+ */
+export function getAuthorizedTelegramChatIds(): string[] {
+  const raw = process.env.TELEGRAM_CHAT_ID || "";
+  return raw
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
+}
+
+/**
+ * Проверка, авторизован ли указанный Chat ID для получения уведомлений и выполнения действий.
+ */
+export function isAuthorizedTelegramChat(
+  chatId: string | number | undefined | null
+): boolean {
+  if (!chatId) return false;
+  const authorized = getAuthorizedTelegramChatIds();
+  return authorized.includes(String(chatId));
+}
+
+/**
  * Базовый клиент отправки сообщений в Telegram Bot API.
+ * Поддерживает рассылку нескольким авторизованным администраторам / мастерам.
  * Если токен или chat_id не настроены, работает в безопасном режиме отладки (dev fallback).
  */
 export async function sendTelegramMessage(options: {
@@ -27,54 +51,66 @@ export async function sendTelegramMessage(options: {
   replyMarkup?: unknown;
 }): Promise<SendTelegramResult> {
   const token = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_CHAT_ID;
+  const chatIds = getAuthorizedTelegramChatIds();
 
-  if (!token || !chatId || token.trim() === "" || chatId.trim() === "") {
+  if (!token || chatIds.length === 0) {
     if (process.env.NODE_ENV !== "test") {
       console.log(
-        "📱 [Telegram Dev Fallback] Токен бота не задан. Сообщение мастеру:\n" +
+        "📱 [Telegram Dev Fallback] Токен бота или chat_id не заданы. Сообщение мастеру:\n" +
           options.text
       );
     }
     return { success: true, simulated: true };
   }
 
-  try {
-    const url = `https://api.telegram.org/bot${token}/sendMessage`;
-    const body: Record<string, unknown> = {
-      chat_id: chatId,
-      text: options.text,
-      parse_mode: "HTML",
-      disable_web_page_preview: true,
-    };
+  let lastMessageId: number | undefined;
+  let hasSuccess = false;
+  let lastError: string | undefined;
 
-    if (options.replyMarkup) {
-      body.reply_markup = options.replyMarkup;
+  // Рассылаем уведомление каждому авторизованному получателю в белом списке
+  for (const chatId of chatIds) {
+    try {
+      const url = `https://api.telegram.org/bot${token}/sendMessage`;
+      const body: Record<string, unknown> = {
+        chat_id: chatId,
+        text: options.text,
+        parse_mode: "HTML",
+        disable_web_page_preview: true,
+      };
+
+      if (options.replyMarkup) {
+        body.reply_markup = options.replyMarkup;
+      }
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      if (response.ok) {
+        const data = (await response.json()) as {
+          ok: boolean;
+          result?: { message_id: number };
+        };
+        lastMessageId = data.result?.message_id;
+        hasSuccess = true;
+      } else {
+        const errJson = await response.json().catch(() => ({}));
+        lastError = `Telegram API Error (${response.status}): ${JSON.stringify(errJson)}`;
+        console.error(`Telegram ошибка для chat_id ${chatId}:`, lastError);
+      }
+    } catch (err) {
+      lastError = err instanceof Error ? err.message : String(err);
+      console.error(`Ошибка при отправке в Telegram для chat_id ${chatId}:`, lastError);
     }
-
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-
-    if (!response.ok) {
-      const errJson = await response.json().catch(() => ({}));
-      const errMsg = `Telegram API Error (${response.status}): ${JSON.stringify(errJson)}`;
-      console.error(errMsg);
-      return { success: false, error: errMsg };
-    }
-
-    const data = (await response.json()) as { ok: boolean; result?: { message_id: number } };
-    return {
-      success: true,
-      messageId: data.result?.message_id,
-    };
-  } catch (err) {
-    const errorString = err instanceof Error ? err.message : String(err);
-    console.error("Ошибка при отправке в Telegram:", errorString);
-    return { success: false, error: errorString };
   }
+
+  if (!hasSuccess && lastError) {
+    return { success: false, error: lastError };
+  }
+
+  return { success: true, messageId: lastMessageId };
 }
 
 /**
@@ -102,46 +138,55 @@ export async function sendTelegramPhoto(options: {
   filename?: string;
 }): Promise<SendTelegramResult> {
   const token = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_CHAT_ID;
+  const chatIds = getAuthorizedTelegramChatIds();
 
-  if (!token || !chatId || token.trim() === "" || chatId.trim() === "") {
+  if (!token || chatIds.length === 0) {
     if (process.env.NODE_ENV !== "test") {
       console.log(`📱 [Telegram Dev Fallback] Фото ${options.filename || ""}: ${options.caption || ""}`);
     }
     return { success: true, simulated: true };
   }
 
-  try {
-    const fd = new FormData();
-    fd.append("chat_id", chatId);
-    const blob = new Blob([new Uint8Array(options.buffer)]);
-    fd.append("photo", blob, options.filename || "reference.jpg");
-    if (options.caption) {
-      fd.append("caption", options.caption);
-      fd.append("parse_mode", "HTML");
+  let lastMessageId: number | undefined;
+  let hasSuccess = false;
+  let lastError: string | undefined;
+
+  for (const chatId of chatIds) {
+    try {
+      const fd = new FormData();
+      fd.append("chat_id", chatId);
+      const blob = new Blob([new Uint8Array(options.buffer)]);
+      fd.append("photo", blob, options.filename || "reference.jpg");
+      if (options.caption) {
+        fd.append("caption", options.caption);
+        fd.append("parse_mode", "HTML");
+      }
+
+      const res = await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
+        method: "POST",
+        body: fd,
+      });
+
+      if (res.ok) {
+        const data = (await res.json()) as { ok: boolean; result?: { message_id: number } };
+        lastMessageId = data.result?.message_id;
+        hasSuccess = true;
+      } else {
+        const errJson = await res.json().catch(() => ({}));
+        lastError = `Telegram sendPhoto Error (${res.status}): ${JSON.stringify(errJson)}`;
+        console.error(`Telegram фото ошибка для chat_id ${chatId}:`, lastError);
+      }
+    } catch (err) {
+      lastError = err instanceof Error ? err.message : String(err);
+      console.error(`Ошибка при отправке фото в Telegram для chat_id ${chatId}:`, lastError);
     }
-
-    const res = await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
-      method: "POST",
-      body: fd,
-    });
-
-    if (!res.ok) {
-      const errJson = await res.json().catch(() => ({}));
-      console.error(`Telegram sendPhoto Error (${res.status}):`, errJson);
-      return { success: false, error: JSON.stringify(errJson) };
-    }
-
-    const data = (await res.json()) as { ok: boolean; result?: { message_id: number } };
-    return {
-      success: true,
-      messageId: data.result?.message_id,
-    };
-  } catch (err) {
-    const errorString = err instanceof Error ? err.message : String(err);
-    console.error("Ошибка при отправке фото в Telegram:", errorString);
-    return { success: false, error: errorString };
   }
+
+  if (!hasSuccess && lastError) {
+    return { success: false, error: lastError };
+  }
+
+  return { success: true, messageId: lastMessageId };
 }
 
 /**
