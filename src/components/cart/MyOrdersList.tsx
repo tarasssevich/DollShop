@@ -185,23 +185,26 @@ export function MyOrdersList({
 
                         {/* Статус */}
                         <div className="ml-auto flex items-center">
-                          {isPaid && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-[11px] font-medium text-emerald-800">
-                              <CheckCircle2 className="h-3 w-3 text-emerald-600" />
-                              <span>Оплачен · Готовится к отправке</span>
+                          {order.trackingNumber ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 border border-blue-200 px-2.5 py-0.5 text-[11px] font-medium text-blue-900">
+                              <Truck className="h-3 w-3 text-blue-600" />
+                              <span>Посылка передана на почту · В пути</span>
                             </span>
-                          )}
-                          {isPending && (
+                          ) : isPaid ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-[11px] font-medium text-emerald-800">
+                              <Sparkles className="h-3 w-3 text-emerald-600" />
+                              <span>Всё упаковываем, всё чётко!</span>
+                            </span>
+                          ) : isPending ? (
                             <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-[11px] font-medium text-amber-800">
                               <Clock className="h-3 w-3 text-amber-600" />
                               <span>Бронь подтверждена · Ожидает оплаты</span>
                             </span>
-                          )}
-                          {isCancelled && (
+                          ) : isCancelled ? (
                             <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 border border-rose-200 px-2.5 py-0.5 text-[11px] font-medium text-rose-800">
                               <span>Отменен</span>
                             </span>
-                          )}
+                          ) : null}
                         </div>
                       </div>
 
@@ -221,19 +224,40 @@ export function MyOrdersList({
                         </span>
                       </div>
 
-                      {/* Трек-номер посылки Белпочты */}
+                      {/* Блок статуса доставки и Белпочты */}
                       {order.trackingNumber ? (
-                        <div className="pt-2 flex items-center gap-2">
-                          <a
-                            href={`https://belpost.by/Otslezhivaniyeotpravleniy?number=${order.trackingNumber}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 rounded-lg bg-linen px-2.5 py-1 text-xs font-medium text-terracotta hover:bg-terracotta/10 transition-colors"
-                          >
-                            <Truck className="h-3.5 w-3.5" />
-                            <span>Трек-номер Белпочты: {order.trackingNumber}</span>
-                            <ExternalLink className="h-3 w-3 ml-0.5" />
-                          </a>
+                        <div className="pt-2.5 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <a
+                              href={`https://belpost.by/Otslezhivaniyeotpravleniy?number=${order.trackingNumber}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 rounded-lg bg-linen px-2.5 py-1 text-xs font-medium text-terracotta hover:bg-terracotta/10 transition-colors"
+                            >
+                              <Truck className="h-3.5 w-3.5" />
+                              <span>Трек-номер Белпочты: {order.trackingNumber}</span>
+                              <ExternalLink className="h-3 w-3 ml-0.5" />
+                            </a>
+                          </div>
+
+                          <div className="rounded-xl bg-linen/50 border border-linen-dark/60 p-2.5 text-[11px] space-y-1 text-muted">
+                            <p className="text-espresso font-medium flex items-center gap-1.5">
+                              <span>📲 Белпочта пришлёт бесплатное SMS о прибытии</span>
+                            </p>
+                            <p>
+                              Как только посылка поступит в ваше отделение связи, вам придёт SMS. Не забудьте взять паспорт для получения.
+                            </p>
+                            <p className="text-[10px] text-muted/80 italic pt-0.5 border-t border-linen-dark/40">
+                              * Оговорка: Мастер гарантирует своевременную передачу на почту. Фактическая скорость доставки зависит от РУП «Белпочта» (обычно 2–4 рабочих дня).
+                            </p>
+                          </div>
+                        </div>
+                      ) : isPaid ? (
+                        <div className="pt-2 rounded-xl bg-linen/40 border border-linen-dark/50 p-2.5 text-[11px] text-muted space-y-0.5">
+                          <p className="text-espresso font-medium">📦 Подготовка к отправке:</p>
+                          <p>
+                            Мастер бережно упаковывает вашу куклу в фирменную коробку с защитным наполнителем. В течение 1–2 рабочих дней посылка будет передана на почту, и здесь появится трек-номер.
+                          </p>
                         </div>
                       ) : (
                         <p className="text-[11px] text-muted/80 pt-1 italic">

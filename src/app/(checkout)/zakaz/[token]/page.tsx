@@ -105,8 +105,11 @@ export default async function OrderSuccessPage({ params }: OrderPageProps) {
           <div className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-1.5 text-xs font-medium text-amber-900">
             <Clock className="h-3.5 w-3.5 text-amber-700" />
             <span>
-              {order.status === "pending" && "Бронь подтверждена · Ожидает согласования"}
-              {order.status === "paid" && "Оплачен · Готовится к отправке"}
+              {order.status === "pending" && "Бронь подтверждена · Ожидает оплаты"}
+              {order.status === "paid" &&
+                (order.trackingNumber
+                  ? "Посылка передана на почту · В пути"
+                  : "Всё упаковываем, всё чётко · Готовится к отправке")}
               {order.status === "completed" && "Выполнен"}
               {order.status === "cancelled" && "Отменен"}
             </span>
@@ -167,17 +170,39 @@ export default async function OrderSuccessPage({ params }: OrderPageProps) {
                 : `${order.deliveryCity}, ${order.deliveryBranch}`}
             </p>
 
-            {order.trackingNumber && (
-              <div className="pt-2">
-                <a
-                  href={`https://belpost.by/Otslezhivaniyeotpravleniy?number=${order.trackingNumber}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-terracotta font-medium hover:underline"
-                >
-                  <span>Трек-номер: {order.trackingNumber}</span>
-                  <ExternalLink className="h-3 w-3" />
-                </a>
+            {!isPickup && (
+              <div className="pt-2 space-y-2">
+                {order.trackingNumber ? (
+                  <>
+                    <a
+                      href={`https://belpost.by/Otslezhivaniyeotpravleniy?number=${order.trackingNumber}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-terracotta font-medium hover:underline"
+                    >
+                      <span>Трек-номер Белпочты: {order.trackingNumber}</span>
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                    <div className="rounded-lg bg-white/80 border border-linen-dark p-2.5 text-[11px] text-muted space-y-1">
+                      <p className="font-medium text-espresso flex items-center gap-1">
+                        📲 Белпочта пришлёт бесплатное SMS о прибытии
+                      </p>
+                      <p>
+                        Как только посылка поступит в ваше отделение связи, вам придёт SMS. Не забудьте взять паспорт для получения.
+                      </p>
+                      <p className="text-[10px] text-muted/80 italic border-t border-linen-dark/50 pt-1">
+                        * Оговорка: Мастер гарантирует своевременную передачу на почту. Фактическая скорость доставки зависит от регламента РУП «Белпочта» (обычно 2–4 рабочих дня).
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <div className="rounded-lg bg-white/80 border border-linen-dark p-2.5 text-[11px] text-muted space-y-0.5">
+                    <p className="font-medium text-espresso">📦 Всё упаковываем, всё чётко:</p>
+                    <p>
+                      Мастер бережно упаковывает вашу куклу в крафтовую коробку. В течение 1–2 рабочих дней посылка будет передана на Белпочту, и здесь появится трек-номер.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>

@@ -231,9 +231,15 @@ export function CheckoutForm({
                 </p>
               </div>
             </div>
-            <p className="text-[11px] text-muted">
-              📦 Стоимость пересылки по тарифам РУП «Белпочта» оплачивается при получении посылки.
-            </p>
+            <div className="rounded-xl bg-linen/50 border border-linen-dark/60 p-2.5 text-[11px] text-muted space-y-1">
+              <p className="text-espresso font-medium">📦 Информация о доставке Белпочтой:</p>
+              <p>
+                Срок доставки составляет 2–4 рабочих дня с момента передачи посылки в отделение связи. Белпочта пришлёт бесплатное SMS на ваш номер телефона при поступлении посылки в отделение.
+              </p>
+              <p className="text-[10px] text-muted/80 italic">
+                * Оговорка: Мастер бережно упаковывает куклу в течение 1–2 рабочих дней. Фактическая скорость пересылки регулируется службой РУП «Белпочта».
+              </p>
+            </div>
           </div>
         ) : (
           <div className="rounded-xl bg-linen/70 p-3.5 text-xs text-muted leading-relaxed">

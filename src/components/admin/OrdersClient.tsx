@@ -17,9 +17,16 @@ import {
   Truck,
   ExternalLink,
   MessageCircle,
+  Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { formatPrice } from "@/lib/utils/format";
 import { formatBelarusPhone } from "@/lib/utils/phone";
@@ -39,6 +46,7 @@ export function OrdersClient({ initialOrders }: OrdersClientProps) {
   const [copiedId, setCopiedId] = React.useState<string | null>(null);
   const [copiedAddressId, setCopiedAddressId] = React.useState<string | null>(null);
   const [copiedTrackingId, setCopiedTrackingId] = React.useState<string | null>(null);
+  const [postalModalOrder, setPostalModalOrder] = React.useState<AdminOrderItem | null>(null);
   const [trackingInputs, setTrackingInputs] = React.useState<Record<string, string>>({});
 
   const filteredOrders = React.useMemo(() => {
@@ -322,7 +330,7 @@ export function OrdersClient({ initialOrders }: OrdersClientProps) {
                         «{ord.comment}»
                       </p>
                     )}
-                    <div className="pt-1">
+                    <div className="pt-1 flex flex-wrap items-center gap-2">
                       <Button
                         type="button"
                         variant="ghost"
@@ -338,9 +346,20 @@ export function OrdersClient({ initialOrders }: OrdersClientProps) {
                         ) : (
                           <>
                             <Copy className="h-3 w-3" />
-                            Скопировать бланк для Белпочты
+                            Скопировать бланк
                           </>
                         )}
+                      </Button>
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-[11px] text-espresso hover:text-terracotta border-linen-dark px-2 gap-1 font-medium cursor-pointer rounded-lg bg-linen/30"
+                        onClick={() => setPostalModalOrder(ord)}
+                      >
+                        <Eye className="h-3 w-3 text-terracotta" />
+                        Бланк для оператора (крупно)
                       </Button>
                     </div>
                   </div>
@@ -556,6 +575,105 @@ export function OrdersClient({ initialOrders }: OrdersClientProps) {
           })}
         </div>
       )}
+
+      {/* Модальное окно крупного бланка для оператора Белпочты */}
+      <Dialog
+        open={!!postalModalOrder}
+        onOpenChange={(open) => !open && setPostalModalOrder(null)}
+      >
+        <DialogContent className="max-w-md bg-white p-5 sm:p-6 rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-xl text-espresso flex items-center gap-2">
+              <Mail className="h-5 w-5 text-terracotta" />
+              <span>Бланк для Белпочты · Заказ #{postalModalOrder?.orderNumber}</span>
+            </DialogTitle>
+          </DialogHeader>
+
+          {postalModalOrder && (
+            <div className="space-y-4 pt-2">
+              <p className="text-xs text-muted">
+                Покажите этот экран оператору в отделении Белпочты или перепишите на бланк посылки:
+              </p>
+
+              <div className="rounded-2xl border-2 border-linen-dark bg-alabaster p-4 space-y-3.5 text-espresso select-all">
+                <div>
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-muted block">
+                    ПОЛУЧАТЕЛЬ (ФИО):
+                  </span>
+                  <p className="text-lg font-bold text-espresso leading-snug">
+                    {postalModalOrder.customerName}
+                  </p>
+                </div>
+
+                <div>
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-muted block">
+                    ТЕЛЕФОН ПОЛУЧАТЕЛЯ (для бесплатного SMS):
+                  </span>
+                  <p className="text-lg font-mono font-bold text-terracotta">
+                    {formatBelarusPhone(postalModalOrder.customerPhone)}
+                  </p>
+                </div>
+
+                <div>
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-muted block">
+                    КУДА (Город / Населённый пункт):
+                  </span>
+                  <p className="text-base font-semibold text-espresso">
+                    {postalModalOrder.deliveryCity}
+                  </p>
+                </div>
+
+                <div>
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-muted block">
+                    ОТДЕЛЕНИЕ СВЯЗИ / ИНДЕКС / АДРЕС:
+                  </span>
+                  <p className="text-base font-semibold text-espresso">
+                    {postalModalOrder.deliveryBranch}
+                  </p>
+                </div>
+
+                <div className="pt-2 border-t border-linen-dark/80 flex items-center justify-between">
+                  <span className="text-xs text-muted">Оплата:</span>
+                  <span className="text-xs font-bold text-emerald-800">
+                    {postalModalOrder.paymentMethod === "cod"
+                      ? `Наложенный платёж: ${formatPrice(postalModalOrder.totalAmount)}`
+                      : "Оплачено онлайн (без наложенного платежа)"}
+                  </span>
+                </div>
+
+                <div className="text-[11px] text-muted border-t border-linen-dark/60 pt-2">
+                  <span className="font-medium text-espresso">Вложение: </span>
+                  Авторская кукла «{postalModalOrder.doll?.title || "Интерьерная кукла"}»
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between gap-3 pt-2">
+                <Button
+                  type="button"
+                  variant="default"
+                  className="rounded-xl flex-1 shadow-xs"
+                  onClick={() => {
+                    handleCopyBelpostAddress(postalModalOrder);
+                    setPostalModalOrder(null);
+                  }}
+                >
+                  <Copy className="h-4 w-4 mr-2" />
+                  <span>Скопировать в буфер</span>
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="rounded-xl"
+                  onClick={() => setPostalModalOrder(null)}
+                >
+                  Закрыть
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
