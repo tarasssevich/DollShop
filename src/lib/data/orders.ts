@@ -1,6 +1,7 @@
-import { eq } from "drizzle-orm";
+import { eq, desc, inArray } from "drizzle-orm";
 import { db } from "@/db/client";
 import { orders, orderItems, products, productMedia } from "@/db/schema";
+import { normalizeBelarusPhone } from "@/lib/utils/phone";
 
 export interface OrderWithDetails {
   id: string;
@@ -29,26 +30,9 @@ export interface OrderWithDetails {
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/**
- * Получение данных оформленного заказа по публичному UUID-токену.
- * Безопасно для показа покупателю на странице /zakaz/[token].
- */
-export async function getOrderByPublicToken(
-  publicToken: string
-): Promise<OrderWithDetails | null> {
-  if (!publicToken || !UUID_REGEX.test(publicToken)) {
-    return null;
-  }
-
-  const [order] = await db
-    .select()
-    .from(orders)
-    .where(eq(orders.publicToken, publicToken));
-
-  if (!order) {
-    return null;
-  }
-
+async function hydrateOrderDetails(
+  order: typeof orders.$inferSelect
+): Promise<OrderWithDetails> {
   // Получаем позицию заказа и куклу
   const [itemRow] = await db
     .select({
@@ -104,4 +88,79 @@ export async function getOrderByPublicToken(
         }
       : null,
   };
+}
+
+/**
+ * Получение данных оформленного заказа по публичному UUID-токену.
+ * Безопасно для показа покупателю на странице /zakaz/[token].
+ */
+export async function getOrderByPublicToken(
+  publicToken: string
+): Promise<OrderWithDetails | null> {
+  if (!publicToken || !UUID_REGEX.test(publicToken)) {
+    return null;
+  }
+
+  const [order] = await db
+    .select()
+    .from(orders)
+    .where(eq(orders.publicToken, publicToken));
+
+  if (!order) {
+    return null;
+  }
+
+  return hydrateOrderDetails(order);
+}
+
+/**
+ * Получение списка заказов по набору сохраненных токенов (например, из cookies/localStorage).
+ */
+export async function getOrdersByPublicTokens(
+  publicTokens: string[]
+): Promise<OrderWithDetails[]> {
+  const validTokens = publicTokens.filter((t) => t && UUID_REGEX.test(t));
+  if (validTokens.length === 0) {
+    return [];
+  }
+
+  const orderRows = await db
+    .select()
+    .from(orders)
+    .where(inArray(orders.publicToken, validTokens))
+    .orderBy(desc(orders.createdAt));
+
+  const results: OrderWithDetails[] = [];
+  for (const order of orderRows) {
+    results.push(await hydrateOrderDetails(order));
+  }
+
+  return results;
+}
+
+/**
+ * Получение списка заказов покупателя по номеру телефона Беларуси.
+ * Используется для поиска своих заказов без необходимости логина и пароля.
+ */
+export async function getOrdersByCustomerPhone(
+  phone: string
+): Promise<OrderWithDetails[]> {
+  const normalized = normalizeBelarusPhone(phone);
+  if (!normalized) {
+    return [];
+  }
+
+  const orderRows = await db
+    .select()
+    .from(orders)
+    .where(eq(orders.customerPhone, normalized))
+    .orderBy(desc(orders.createdAt))
+    .limit(20);
+
+  const results: OrderWithDetails[] = [];
+  for (const order of orderRows) {
+    results.push(await hydrateOrderDetails(order));
+  }
+
+  return results;
 }

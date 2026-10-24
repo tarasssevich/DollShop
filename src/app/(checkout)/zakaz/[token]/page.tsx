@@ -19,6 +19,7 @@ import { formatBelarusPhone } from "@/lib/utils/phone";
 import { Button } from "@/components/ui/button";
 import { generateEripQrDataUrl, ERIP_CONFIG } from "@/lib/payments/erip";
 import { EripPaymentBlock } from "@/components/checkout/EripPaymentBlock";
+import { OrderTrackerSync } from "@/components/checkout/OrderTrackerSync";
 
 interface OrderPageProps {
   params: Promise<{ token: string }>;
@@ -66,6 +67,21 @@ export default async function OrderSuccessPage({ params }: OrderPageProps) {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:py-14 space-y-8">
+      <OrderTrackerSync
+        order={{
+          orderNumber: order.orderNumber,
+          publicToken: order.publicToken,
+          dollTitle: order.item?.productTitle || `Заказ #${order.orderNumber}`,
+          dollSlug: order.item?.productSlug,
+          dollCoverUrl: coverUrl,
+          totalAmount: order.totalAmount,
+          status: order.status,
+          trackingNumber: order.trackingNumber,
+          deliveryType: isPickup ? "pickup" : "postal",
+          deliveryCity: order.deliveryCity,
+          createdAt: order.createdAt.toISOString(),
+        }}
+      />
       {/* 1. Главный баннер успеха */}
       <div className="rounded-3xl border border-linen-dark bg-white p-6 sm:p-10 text-center shadow-sm space-y-4">
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-sage-subtle border border-sage/20 text-sage-dark">

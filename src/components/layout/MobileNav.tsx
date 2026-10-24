@@ -24,6 +24,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { href: "/cart", label: "Корзина / Моя бронь" },
+  { href: "/moi-zakazy", label: "Мои заказы и трекинг 📦" },
   { href: "/kukly", label: "Куклы в наличии", badge: "OOAK" },
   { href: "/na-zakaz", label: "На заказ" },
   { href: "/galereya", label: "Галерея работ" },

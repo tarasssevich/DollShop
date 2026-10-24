@@ -1,7 +1,7 @@
 import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Package } from "lucide-react";
 import { Container } from "./Container";
 import { MobileNav } from "./MobileNav";
 import { DesktopNav } from "./DesktopNav";
@@ -21,6 +21,14 @@ export function Header() {
             <span>Минск, Беларусь</span>
             <span className="text-linen-dark">·</span>
             <span>Почта или самовывоз</span>
+            <span className="text-linen-dark">·</span>
+            <Link
+              href="/moi-zakazy"
+              className="text-espresso hover:text-terracotta transition-colors font-medium flex items-center gap-1"
+            >
+              <Package className="h-3 w-3 text-terracotta" />
+              <span>Мои заказы</span>
+            </Link>
             <span className="text-linen-dark">·</span>
             <a
               href="tel:+375291234567"
@@ -65,6 +73,14 @@ export function Header() {
 
           {/* Actions & Mobile menu */}
           <div className="flex items-center gap-2 sm:gap-3">
+            <Link
+              href="/moi-zakazy"
+              className="hidden lg:inline-flex h-9 items-center gap-1.5 rounded-full border border-linen-dark bg-alabaster px-3 text-xs font-medium text-espresso transition-colors hover:bg-linen hover:border-terracotta/40"
+            >
+              <Package className="h-3.5 w-3.5 text-terracotta" />
+              <span>Мои заказы</span>
+            </Link>
+
             {/* Cart & Reservation Button */}
             <CartHeaderButton />
 

@@ -16,6 +16,10 @@ import { db } from "@/db/client";
 import { orders } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { orderFormSchema } from "@/lib/schemas/order-form";
+import {
+  getOrdersByCustomerPhone,
+  getOrdersByPublicTokens,
+} from "@/lib/data/orders";
 
 export type OrderFormInput = z.infer<typeof orderFormSchema>;
 
@@ -161,6 +165,23 @@ export async function createOrderAction(
     // Удаляем cookie временной брони (теперь кукла удерживается заказом в статусе pending)
     cookieStore.delete(cookieName);
 
+    // Сохраняем публичный токен в cookie покупателя (для раздела "Мои заказы" в корзине)
+    try {
+      const existingCookie = cookieStore.get("dollshop_order_tokens")?.value || "";
+      const tokens = existingCookie ? existingCookie.split(",").filter(Boolean) : [];
+      if (!tokens.includes(res.publicToken)) {
+        tokens.unshift(res.publicToken);
+      }
+      cookieStore.set("dollshop_order_tokens", tokens.slice(0, 10).join(","), {
+        httpOnly: false,
+        sameSite: "lax",
+        maxAge: 365 * 24 * 60 * 60,
+        path: "/",
+      });
+    } catch {
+      // Игнорируем вне Next.js
+    }
+
     // Сбрасываем кэш каталога и обновляем страницы витрины и панели мастера
     try {
       revalidateTag(CACHE_TAGS.products, { expire: 0 });
@@ -264,5 +285,140 @@ export async function createOrderAction(
       code: "SERVER_ERROR",
       error: "Произошла непредвиденная ошибка при оформлении заказа.",
     };
+  }
+}
+
+export interface PublicOrderSummary {
+  orderNumber: number;
+  publicToken: string;
+  dollTitle: string;
+  dollSlug: string;
+  dollCoverUrl: string | null;
+  totalAmount: number;
+  status: "pending" | "paid" | "cancelled" | "completed";
+  trackingNumber: string | null;
+  paymentMethod: string;
+  deliveryType: "postal" | "pickup";
+  deliveryCity: string;
+  createdAt: string;
+}
+
+export type FindOrdersResult =
+  | {
+      success: true;
+      orders: PublicOrderSummary[];
+    }
+  | {
+      success: false;
+      error: string;
+    };
+
+/**
+ * Server Action поиска заказов покупателя по номеру телефона Беларуси.
+ * Находит все заказы, привязанные к номеру, обновляет cookie и возвращает безопасные данные.
+ */
+export async function findOrdersByPhoneAction(
+  rawPhone: string
+): Promise<FindOrdersResult> {
+  const normalized = normalizeBelarusPhone(rawPhone);
+  if (!normalized) {
+    return {
+      success: false,
+      error: "Пожалуйста, введите корректный номер телефона Беларуси (+375...)",
+    };
+  }
+
+  try {
+    const list = await getOrdersByCustomerPhone(normalized);
+
+    // Сохраняем найденные токены в cookie
+    if (list.length > 0) {
+      try {
+        const cookieStore = await cookies();
+        const existingCookie = cookieStore.get("dollshop_order_tokens")?.value || "";
+        const existingTokens = existingCookie ? existingCookie.split(",").filter(Boolean) : [];
+        const newTokens = list.map((o) => o.publicToken);
+        const combined = Array.from(new Set([...newTokens, ...existingTokens]));
+
+        cookieStore.set("dollshop_order_tokens", combined.slice(0, 10).join(","), {
+          httpOnly: false,
+          sameSite: "lax",
+          maxAge: 365 * 24 * 60 * 60,
+          path: "/",
+        });
+      } catch {
+        // Игнорируем вне Next.js
+      }
+    }
+
+    const publicOrders: PublicOrderSummary[] = list.map((order) => {
+      const isPickup =
+        order.deliveryBranch.toLowerCase().includes("самовывоз") ||
+        (order.deliveryCity.toLowerCase() === "минск" &&
+          order.deliveryBranch.toLowerCase().includes("согласован"));
+
+      return {
+        orderNumber: order.orderNumber,
+        publicToken: order.publicToken,
+        dollTitle: order.item?.productTitle || `Заказ #${order.orderNumber}`,
+        dollSlug: order.item?.productSlug || "",
+        dollCoverUrl: order.item?.coverUrl || null,
+        totalAmount: order.totalAmount,
+        status: order.status,
+        trackingNumber: order.trackingNumber,
+        paymentMethod: order.paymentMethod,
+        deliveryType: isPickup ? "pickup" : "postal",
+        deliveryCity: order.deliveryCity,
+        createdAt: order.createdAt.toISOString(),
+      };
+    });
+
+    return {
+      success: true,
+      orders: publicOrders,
+    };
+  } catch (err) {
+    console.error("Ошибка поиска заказов по номеру:", err);
+    return {
+      success: false,
+      error: "Не удалось выполнить поиск. Попробуйте еще раз позже.",
+    };
+  }
+}
+
+/**
+ * Получение заказов текущего посетителя по cookie dollshop_order_tokens.
+ */
+export async function getMySavedOrdersAction(): Promise<PublicOrderSummary[]> {
+  try {
+    const cookieStore = await cookies();
+    const rawTokens = cookieStore.get("dollshop_order_tokens")?.value || "";
+    const tokens = rawTokens.split(",").map((t) => t.trim()).filter(Boolean);
+    if (tokens.length === 0) return [];
+
+    const list = await getOrdersByPublicTokens(tokens);
+    return list.map((order) => {
+      const isPickup =
+        order.deliveryBranch.toLowerCase().includes("самовывоз") ||
+        (order.deliveryCity.toLowerCase() === "минск" &&
+          order.deliveryBranch.toLowerCase().includes("согласован"));
+
+      return {
+        orderNumber: order.orderNumber,
+        publicToken: order.publicToken,
+        dollTitle: order.item?.productTitle || `Заказ #${order.orderNumber}`,
+        dollSlug: order.item?.productSlug || "",
+        dollCoverUrl: order.item?.coverUrl || null,
+        totalAmount: order.totalAmount,
+        status: order.status,
+        trackingNumber: order.trackingNumber,
+        paymentMethod: order.paymentMethod,
+        deliveryType: isPickup ? "pickup" : "postal",
+        deliveryCity: order.deliveryCity,
+        createdAt: order.createdAt.toISOString(),
+      };
+    });
+  } catch {
+    return [];
   }
 }

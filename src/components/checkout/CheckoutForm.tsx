@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import { formatPrice } from "@/lib/utils/format";
 import { formatAsBelarusPhoneInput } from "@/lib/utils/phone";
 import { createOrderAction } from "@/actions/order";
+import { saveLocalOrder } from "@/lib/data/recent-orders";
 
 interface CheckoutFormProps {
   productId: string;
@@ -111,6 +112,18 @@ export function CheckoutForm({
         });
 
         if (res.success) {
+          saveLocalOrder({
+            orderNumber: res.orderNumber,
+            publicToken: res.publicToken,
+            dollTitle: dollName,
+            dollSlug: slug,
+            totalAmount: dollPriceByn,
+            status: "pending",
+            deliveryType,
+            deliveryCity: deliveryType === "postal" ? deliveryCity : "Минск",
+            createdAt: new Date().toISOString(),
+          });
+
           toast.success(`Заказ #${res.orderNumber} успешно оформлен!`, {
             description: "Бронь зафиксирована. Мы перенаправляем вас на страницу заказа.",
           });

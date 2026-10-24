@@ -7,12 +7,14 @@ import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { getDolls } from "@/lib/data/catalog";
 import { getActiveReservationsAction } from "@/actions/reserve";
+import { getMySavedOrdersAction } from "@/actions/order";
 import { CartReservationView } from "@/components/cart/CartReservationView";
+import { MyOrdersList } from "@/components/cart/MyOrdersList";
 
 export const metadata: Metadata = {
-  title: "Корзина и бронирование | DollShop",
+  title: "Корзина и заказы | DollShop",
   description:
-    "Ваша корзина и забронированные авторские куклы-феи ручной работы. Посылка почтой по Беларуси или самовывоз в Минске.",
+    "Ваша корзина, забронированные авторские куклы и оформленные заказы. Отслеживание доставки Белпочтой.",
   robots: {
     index: false,
     follow: false,
@@ -23,6 +25,7 @@ export const dynamic = "force-dynamic";
 
 export default async function CartPage() {
   const reservations = await getActiveReservationsAction();
+  const myOrders = await getMySavedOrdersAction();
   const hasReservation = reservations.length > 0;
   const availableDolls = await getDolls({ status: "available", limit: 3 });
 
@@ -36,25 +39,44 @@ export default async function CartPage() {
             <span>Ателье авторских кукол · Единственный экземпляр</span>
           </div>
           <h1 className="font-serif text-3xl sm:text-4xl font-light text-espresso">
-            {hasReservation ? (reservations.length > 1 ? `Ваша бронь · ${reservations.length}` : "Ваша бронь") : "Корзина"}
+            {hasReservation
+              ? reservations.length > 1
+                ? `Ваша бронь · ${reservations.length}`
+                : "Ваша бронь"
+              : "Корзина и заказы"}
           </h1>
           <p className="text-sm text-muted mt-1 max-w-xl">
             {hasReservation
               ? "Выбранные авторские работы удерживаются за вами по 15 минут каждая. Оформите заказ на каждую куклу отдельно."
-              : "Каждая кукла создаётся вручную в одном экземпляре. Нажмите «Бронь» у понравившейся работы, чтобы закрепить её за собой."}
+              : "Здесь вы можете отслеживать оформленные заказы, их доставку или забронировать понравившуюся куклу из каталога."}
           </p>
         </div>
 
         {/* Content */}
         {hasReservation ? (
-          <div className="space-y-8">
-            {reservations.map((reservation) => (
-              <CartReservationView key={reservation.productId} reservation={reservation} />
-            ))}
+          <div className="space-y-10">
+            <div className="space-y-6">
+              {reservations.map((reservation) => (
+                <CartReservationView
+                  key={reservation.productId}
+                  reservation={reservation}
+                />
+              ))}
+            </div>
+
+            <div className="pt-6 border-t border-linen-dark">
+              <MyOrdersList
+                initialOrders={myOrders}
+                title="Ваши оформленные заказы"
+              />
+            </div>
           </div>
         ) : (
-          <div className="space-y-12">
-            {/* Empty State Card */}
+          <div className="space-y-10">
+            {/* Раздел оформленных заказов (если есть) или поиск по номеру телефона */}
+            <MyOrdersList initialOrders={myOrders} />
+
+            {/* Empty State Card для активной брони */}
             <div className="rounded-3xl border border-linen-dark bg-white p-8 sm:p-12 text-center shadow-xs">
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-linen border border-linen-dark text-muted mb-5">
                 <ShoppingBag className="h-8 w-8 text-terracotta/80" />
